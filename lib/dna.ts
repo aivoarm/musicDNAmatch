@@ -44,7 +44,7 @@ function getGenreTraits(genres: string[]) {
             if (lowerGenre.includes(key)) {
                 for (const [trait, val] of Object.entries(genreMap)) {
                     if (!traits[trait]) traits[trait] = [];
-                    traits[trait].push(val);
+                    if (val !== undefined) traits[trait].push(val);
                 }
             }
         }
