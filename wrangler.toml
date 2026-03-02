@@ -1,10 +1,5 @@
-[build]
-  command = "pnpm run build:cf"
-  directory = ".open-next/assets"
-
-[build.environment]
-  NODE_VERSION = "20"
-
-[[pages.functions.routes]]
-  pattern = "/*"
-  script = ".open-next/worker.js"
+#:schema node_modules/wrangler/config-schema.json
+name = "music-dna-match"
+compatibility_date = "2024-12-18"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".open-next/assets"
