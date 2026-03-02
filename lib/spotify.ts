@@ -27,7 +27,7 @@ export const getTokens = async (code: string) => {
         method: "POST",
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `Basic ${Buffer.from(`${client_id}:${client_secret}`).toString("base64")}`,
+            Authorization: `Basic ${btoa(`${client_id}:${client_secret}`)}`,
         },
         body: new URLSearchParams({
             grant_type: "authorization_code",

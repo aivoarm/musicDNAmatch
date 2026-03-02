@@ -1,0 +1,10 @@
+[build]
+  command = "pnpm run build:cf"
+  directory = ".open-next/assets"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[pages.functions.routes]]
+  pattern = "/*"
+  script = ".open-next/worker.js"
