@@ -1,0 +1,7 @@
+librosa
+numpy
+requests
+numba
+scipy
+scikit-learn
+# Essentia is powerful but hard to install on Vercel without a custom build image; using librosa for better portability.
