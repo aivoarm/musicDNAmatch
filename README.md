@@ -163,18 +163,18 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 # Spotify (from developer.spotify.com/dashboard)
 SPOTIFY_CLIENT_ID=your-client-id
 SPOTIFY_CLIENT_SECRET=your-actual-secret
-SPOTIFY_REDIRECT_URI=http://127.0.0.1:3000/api/auth/callback/spotify
+SPOTIFY_REDIRECT_URI=https://music-dna-match.vercel.app/api/auth/callback/spotify
 
 # Google Gemini
 GEMINI_API_KEY=your-gemini-api-key
 ```
 
-> ⚠️ **Critical**: Use `http://127.0.0.1:3000` not `http://localhost:3000` for the redirect URI. Spotify and Next.js treat these as the same, but browsers treat them as different cookie origins.
+> ⚠️ **Critical**: Ensure `SPOTIFY_REDIRECT_URI` matches the environment you are accessing the app from. For Vercel, it should be the `https://xxxx.vercel.app` URL.
 
 ### 3. Spotify App Configuration
 
 In your [Spotify Developer Dashboard](https://developer.spotify.com/dashboard):
-- Add `http://127.0.0.1:3000/api/auth/callback/spotify` to **Redirect URIs**
+- Add `https://music-dna-match.vercel.app/api/auth/callback/spotify` to **Redirect URIs**
 - Required scopes are requested automatically:
   - `user-read-private`
   - `user-read-email`
@@ -251,7 +251,7 @@ $$;
 pnpm dev
 ```
 
-Open **`http://127.0.0.1:3000`** (not `localhost:3000`).
+Open your app URL (e.g. `https://music-dna-match.vercel.app` or `http://127.0.0.1:3000` for development).
 
 ---
 
@@ -299,7 +299,7 @@ The `/v1/audio-features` endpoint was deprecated for new apps in **November 2024
 The vector similarity search only returns results if multiple users have broadcasted their DNA. For solo testing, insert a seed profile directly into `dna_profiles` via the Supabase dashboard.
 
 ### Cookie Domain
-Always access the app via `http://127.0.0.1:3000` during local development. Using `localhost:3000` breaks cookie persistence because the OAuth callback redirects to `127.0.0.1`.
+Always ensure the URL in your browser matches the one configured in your Environment Variables.
 
 ---
 
