@@ -149,32 +149,37 @@ function BroadcastContent() {
             console.error("Lazy load failed:", err);
         }
 
-        // Simulate deep DNA scan progress
-        for (let i = 0; i <= 100; i++) {
-            setProgress(i);
-            const delay = i < 20 ? 40 : i < 80 ? 15 : 5;
-            await new Promise(r => setTimeout(r, delay));
+        // Generate DNA via the real engine instead of Math.random()
+        try {
+            const r = await fetch("/api/dna/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    genres: ["Electronic"], // Default base
+                    displayName: playlist.name,
+                    spotifyTracks: tracks,
+                })
+            });
+            const d = await r.json();
+            if (d.success) {
+                const vector = d.vector;
+                const top_genres = d.metadata?.top_genres || [playlist.name.split(' ')[0]];
+
+                // Finalize results
+                setDnaData((prev: any) => ({
+                    ...prev,
+                    display_name: `${playlist.name} Signal`,
+                    vector,
+                    top_genres,
+                    recent_tracks: tracks.slice(0, 10),
+                    verbium: generateVerbium(vector, top_genres),
+                    coherence_index: d.coherence_index
+                }));
+            }
+        } catch (err) {
+            console.error("Structural extraction failed:", err);
         }
 
-        const vector = [
-            0.6 + Math.random() * 0.3,
-            0.2 + Math.random() * 0.4,
-            0.4 + Math.random() * 0.3,
-            0.1, 0.8, 0.9,
-            0.4 + Math.random() * 0.2,
-            0.1, 0.3, 0.5, 0.5, 0.5
-        ];
-        const top_genres = ["Spectral Synthesis", "Public Tail", playlist.name.split(' ')[0]];
-
-        // Finalize results
-        setDnaData((prev: any) => ({
-            ...prev,
-            display_name: `${playlist.name} Signal`,
-            vector,
-            top_genres,
-            recent_tracks: tracks.slice(0, 10),
-            verbium: generateVerbium(vector, top_genres)
-        }));
 
         setComplete(true);
         setAnalyzing(false);

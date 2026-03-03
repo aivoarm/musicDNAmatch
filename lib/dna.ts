@@ -17,6 +17,50 @@ export const AXIS_LABELS = [
 
 export const DNA_SCHEMA_VERSION = 2;
 
+export const AXIS_DESCRIPTIONS: Record<string, string> = {
+    "spectral_energy": "High-energy, intense soundscapes",
+    "harmonic_depth": "Rich harmony and tonal complexity",
+    "rhythmic_drive": "Groove-forward, rhythmic music",
+    "melodic_warmth": "Warm, melodic focus",
+    "structural_complexity": "Intricate, progressive structures",
+    "sonic_texture": "Layered and detailed production",
+    "tempo_variance": "Dynamic tempo and timing changes",
+    "tonal_brightness": "Bright, uplifting tonal palette",
+    "dynamic_range": "High dynamic contrast",
+    "genre_fusion": "Experimental genre blending",
+    "experimental_index": "Avant-garde, unconventional sounds",
+    "emotional_density": "Deep emotional and atmospheric weight",
+};
+
+/**
+ * Decodes a DNA vector into layman's terms.
+ */
+export function generateInterpretation(vector: number[]) {
+    if (!vector || vector.length === 0) return { characteristics: [], genreMatches: [] };
+
+    // Get top 5 characteristics
+    const characteristics = vector
+        .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5)
+        .map(axis => AXIS_DESCRIPTIONS[axis.label] || axis.label.replace(/_/g, " "));
+
+    // Get top 5 matching genres based on cosine similarity
+    const genreMatches = Object.entries(GENRE_VECTORS)
+        .map(([name, genreVec]) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            score: cosineSimilarity(vector, genreVec)
+        }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(g => g.name);
+
+    return {
+        characteristics,
+        genreMatches
+    };
+}
+
 // ── Genre display list (for the UI picker) ──────────
 export const GENRE_OPTIONS = [
     { key: "electronic", label: "Electronic", emoji: "⚡" },
@@ -63,6 +107,15 @@ export const GENRE_VECTORS: Record<string, number[]> = {
     "afrobeats": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.7, 0.6, 0.8, 0.5, 0.8],
     "gospel": [0.5, 0.8, 0.6, 0.9, 0.6, 0.5, 0.5, 0.7, 0.7, 0.4, 0.3, 0.9],
     "experimental": [0.6, 0.6, 0.5, 0.4, 0.9, 0.8, 0.9, 0.4, 0.8, 0.7, 0.9, 0.5],
+    "phonk": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.4, 0.6, 0.7, 0.7, 0.6, 0.8],
+    "synthpop": [0.7, 0.6, 0.8, 0.7, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.5, 0.7],
+    "grunge": [0.7, 0.6, 0.6, 0.5, 0.6, 0.7, 0.5, 0.4, 0.7, 0.5, 0.5, 0.8],
+    "industrial": [0.9, 0.5, 0.8, 0.2, 0.7, 0.9, 0.6, 0.4, 0.8, 0.6, 0.8, 0.5],
+    "garage": [0.8, 0.5, 0.9, 0.5, 0.5, 0.7, 0.5, 0.7, 0.6, 0.6, 0.5, 0.7],
+    "trap": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.5, 0.7, 0.8, 0.8, 0.5, 0.8],
+    "drill": [0.8, 0.4, 0.9, 0.4, 0.5, 0.8, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
+    "dubstep": [0.9, 0.4, 0.9, 0.3, 0.7, 0.9, 0.6, 0.6, 0.8, 0.6, 0.8, 0.5],
+    "trance": [0.9, 0.5, 0.8, 0.4, 0.6, 0.8, 0.5, 0.9, 0.6, 0.5, 0.7, 0.5],
 };
 
 // ── Spotify audio feature → DNA axis mapping ────────
@@ -117,10 +170,45 @@ export interface SpotifyAudioFeatures {
 // ── Core Functions ──────────────────────────────────
 
 /**
+ * Standardised coherence calculation to ensure consistency across all screens.
+ */
+export function calculateCoherence(vector: number[], confidence: number[] = []): number {
+    if (!vector || vector.length === 0) return 0;
+    const conf = confidence.length === vector.length ? confidence : Array(vector.length).fill(1.0);
+    const totalConf = conf.reduce((a, b) => a + b, 0) + 1e-9;
+    const weights = conf.map(c => c / totalConf);
+    const mean = weights.reduce((sum, w, i) => sum + w * vector[i], 0);
+    const variance = weights.reduce((sum, w, i) => sum + w * Math.pow(vector[i] - mean, 2), 0);
+    return round4(Math.max(0, Math.min(1, 1.0 - Math.sqrt(variance) / 0.5)));
+}
+
+/**
  * Compute a DNA vector from user's selected genres.
  */
 export function computeGenreVector(selectedGenres: string[]): DNAVector {
-    const normalised = selectedGenres.map(g => g.toLowerCase().replace(/[^a-z]/g, ""));
+    const normalised = selectedGenres.map(g => {
+        const s = g.toLowerCase().replace(/[^a-z0-9]/g, ""); // include numbers for K-Pop etc
+        // Handle common variations/aliases
+        if (s === "rb") return "rnb";
+        if (s === "indierock") return "indie";
+        if (s === "dreampop") return "indie";
+        if (s === "hiphop") return "hiphop";
+        if (s === "synthpop") return "synthpop";
+        if (s === "phenk" || s === "phonk") return "phonk";
+        if (s === "technopop") return "techno";
+        if (s === "folkrock") return "rock";
+        if (s === "kpop") return "kpop";
+        if (s === "jpop") return "pop";
+        if (s === "acidjazz") return "jazz";
+        if (s === "deephouse") return "house";
+        if (s === "futurebass") return "electronic";
+        if (s === "nudisco") return "disco";
+        // Map some more GENRES from page.tsx to lib/dna.ts keys
+        if (g === "R&B") return "rnb";
+        if (g === "Hip Hop") return "hiphop";
+        return s;
+    });
+
     const vecs = normalised
         .map(g => GENRE_VECTORS[g])
         .filter(Boolean);
@@ -134,6 +222,7 @@ export function computeGenreVector(selectedGenres: string[]): DNAVector {
     );
     return makeDNA(vector, Array(12).fill(1.0), "genre", { genres: selectedGenres });
 }
+
 
 /**
  * Compute DNA vector from Spotify audio features.

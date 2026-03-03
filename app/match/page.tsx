@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, MapPin, Share2, MessageSquarePlus, Activity, ArrowLeft, Mail, CheckCircle2, X, Brain, Binary, Filter, ChevronRight, Users, Music2, Scan } from "lucide-react";
+import { Search, MapPin, Share2, MessageSquarePlus, Activity, ArrowLeft, Mail, CheckCircle2, X, Brain, Binary, Filter, ChevronRight, Users, Music2, Scan, ExternalLink, User } from "lucide-react";
+import { AXIS_LABELS } from "@/lib/dna";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -24,7 +25,7 @@ export default function MatchPage() {
                 const profileRes = await fetch("/api/dna/profile/me");
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
-                    setUserDna(profileData.profile);
+                    setUserDna(profileData.dna);
                 }
 
                 const res = await fetch("/api/dna/match");
@@ -239,11 +240,36 @@ export default function MatchPage() {
                             <div className="space-y-6 md:space-y-8 relative z-10">
                                 <div className="border-b border-white/10 pb-6">
                                     <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-2 font-mono">My Primary Signal</p>
-                                    <div className="flex items-end justify-between">
+                                    <div className="flex items-end justify-between border-b border-white/10 pb-6 mb-6">
                                         <h4 className="text-xl md:text-2xl font-black text-white italic truncate pr-4">{userDna?.display_name || "Scanning..."}</h4>
                                         <div className="text-right shrink-0">
-                                            <p className="text-2xl md:text-3xl font-mono font-black text-[#FF0000] tracking-tighter">80.2%</p>
+                                            <p className="text-2xl md:text-3xl font-mono font-black text-[#FF0000] tracking-tighter">
+                                                {((userDna?.coherence_index ?? 0.8) * 100).toFixed(1)}%
+                                            </p>
                                             <p className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-widest">COHERENCE</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <p className="mono text-[8px] text-white/50 uppercase tracking-[0.2em] mb-3">Seed Identity — Selected Genres</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {(userDna?.top_genres || []).slice(0, 3).map((g: string) => (
+                                                <span key={g} className="text-[8px] bg-white/5 border border-white/10 text-white/60 px-2 py-1 rounded-md font-black uppercase tracking-widest">{g}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="mb-6">
+                                        <p className="mono text-[8px] text-[#FF0000]/60 uppercase tracking-[0.2em] mb-3">Neural Highlights — Strongest Dim</p>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {AXIS_LABELS.map((label, i) => ({ label, value: userDna?.vector?.[i] || 0 }))
+                                                .sort((a, b) => b.value - a.value)
+                                                .slice(0, 2)
+                                                .map((axis) => (
+                                                    <span key={axis.label} className="text-[8px] bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF0000] px-2 py-1 rounded-md font-black uppercase tracking-widest">
+                                                        {axis.label.replace(/_/g, " ")}
+                                                    </span>
+                                                ))}
                                         </div>
                                     </div>
                                 </div>
@@ -251,7 +277,7 @@ export default function MatchPage() {
                                 <div className="space-y-4">
                                     <div className="bg-white/10 p-5 rounded-2xl border border-white/10">
                                         <div className="flex justify-between items-center mb-2">
-                                            <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">Vector Dist Target</p>
+                                            <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">Normalized Distance</p>
                                             <p className="text-lg font-mono font-black text-white tracking-widest">0.198</p>
                                         </div>
                                         <p className="text-[8px] text-white/60 font-bold uppercase">Optimal clustering threshold</p>
@@ -270,7 +296,7 @@ export default function MatchPage() {
                                         <div className="h-2 w-2 rounded-full bg-[#FF0000] mt-1 shrink-0" />
                                         <p className="text-[10px] text-white leading-relaxed font-bold">
                                             <span className="text-[#FF0000] uppercase tracking-widest block mb-1">Numbers Explained</span>
-                                            Similarity is calculated via Euclidean distance in a 12-dimensional vector space. 80.2% coherence confirms your signature's structural integrity.
+                                            Similarity is calculated via cosine distance in a 12-dimensional vector space. {((userDna?.coherence_index ?? 0.8) * 100).toFixed(1)}% coherence confirms your signature's structural integrity.
                                         </p>
                                     </div>
                                 </div>

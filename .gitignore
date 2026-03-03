@@ -19,7 +19,7 @@ __pycache__/
 .next/
 out/
 build/
-
+code_structure.txt
 # Environment variables — NEVER commit these
 .env
 .env.local
