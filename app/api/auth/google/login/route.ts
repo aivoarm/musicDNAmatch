@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export async function GET() {
     const client_id = process.env.GOOGLE_CLIENT_ID;
@@ -9,11 +11,19 @@ export async function GET() {
         return NextResponse.json({ error: "GOOGLE_CLIENT_ID missing in .env" }, { status: 500 });
     }
 
-    // scopes:
-    // https://www.googleapis.com/auth/youtube.readonly -> to fetch videos/activities
-    // openid profile email -> for user info
+    // CSRF Protection: Generate and store state
+    const state = crypto.randomBytes(32).toString("hex");
+    const cookieStore = await cookies();
+    cookieStore.set("google_oauth_state", state, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 10, // 10 minutes
+        path: "/",
+        sameSite: "lax"
+    });
+
     const scope = "https://www.googleapis.com/auth/youtube.readonly openid profile email";
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent`;
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&scope=${encodeURIComponent(scope)}&access_type=offline&prompt=consent&state=${state}`;
 
     return NextResponse.redirect(googleAuthUrl);
 }

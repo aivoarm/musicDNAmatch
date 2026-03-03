@@ -4,6 +4,25 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    const error = searchParams.get("error");
+
+    if (error) {
+        console.warn("Google OAuth Error:", error);
+        return NextResponse.redirect(new URL(`/youtube?error=${error}`, request.url));
+    }
+
+    const cookieStore = await cookies();
+    const storedState = cookieStore.get("google_oauth_state")?.value;
+
+    // Security Check: Validate State (CSRF Prevention)
+    if (!state || !storedState || state !== storedState) {
+        console.error("OAuth Security Check Failed: State mismatch.");
+        return NextResponse.redirect(new URL("/youtube?error=security_mismatch", request.url));
+    }
+
+    // Clean up state cookie
+    cookieStore.delete("google_oauth_state");
 
     if (!code) {
         return NextResponse.redirect(new URL("/youtube?error=no_callback_code", request.url));

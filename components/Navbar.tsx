@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Radio, User } from "lucide-react";
+import { Radio, User, LogOut } from "lucide-react";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -28,6 +28,17 @@ export default function Navbar() {
         };
         checkUser();
     }, [pathname]);
+
+    const handleLogout = async () => {
+        try {
+            const res = await fetch("/api/auth/logout", { method: "POST" });
+            if (res.ok) {
+                window.location.href = "/";
+            }
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+    };
 
     const navLinks = [
         { href: "/broadcast", label: "Broadcast" },
@@ -85,6 +96,13 @@ export default function Navbar() {
                                     <User className="h-4 w-4 text-[#FF0000]" />
                                 </div>
                             )}
+                            <button
+                                onClick={handleLogout}
+                                className="h-8 w-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-[#FF0000] transition-all"
+                                title="Sign Out"
+                            >
+                                <LogOut className="h-4 w-4" />
+                            </button>
                         </motion.div>
                     ) : (
                         <motion.a
