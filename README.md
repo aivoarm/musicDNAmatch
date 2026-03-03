@@ -3,36 +3,28 @@
 
 [Live Site: dna.armanayva.com](https://dna.armanayva.com/)
 
-Music DNA Match is a high-fidelity musical discovery engine that strips away cultural labels and genres to focus on the underlying mathematics of sound. By scanning your digital music footprint (Spotify & YouTube), it generates a **12-dimensional sonic vector**—a mathematical fingerprint of your unique musical identity—then matches you with like-minded listeners so you can collaborate on shared playlists.
+Music DNA Match is a high-fidelity musical discovery engine that strips away cultural labels and genres to focus on the underlying mathematics of sound. By scanning your digital music footprint (Spotify & YouTube), it generates a **12-dimensional sonic vector**—a mathematical fingerprint of your unique musical identity—then matches you with like-minded listeners ("Sonic Soulmates").
 
 ---
 
 ## ✨ Features
 
-### 🎧 Multimodal Signal Capture
-- **Spotify Native Scan:** Pure TypeScript implementation that systematically scans Spotify discovery signals (Playlists, Top Tracks) without requiring a Python environment.
-- **YouTube Frequency Extraction:** Real-time extraction of structural audio DNA from any YouTube signal (Artist, Track, or Vibe).
-- **Frictionless Discovery:** No login required for standard frequency scanning.
+### 🧬 Neural Discovery Flow
+- **Frictionless Onboarding:** No mandatory sign-up or login. Users are assigned a persistent **Digital Identity** via guest cookies, allowing instant DNA extraction.
+- **Multimodal Signal Capture:**
+    - **Spotify Native Scan:** Analyzes public playlists and listening signals without requiring account connection.
+    - **YouTube Search & Paste:** Supplement your DNA with specific tracks found on YouTube.
+- **The Identity Stage:** At the end of the extraction process, users define their **Signal Profile** with a display name and an optional email (used for reconnecting and matching).
 
 ### 🧬 Neural Discovery Protocol
-- **Vector Space Mapping:** Your DNA is quantized across 12 distinct axes (Spectral, Harmonic, Transient, etc.) and projected into a high-dimensional vector space.
-- **Euclidean Matching:** High-precision similarity search finds "Sonic Soulmates" by calculating the multi-dimensional distance between user profiles.
-- **Coherence Index:** A geometric measurement of your signal's internal consistency and structured complexity.
+- **Vector Space Mapping:** DNA is quantized across 12 distinct axes: *Spectral Energy, Harmonic Depth, Rhythmic Drive, Melodic Warmth, Structural Complexity, Sonic Texture, Tempo Variance, Tonal Brightness, Dynamic Range, Genre Fusion, Experimental Index, and Emotional Density.*
+- **Similarity Matching:** Uses Euclidean distance and cosine similarity via `pgvector` to find users with overlapping sonic fingerprints.
+- **Coherence Index:** A geometric measurement of your signal's internal consistency and musical complexity.
 
-### 🤝 Matching & Collaboration
-- **Interest Signals:** Express interest in matched users; when interest is mutual, a Bridge is automatically created.
-- **DNA Bridge:** A streamlined connection page showing both participants' profiles and contact info.
-- **Email Draft:** One-click button to draft a pre-written email introducing the match and proposing playlist collaboration.
-- **Guest & Authenticated Users:** Works for both Google-authenticated users and anonymous guests via guest IDs.
-
-### 🔐 Authentication
-- **Google OAuth:** Sign in with Google for a persistent profile and email-based matching.
-- **Guest Mode:** Instant access without sign-up—a guest ID is assigned automatically and carried through the matching flow.
-
-### 📱 Premium Mobile Experience
-- **Fluid Layouts:** Fully responsive design system optimized for all screen sizes, from mobile devices to desktop workstations.
-- **Glassmorphism UI:** A stunning, translucent interface with vibrant gradients and micro-animations.
-- **Performance Optimized:** Strategic link prefetching and native edge-compatible logic for instantaneous transitions.
+### 🤝 Matching & Bridge System
+- **Soulmate Feed:** A real-time list of users sorted by matching percentage.
+- **Interest Signals:** Express interest in a match. If the interest is mutual, a **Bridge** is created.
+- **Collaborative Bridges:** Private spaces where users can view each other's full DNA signals and shared contact info for playlist collaboration.
 
 ---
 
@@ -40,16 +32,12 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 
 | Layer | Technology |
 |---|---|
-| **Framework** | Next.js 16 (App Router, Turbopack) |
-| **Language** | TypeScript (Native Edge-Compatible Logic) |
-| **Logic** | Custom Spotify Structural Fetcher (Pure TS) |
-| **Styling** | Vanilla CSS + Tailwind Utility Layer |
-| **Animations** | Framer Motion (60FPS Micro-interactions) |
+| **Framework** | Next.js 15 (App Router, Turbopack) |
+| **Styling** | Vanilla CSS + Tailwind CSS (High-Contrast Premium Look) |
+| **Animations** | Framer Motion (Smooth stage transitions & micro-interactions) |
 | **Database** | Supabase (PostgreSQL + `pgvector`) |
-| **Realtime** | Supabase Realtime Channels |
-| **AI** | Google Gemini 2.0 Flash (Signal Synthesis) |
-| **Auth** | Google OAuth 2.0 + Guest ID System |
-| **Music APIs** | Spotify Public API + YouTube Data API v3 |
+| **Identification** | Cookie-based Guest Session + Optional Email Identity |
+| **Icons** | Lucide React |
 
 ---
 
@@ -57,19 +45,16 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 
 ```
 app/
-├── page.tsx              # Home — scan & generate your Music DNA
-├── match/page.tsx        # Neural Matching Protocol — find soulmates
-├── temp-room/[id]/       # DNA Bridge — email exchange with your match
-├── broadcast/            # Broadcast discovery signals
-├── youtube/              # YouTube frequency scanner
-├── privacy/              # Privacy policy
-├── terms/                # Terms of service
-└── api/
-    ├── auth/             # Google OAuth & session management
-    ├── bridge/           # Bridge lifecycle (create, info, consent, merge, synthesize, message)
-    ├── dna/              # DNA generation, profile CRUD, matching engine
-    ├── match/            # Interest registration (join)
-    └── spotify/          # Spotify public scan
+├── (home) page.tsx      # Multi-stage discovery flow (Genres -> Spotify -> YouTube -> Identity)
+├── profile/page.tsx     # Your 12-dimensional DNA visualization
+├── soulmates/page.tsx   # Discovery feed for finding sonic matches
+├── bridge/[id]/         # Mutual match connection rooms
+├── api/
+│   ├── dna/             # Generation, profile retrieval, and matching logic
+│   ├── match/           # Interest registration and bridge creation
+│   └── spotify/         # Public playlist scanner
+└── components/
+    └── Navbar.tsx       # Dynamic navigation based on DNA availability
 ```
 
 ---
@@ -82,18 +67,66 @@ Create `.env.local`:
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
 
-
-# API Signals
+# API Keys
 YOUTUBE_API_KEY=...
 SPOTIFY_CLIENT_ID=...
 SPOTIFY_CLIENT_SECRET=...
 
 # Site Config
-NEXT_PUBLIC_SITE_URL=https://dna.armanayva.com
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-### 2. Initialization
+### 2. Database Schema
+Run this in your Supabase SQL Editor:
+
+```sql
+-- Enable vector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- DNA Profiles
+CREATE TABLE dna_profiles (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           uuid UNIQUE NOT NULL,
+  sonic_embedding   vector(12),
+  metadata          jsonb DEFAULT '{}'::jsonb,
+  broadcasting      boolean DEFAULT true,
+  created_at        timestamptz DEFAULT now()
+);
+
+-- Match Interests
+CREATE TABLE match_interests (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id           uuid NOT NULL,
+  target_id         uuid NOT NULL,
+  email             text NOT NULL,
+  created_at        timestamptz DEFAULT now(),
+  UNIQUE(user_id, target_id)
+);
+
+-- Similarity Search Function
+CREATE OR REPLACE FUNCTION match_sonic_soulmates (
+  query_embedding vector(12),
+  match_threshold float,
+  match_count int,
+  caller_id uuid
+)
+RETURNS TABLE (id uuid, user_id uuid, metadata jsonb, similarity float)
+LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.id, p.user_id, p.metadata, 1 - (p.sonic_embedding <=> query_embedding) AS similarity
+  FROM dna_profiles p
+  WHERE 1 - (p.sonic_embedding <=> query_embedding) > match_threshold
+    AND p.user_id != caller_id
+    AND p.broadcasting = true
+  ORDER BY similarity DESC LIMIT match_count;
+END;
+$$;
+```
+
+### 3. Running Locally
 ```bash
 pnpm install
 pnpm dev
