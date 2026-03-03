@@ -3,79 +3,71 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { Radio, User, LogOut } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Waves, User, Users, Search, Brain } from "lucide-react";
 
 export default function Navbar() {
     const pathname = usePathname();
-    const [user, setUser] = useState<{ name: string; image: string } | null>(null);
-    const [checking, setChecking] = useState(true);
+    const [hasDna, setHasDna] = useState(false);
+    const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
-        // Session polling disabled for frictionless discovery
-        setChecking(false);
+        (async () => {
+            try {
+                const r = await fetch("/api/dna/profile/me");
+                const d = await r.json();
+                setHasDna(d.found);
+            } catch { }
+            finally { setLoading(false); }
+        })();
     }, [pathname]);
 
-    const handleLogout = async () => {
-        try {
-            const res = await fetch("/api/auth/logout", { method: "POST" });
-            if (res.ok) {
-                window.location.href = "/";
-            }
-        } catch (err) {
-            console.error("Logout failed:", err);
-        }
-    };
 
-    const navLinks = [
-        { href: "/broadcast", label: "Broadcast" },
-        { href: "/match", label: "Match" },
-    ];
+    // Hide Navbar on home if not scanned yet? No, keep it for brand.
+    // But we might want it to be translucent.
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-6 sm:px-10 border-b border-white/5 backdrop-blur-xl bg-black/40">
-            {/* Brand */}
-            <Link href="/" className="flex items-center gap-2.5 font-black text-lg tracking-tighter mr-8">
-                <div className="h-7 w-7 rounded-lg bg-[#FF0000] flex items-center justify-center">
-                    <Radio className="h-4 w-4 text-white" />
-                </div>
-                <span>Music<span className="text-[#FF0000]">DNA</span></span>
-            </Link>
+        <nav className="fixed top-0 left-0 right-0 z-[100] h-16 border-b border-white/10 bg-[#080808]/80 backdrop-blur-xl transition-all">
+            <div className="max-w-7xl mx-auto h-full px-6 flex items-center justify-between">
+                {/* Brand */}
+                <Link href="/" className="flex items-center gap-2.5 group">
+                    <div className="h-7 w-7 rounded-sm bg-[#FF0000] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <Waves className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="font-black text-white text-base uppercase tracking-tighter italic">
+                        musicDNA<span className="text-[#FF0000]">match</span>
+                    </span>
+                </Link>
 
-            {/* Navbar links removed to focus on home journey */}
-
-            {/* Right side */}
-            <div className="ml-auto flex items-center gap-3">
-                {!checking && user && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-3"
-                    >
-                        <div className="text-right hidden sm:block">
-                            <div className="text-xs font-bold leading-none">{user.name}</div>
-                            <div className="text-[10px] text-[#FF0000] font-mono mt-0.5">● BROADCASTING</div>
-                        </div>
-                        {user.image ? (
-                            <img
-                                src={user.image}
-                                alt={user.name}
-                                className="h-8 w-8 rounded-full ring-2 ring-[#FF0000]/40 object-cover"
-                            />
-                        ) : (
-                            <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 ring-2 ring-[#FF0000]/40 flex items-center justify-center">
-                                <User className="h-4 w-4 text-[#FF0000]" />
-                            </div>
+                {/* Links */}
+                <div className="flex items-center gap-4 sm:gap-6">
+                    <AnimatePresence>
+                        {hasDna && (
+                            <>
+                                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
+                                    <Link href="/soulmates" className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === "/soulmates" ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}>
+                                        <Users className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">Soulmates</span>
+                                    </Link>
+                                </motion.div>
+                                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
+                                    <Link href="/profile" className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === "/profile" ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}>
+                                        <User className="h-3.5 w-3.5" />
+                                        <span className="hidden sm:inline">Profile</span>
+                                    </Link>
+                                </motion.div>
+                            </>
                         )}
-                        <button
-                            onClick={handleLogout}
-                            className="h-8 w-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-[#FF0000] transition-all"
-                            title="Sign Out"
-                        >
-                            <LogOut className="h-4 w-4" />
-                        </button>
-                    </motion.div>
-                )}
+                        {!loading && !hasDna && pathname !== "/" && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                <Link href="/" className="mono text-[10px] uppercase tracking-widest text-[#FF0000] border border-[#FF0000]/30 px-3 py-1.5 rounded-lg hover:bg-[#FF0000]/10 transition-all">
+                                    Start Discovery
+                                </Link>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
         </nav>
     );

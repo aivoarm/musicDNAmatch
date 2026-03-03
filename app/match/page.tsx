@@ -82,7 +82,7 @@ export default function MatchPage() {
                     </div>
 
                     <div className="relative z-10">
-                        <button onClick={() => router.back()} className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-white/40 hover:text-[#FF0000] transition-colors mb-4 tracking-[0.3em]">
+                        <button onClick={() => router.back()} className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-white/70 hover:text-[#FF0000] transition-colors mb-4 tracking-[0.3em]">
                             <ArrowLeft className="h-3.5 md:h-4 w-3.5 md:w-4" /> Return to DNA
                         </button>
                         <h1 className="text-3xl md:text-5xl font-black mb-3 italic tracking-tighter">Sonic <span className="text-[#FF0000] not-italic">Soulmates</span></h1>
@@ -90,7 +90,7 @@ export default function MatchPage() {
                             <p className="text-[#FF0000] flex items-center gap-2 font-black text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] bg-[#FF0000]/10 px-3 sm:px-4 py-2 rounded-full border border-[#FF0000]/20">
                                 <Activity className="h-3 md:h-4 w-3 md:w-4 animate-pulse" /> Neural Protocol Active
                             </p>
-                            <span className="text-white/40 font-mono text-[8px] md:text-[9px] uppercase tracking-[0.3em] md:tracking-[0.4em]">12,492 Signal Nodes Active</span>
+                            <span className="text-white/70 font-mono text-[8px] md:text-[9px] uppercase tracking-[0.3em] md:tracking-[0.4em]">12,492 Signal Nodes Active</span>
                         </div>
                     </div>
                 </header>
@@ -109,7 +109,7 @@ export default function MatchPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <div className="flex items-center gap-2 px-2 text-[10px] font-black tracking-[0.2em] text-white/40 uppercase mb-2">
+                                <div className="flex items-center gap-2 px-2 text-[10px] font-black tracking-[0.2em] text-white/70 uppercase mb-2">
                                     <Brain className="h-3.5 w-3.5" /> High Coherence Signals
                                 </div>
                                 {matches.map((match, idx) => (
@@ -164,11 +164,11 @@ export default function MatchPage() {
                                                         <button
                                                             onClick={() => !match.has_signal && setSelectedMatch(match)}
                                                             disabled={match.has_signal}
-                                                            className={`flex-1 font-black py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all text-xs md:text-sm uppercase tracking-widest shadow-lg ${match.has_signal ? 'bg-white/10 text-white/40 cursor-not-allowed' : 'bg-white text-black hover:scale-[1.02] active:scale-95'}`}
+                                                            className={`flex-1 font-black py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 transition-all text-xs md:text-sm uppercase tracking-widest shadow-lg ${match.has_signal ? 'bg-white/10 text-white/70 cursor-not-allowed' : 'bg-white text-black hover:scale-[1.02] active:scale-95'}`}
                                                         >
                                                             {match.has_signal ? (
                                                                 <>
-                                                                    <Activity className="h-4 w-4 text-white/20" />
+                                                                    <Activity className="h-4 w-4 text-white/50" />
                                                                     Signal Pending
                                                                 </>
                                                             ) : (
@@ -179,7 +179,7 @@ export default function MatchPage() {
                                                             )}
                                                         </button>
                                                     )}
-                                                    <button className="p-3 md:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-white/40 hover:text-white flex justify-center items-center">
+                                                    <button className="p-3 md:p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-white/70 hover:text-white flex justify-center items-center">
                                                         <Share2 className="h-4 w-4 md:h-5 md:w-5" />
                                                     </button>
                                                 </div>
@@ -193,22 +193,22 @@ export default function MatchPage() {
 
                     {/* Sidebar: Intersections & Signal Analysis */}
                     <div className="space-y-6">
-                        <section className="glass rounded-[2rem] p-8 border-white/5 bg-white/2 backdrop-blur-2xl">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/40 mb-6 flex items-center gap-2">
+                        <section className="glass rounded-[2rem] p-8 border-white/10 bg-white/2 backdrop-blur-2xl">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/70 mb-6 flex items-center gap-2">
                                 <Users className="h-4 w-4 text-[#FF0000]" /> Active Intersections
                             </h3>
 
                             <div className="space-y-4">
                                 {matches.filter(m => m.is_mutual).length === 0 ? (
-                                    <div className="p-8 text-center bg-black/20 rounded-2xl border border-dashed border-white/5">
-                                        <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest leading-relaxed">No shared signals yet. Signals must cross for access.</p>
+                                    <div className="p-8 text-center bg-black/20 rounded-2xl border border-dashed border-white/10">
+                                        <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest leading-relaxed">No shared signals yet. Signals must cross for access.</p>
                                     </div>
                                 ) : (
                                     matches.filter(m => m.is_mutual).map((m, i) => (
                                         <Link
                                             key={m.id || i}
                                             href={`/temp-room/${m.bridge_id}`}
-                                            className="block p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group"
+                                            className="block p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group"
                                         >
                                             <div className="flex items-center gap-4">
                                                 <img
@@ -220,9 +220,9 @@ export default function MatchPage() {
                                                     <div className="text-xs font-black text-white truncate group-hover:text-green-500 transition-colors uppercase tracking-tight">
                                                         {m.metadata?.display_name || "Neural Signal"}
                                                     </div>
-                                                    <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">Intersection Room Active</div>
+                                                    <div className="text-[8px] font-black text-white/60 uppercase tracking-widest mt-0.5">Intersection Room Active</div>
                                                 </div>
-                                                <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white transition-colors" />
+                                                <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-white transition-colors" />
                                             </div>
                                         </Link>
                                     ))
@@ -254,14 +254,14 @@ export default function MatchPage() {
                                             <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">Vector Dist Target</p>
                                             <p className="text-lg font-mono font-black text-white tracking-widest">0.198</p>
                                         </div>
-                                        <p className="text-[8px] text-white/30 font-bold uppercase">Optimal clustering threshold</p>
+                                        <p className="text-[8px] text-white/60 font-bold uppercase">Optimal clustering threshold</p>
                                     </div>
                                     <div className="bg-white/10 p-5 rounded-2xl border border-white/10">
                                         <div className="flex justify-between items-center mb-2">
                                             <p className="text-[9px] font-black text-white/50 uppercase tracking-widest">Vector Space</p>
                                             <p className="text-lg font-mono font-black text-white tracking-widest">12D PROJECTION</p>
                                         </div>
-                                        <p className="text-[8px] text-white/30 font-bold uppercase">Quantized frequency axes</p>
+                                        <p className="text-[8px] text-white/60 font-bold uppercase">Quantized frequency axes</p>
                                     </div>
                                 </div>
 
@@ -278,8 +278,8 @@ export default function MatchPage() {
                         </div>
 
                         {/* Aesthetic Projection */}
-                        <div className="glass rounded-[2.5rem] p-8 aspect-square relative flex items-center justify-center overflow-hidden border-white/5">
-                            <div className="absolute inset-0 opacity-20 pointer-events-none">
+                        <div className="glass rounded-[2.5rem] p-8 aspect-square relative flex items-center justify-center overflow-hidden border-white/10">
+                            <div className="absolute inset-0 opacity-40 pointer-events-none">
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200%] h-[200%] border-[1px] border-dashed border-white/20 rounded-full animate-spin [animation-duration:60s]" />
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] border-[1px] border-dashed border-white/20 rounded-full animate-spin [animation-duration:40s] direction-reverse" />
                                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100%] h-[100%] border-[1px] border-dashed border-white/10 rounded-full animate-spin [animation-duration:20s]" />
@@ -290,7 +290,7 @@ export default function MatchPage() {
                                     <Scan className="h-8 w-8 text-[#FF0000] animate-float" />
                                 </div>
                                 <h3 className="font-black text-lg mb-1 uppercase italic tracking-tighter text-white">Neural Sink</h3>
-                                <p className="text-[9px] text-white/40 font-mono tracking-widest">12,492 NODES</p>
+                                <p className="text-[9px] text-white/70 font-mono tracking-widest">12,492 NODES</p>
                             </div>
                         </div>
                     </div>
@@ -349,7 +349,7 @@ export default function MatchPage() {
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Your Communications Email</label>
                                             <div className="relative">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
                                                 <input
                                                     type="email"
                                                     required

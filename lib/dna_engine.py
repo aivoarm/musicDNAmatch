@@ -1,76 +1,61 @@
-"""
-musicDNAmatch — Improved DNA Engine
-====================================
-Improvements over original:
-  1.  Full 12-dim vector — no more placeholder 0.5 values
-  2.  Per-axis z-score normalization (population stats)
-  3.  Cosine similarity replacing Euclidean distance
-  4.  Recency decay weighting for multi-track aggregation
-  5.  Confidence-weighted axes
-  6.  DNA schema versioning
-  7.  Coherence Index with a defined, interpretable formula
-  8.  Graceful fallbacks (no silent crashes)
-"""
-
-import librosa
 import numpy as np
 from dataclasses import dataclass, field
 from typing import Optional
 import warnings
 
-# ─────────────────────────────────────────────
-# DNA Version — bump this when algorithm changes
-# ─────────────────────────────────────────────
 DNA_SCHEMA_VERSION = 2
 
-# ─────────────────────────────────────────────
-# Population stats for z-score normalization
-# (Replace with real DB-computed values at scale)
-# Axes: centroid, bandwidth, rolloff,
-#       tempo, pulse, beat_stability,
-#       harmonicity, flatness, rms,
-#       mfcc_d0, mfcc_d1, mfcc_d2
-# ─────────────────────────────────────────────
-AXIS_MEANS = np.array([
-    2500.0, 1500.0, 4000.0,   # Spectral
-    120.0,  0.5,    0.7,       # Rhythmic
-    0.5,    0.01,   0.05,      # Psychoacoustic
-    0.0,    0.0,    0.0,       # Structural (MFCC deltas — centred by nature)
-], dtype=float)
-
-AXIS_STDS = np.array([
-    1200.0, 700.0,  2000.0,   # Spectral
-    40.0,   0.25,   0.2,      # Rhythmic
-    0.3,    0.008,  0.03,     # Psychoacoustic
-    5.0,    3.0,    3.0,      # Structural
-], dtype=float)
-
-# Axis labels (for readability / debugging)
 AXIS_LABELS = [
-    "spectral_centroid", "spectral_bandwidth", "spectral_rolloff",
-    "tempo",             "pulse_saliency",     "beat_stability",
-    "harmonicity",       "spectral_flatness",  "rms_energy",
-    "mfcc_delta_0",      "mfcc_delta_1",       "mfcc_delta_2",
+    "spectral_energy", "harmonic_depth", "rhythmic_drive",
+    "melodic_warmth", "structural_complexity", "sonic_texture",
+    "tempo_variance", "tonal_brightness", "dynamic_range",
+    "genre_fusion", "experimental_index", "emotional_density",
 ]
 
+# Genre bias vectors — each genre maps to a 12-dim axis preset
+GENRE_VECTORS = {
+    "electronic": [0.9,0.5,0.8,0.3,0.7,0.9,0.6,0.8,0.7,0.7,0.8,0.5],
+    "hiphop":     [0.7,0.4,0.9,0.6,0.5,0.7,0.5,0.6,0.8,0.8,0.5,0.8],
+    "indie":      [0.5,0.6,0.5,0.8,0.7,0.6,0.7,0.5,0.7,0.6,0.6,0.7],
+    "classical":  [0.4,0.9,0.3,0.9,0.9,0.5,0.8,0.6,0.9,0.3,0.4,0.8],
+    "jazz":       [0.5,0.9,0.6,0.7,0.8,0.6,0.8,0.5,0.7,0.7,0.7,0.7],
+    "rnb":        [0.6,0.7,0.7,0.9,0.5,0.7,0.4,0.6,0.6,0.6,0.4,0.9],
+    "metal":      [0.9,0.6,0.9,0.3,0.7,0.8,0.5,0.4,0.8,0.5,0.7,0.7],
+    "pop":        [0.6,0.5,0.7,0.7,0.4,0.6,0.4,0.8,0.5,0.5,0.3,0.7],
+    "folk":       [0.3,0.7,0.4,0.9,0.6,0.4,0.6,0.6,0.8,0.4,0.5,0.8],
+    "latin":      [0.6,0.6,0.9,0.7,0.5,0.6,0.5,0.7,0.6,0.7,0.4,0.8],
+    "world":      [0.5,0.7,0.7,0.7,0.7,0.7,0.7,0.6,0.6,0.9,0.7,0.7],
+    "ambient":    [0.4,0.6,0.2,0.6,0.6,0.9,0.8,0.5,0.9,0.5,0.8,0.6],
+}
 
-# ─────────────────────────────────────────────
-# Data structures
-# ─────────────────────────────────────────────
+# Spotify audio feature → DNA axis mapping weights
+# Keys match Spotify's /audio-features response fields
+SPOTIFY_AXIS_MAP = {
+    # axis_index: [(feature_key, weight), ...]
+    0: [("energy", 0.6), ("loudness_norm", 0.4)],          # spectral_energy
+    1: [("instrumentalness", 0.5), ("acousticness", 0.5)], # harmonic_depth
+    2: [("danceability", 0.5), ("tempo_norm", 0.5)],       # rhythmic_drive
+    3: [("valence", 0.4), ("acousticness", 0.6)],          # melodic_warmth
+    4: [("time_signature_norm", 0.5), ("key_norm", 0.5)],  # structural_complexity
+    5: [("liveness", 0.4), ("instrumentalness", 0.6)],     # sonic_texture
+    6: [("tempo_norm", 0.7), ("time_signature_norm", 0.3)],# tempo_variance
+    7: [("valence", 0.5), ("mode_norm", 0.5)],             # tonal_brightness
+    8: [("loudness_norm", 0.5), ("energy", 0.5)],          # dynamic_range
+    9: [("speechiness", 0.5), ("liveness", 0.5)],          # genre_fusion
+    10:[("instrumentalness", 0.4), ("acousticness", 0.6)], # experimental_index
+    11:[("valence", 0.4), ("energy", 0.6)],                # emotional_density
+}
 
 @dataclass
 class DNAVector:
-    """
-    A versioned, confidence-annotated 12-dimensional sonic fingerprint.
-    """
-    vector: list[float]                          # 12 normalized values
-    confidence: list[float]                      # per-axis confidence [0–1]
-    coherence_index: float                       # 0–1, internal consistency
+    vector: list
+    confidence: list
+    coherence_index: float
     schema_version: int = DNA_SCHEMA_VERSION
-    source: str = "unknown"                      # "spotify" | "youtube" | "file"
+    source: str = "unknown"
     metadata: dict = field(default_factory=dict)
 
-    def to_dict(self) -> dict:
+    def to_dict(self):
         return {
             "vector": self.vector,
             "confidence": self.confidence,
@@ -81,271 +66,160 @@ class DNAVector:
         }
 
 
-# ─────────────────────────────────────────────
-# Core extraction
-# ─────────────────────────────────────────────
-
-def extract_dna_vector(
-    audio_path: str,
-    source: str = "file",
-    metadata: Optional[dict] = None,
-) -> DNAVector:
+def spotify_features_to_vector(features_list: list[dict]) -> DNAVector:
     """
-    Extracts a fully-computed 12-dimensional DNA vector from an audio file.
-
-    Dimensions:
-      0–2  : Spectral  (Centroid, Bandwidth, Rolloff)
-      3–5  : Rhythmic  (Tempo, Pulse Saliency, Beat Stability)
-      6–8  : Psychoacoustic (Harmonicity via HNNT, Flatness, RMS)
-      9–11 : Structural (MFCC mean deltas for coefficients 0, 1, 2)
+    Convert a list of Spotify audio-feature objects into a DNA vector.
+    Each features dict should contain the raw Spotify /audio-features response.
     """
-    try:
-        y, sr = librosa.load(audio_path, sr=None, mono=True)
-    except Exception as e:
-        raise ValueError(f"Could not load audio file '{audio_path}': {e}")
+    if not features_list:
+        raise ValueError("features_list must be non-empty")
 
-    confidence = np.ones(12, dtype=float)  # start fully confident
+    axis_values = [[] for _ in range(12)]
 
-    # ── 1. Spectral ──────────────────────────────────────────────────────────
-    spec_centroid = float(np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)))
-    spec_bw       = float(np.mean(librosa.feature.spectral_bandwidth(y=y, sr=sr)))
-    spec_rolloff  = float(np.mean(librosa.feature.spectral_rolloff(y=y, sr=sr)))
+    for f in features_list:
+        # Normalise Spotify features to [0,1]
+        norm = {
+            "energy":             float(f.get("energy", 0.5)),
+            "valence":            float(f.get("valence", 0.5)),
+            "danceability":       float(f.get("danceability", 0.5)),
+            "acousticness":       float(f.get("acousticness", 0.5)),
+            "instrumentalness":   float(f.get("instrumentalness", 0.0)),
+            "liveness":           float(f.get("liveness", 0.1)),
+            "speechiness":        float(f.get("speechiness", 0.05)),
+            "loudness_norm":      (float(f.get("loudness", -10)) + 60) / 60,
+            "tempo_norm":         min(float(f.get("tempo", 120)) / 200, 1.0),
+            "key_norm":           float(f.get("key", 0)) / 11,
+            "mode_norm":          float(f.get("mode", 1)),
+            "time_signature_norm":min(float(f.get("time_signature", 4)) / 7, 1.0),
+        }
+        for axis_idx, mappings in SPOTIFY_AXIS_MAP.items():
+            val = sum(norm.get(k, 0.5) * w for k, w in mappings)
+            axis_values[axis_idx].append(val)
 
-    # ── 2. Rhythmic ───────────────────────────────────────────────────────────
-    tempo_arr, beats = librosa.beat.beat_track(y=y, sr=sr)
-    tempo = float(np.squeeze(tempo_arr))
-
-    # Pulse Saliency via PLP (Predominant Local Pulse)
-    try:
-        plp = librosa.beat.plp(y=y, sr=sr)
-        pulse_saliency = float(np.mean(plp))
-    except Exception:
-        pulse_saliency = 0.5
-        confidence[4] = 0.3   # lower confidence — fallback used
-
-    # Beat Stability: std of inter-beat intervals (lower std = more stable)
-    if len(beats) > 2:
-        ibi         = np.diff(librosa.frames_to_time(beats, sr=sr))
-        beat_cv     = float(np.std(ibi) / (np.mean(ibi) + 1e-6))   # coeff of variation
-        beat_stability = float(np.clip(1.0 - beat_cv, 0.0, 1.0))   # invert: 1 = stable
-    else:
-        beat_stability = 0.5
-        confidence[5] = 0.2   # very few beats detected
-
-    # ── 3. Psychoacoustic ────────────────────────────────────────────────────
-    # Harmonicity via Harmonic-to-Noise Ratio proxy
-    try:
-        y_harmonic, _ = librosa.effects.hpss(y)
-        harmonicity   = float(
-            np.mean(np.abs(y_harmonic)) / (np.mean(np.abs(y)) + 1e-6)
-        )
-        harmonicity   = float(np.clip(harmonicity, 0.0, 1.0))
-    except Exception:
-        harmonicity   = 0.5
-        confidence[6] = 0.3
-
-    flatness = float(np.mean(librosa.feature.spectral_flatness(y=y)))
-    rms      = float(np.mean(librosa.feature.rms(y=y)))
-
-    # ── 4. Structural — MFCC mean deltas ─────────────────────────────────────
-    mfcc        = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
-    mfcc_delta  = librosa.feature.delta(mfcc)
-    mfcc_d0     = float(np.mean(mfcc_delta[0]))
-    mfcc_d1     = float(np.mean(mfcc_delta[1]))
-    mfcc_d2     = float(np.mean(mfcc_delta[2]))
-
-    # ── Assemble raw vector ───────────────────────────────────────────────────
-    raw = np.array([
-        spec_centroid, spec_bw, spec_rolloff,
-        tempo, pulse_saliency, beat_stability,
-        harmonicity, flatness, rms,
-        mfcc_d0, mfcc_d1, mfcc_d2,
-    ], dtype=float)
-
-    # ── Normalize via z-score then sigmoid-squash to (~0, 1) ─────────────────
-    normalized = _normalize(raw)
-
-    # ── Coherence Index ───────────────────────────────────────────────────────
-    coherence = _compute_coherence(normalized, confidence)
+    vector = [float(np.mean(v)) if v else 0.5 for v in axis_values]
+    confidence = [min(1.0, len(v) / 10) for v in axis_values]
+    coherence = _compute_coherence(np.array(vector), np.array(confidence))
 
     return DNAVector(
-        vector=normalized.tolist(),
+        vector=vector,
+        confidence=confidence,
+        coherence_index=coherence,
+        source="spotify",
+        metadata={"track_count": len(features_list)},
+    )
+
+
+def youtube_metadata_to_vector(videos: list[dict]) -> DNAVector:
+    """
+    Convert YouTube video metadata dicts to a partial DNA vector.
+    Each dict should contain: category_id, duration_seconds, tags (list), title.
+    """
+    # YouTube category → rough genre mapping
+    YT_CATEGORY_GENRE = {
+        "10": "pop", "24": "electronic", "17": "rnb",
+    }
+    genre_hits = []
+    for v in videos:
+        cat = str(v.get("category_id", "10"))
+        genre = YT_CATEGORY_GENRE.get(cat, "pop")
+        genre_hits.append(genre)
+
+    genre_vecs = [GENRE_VECTORS.get(g, GENRE_VECTORS["pop"]) for g in genre_hits]
+    vector = list(np.mean(genre_vecs, axis=0)) if genre_vecs else [0.5]*12
+    confidence = [0.4] * 12  # YouTube metadata → lower confidence
+    coherence = _compute_coherence(np.array(vector), np.array(confidence))
+
+    return DNAVector(
+        vector=vector,
+        confidence=confidence,
+        coherence_index=coherence,
+        source="youtube",
+        metadata={"track_count": len(videos)},
+    )
+
+
+def compute_genre_vector(selected_genres: list[str]) -> DNAVector:
+    """Build a DNA vector from the user's genre selections."""
+    vecs = [GENRE_VECTORS[g] for g in selected_genres if g in GENRE_VECTORS]
+    if not vecs:
+        vecs = [GENRE_VECTORS["pop"]]
+    vector = list(np.mean(vecs, axis=0))
+    confidence = [1.0] * 12
+    coherence = _compute_coherence(np.array(vector), np.array(confidence))
+    return DNAVector(vector=vector, confidence=confidence,
+                     coherence_index=coherence, source="genre")
+
+
+def combine_vectors(
+    genre_dna: DNAVector,
+    spotify_dna: Optional[DNAVector] = None,
+    youtube_dna: Optional[DNAVector] = None,
+) -> DNAVector:
+    """
+    Final combination:  V = 0.50 × genre  +  0.25 × spotify  +  0.25 × youtube
+    Missing sources are filled with the genre vector at reduced confidence.
+    """
+    vg = np.array(genre_dna.vector)
+    cg = np.array(genre_dna.confidence)
+
+    vs = np.array(spotify_dna.vector if spotify_dna else genre_dna.vector)
+    cs = np.array(spotify_dna.confidence if spotify_dna else [0.3]*12)
+
+    vy = np.array(youtube_dna.vector if youtube_dna else genre_dna.vector)
+    cy = np.array(youtube_dna.confidence if youtube_dna else [0.2]*12)
+
+    vector = 0.50 * vg + 0.25 * vs + 0.25 * vy
+    confidence = np.clip(0.50 * cg + 0.25 * cs + 0.25 * cy, 0, 1)
+    coherence = _compute_coherence(vector, confidence)
+
+    return DNAVector(
+        vector=vector.tolist(),
         confidence=confidence.tolist(),
-        coherence_index=coherence,
-        source=source,
-        metadata=metadata or {},
+        coherence_index=round(coherence, 4),
+        source="combined",
+        metadata={
+            "genre_tracks": len(genre_dna.metadata.get("genres", [])),
+            "spotify_tracks": spotify_dna.metadata.get("track_count", 0) if spotify_dna else 0,
+            "youtube_tracks": youtube_dna.metadata.get("track_count", 0) if youtube_dna else 0,
+        }
     )
 
-
-# ─────────────────────────────────────────────
-# Multi-track aggregation with recency decay
-# ─────────────────────────────────────────────
-
-def aggregate_tracks(
-    track_vectors: list[DNAVector],
-    recency_weights: Optional[list[float]] = None,
-) -> DNAVector:
-    """
-    Combines multiple per-track DNA vectors into a single profile DNA.
-
-    recency_weights: list of floats (same length as track_vectors), where
-                     higher = more recent. If None, uniform weights are used.
-                     Tip: pass [decay**i for i in range(n)] with decay=0.9.
-    """
-    if not track_vectors:
-        raise ValueError("track_vectors must be non-empty.")
-
-    n = len(track_vectors)
-
-    # Build recency weights
-    if recency_weights is None:
-        recency_weights = [1.0] * n
-    rw = np.array(recency_weights, dtype=float)
-    rw /= rw.sum()   # normalize to sum=1
-
-    vectors     = np.array([tv.vector     for tv in track_vectors])   # (n, 12)
-    confidences = np.array([tv.confidence for tv in track_vectors])   # (n, 12)
-
-    # Weighted mean — per axis, weight by recency × per-axis confidence
-    axis_weights = confidences * rw[:, np.newaxis]                    # (n, 12)
-    axis_weights /= (axis_weights.sum(axis=0, keepdims=True) + 1e-9)
-
-    agg_vector     = (vectors * axis_weights).sum(axis=0)
-    agg_confidence = np.clip(confidences.mean(axis=0) * np.sqrt(n / 10), 0, 1)
-    coherence      = _compute_coherence(agg_vector, agg_confidence)
-
-    return DNAVector(
-        vector=agg_vector.tolist(),
-        confidence=agg_confidence.tolist(),
-        coherence_index=coherence,
-        source=track_vectors[0].source,
-        metadata={"track_count": n},
-    )
-
-
-# ─────────────────────────────────────────────
-# Matching
-# ─────────────────────────────────────────────
 
 def match_score(dna_a: DNAVector, dna_b: DNAVector) -> dict:
-    """
-    Returns a similarity report between two DNA profiles.
-
-    Uses COSINE SIMILARITY (not Euclidean) for robustness.
-    Also returns a confidence-weighted score and per-axis breakdown.
-    """
-    _check_version_compatibility(dna_a, dna_b)
-
+    """Cosine similarity match between two DNA profiles."""
     va = np.array(dna_a.vector)
     vb = np.array(dna_b.vector)
     ca = np.array(dna_a.confidence)
     cb = np.array(dna_b.confidence)
 
-    # Plain cosine similarity
-    cosine_sim = _cosine_similarity(va, vb)
-
-    # Confidence-weighted cosine: down-weight axes where either party is uncertain
+    cosine = _cosine_similarity(va, vb)
     combined_conf = ca * cb
-    va_w = va * combined_conf
-    vb_w = vb * combined_conf
-    weighted_cosine = _cosine_similarity(va_w, vb_w)
+    weighted_cosine = _cosine_similarity(va * combined_conf, vb * combined_conf)
 
-    # Per-axis absolute difference (for breakdown display)
-    axis_diff = np.abs(va - vb).tolist()
-
-    # Divergence score: how *complementary* the profiles are (inverse similarity)
-    divergence = float(1.0 - cosine_sim)
+    if cosine >= 0.85:
+        mode = "convergent"
+    elif cosine >= 0.70:
+        mode = "resonant"
+    else:
+        mode = "divergent"
 
     return {
-        "cosine_similarity":          round(float(cosine_sim),      4),
-        "weighted_cosine_similarity": round(float(weighted_cosine), 4),
-        "divergence_score":           round(divergence,             4),
-        "axis_diff":                  [round(d, 4) for d in axis_diff],
-        "axis_labels":                AXIS_LABELS,
-        "match_mode":                 "convergent" if cosine_sim > 0.7 else "divergent",
-        "schema_versions":            (dna_a.schema_version, dna_b.schema_version),
+        "cosine_similarity": round(float(cosine), 4),
+        "weighted_cosine":   round(float(weighted_cosine), 4),
+        "divergence_score":  round(1.0 - float(cosine), 4),
+        "match_mode":        mode,
+        "axis_diff":         [round(float(abs(a-b)), 4) for a,b in zip(va, vb)],
+        "axis_labels":       AXIS_LABELS,
     }
 
 
-# ─────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────
-
-def _normalize(raw: np.ndarray) -> np.ndarray:
-    """Z-score normalize then squash to (0, 1) via sigmoid."""
-    z = (raw - AXIS_MEANS) / (AXIS_STDS + 1e-9)
-    return 1.0 / (1.0 + np.exp(-z))   # sigmoid
-
-
-def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
-    """Cosine similarity clamped to [0, 1]."""
+def _cosine_similarity(a, b):
     denom = (np.linalg.norm(a) * np.linalg.norm(b)) + 1e-9
     return float(np.clip(np.dot(a, b) / denom, 0.0, 1.0))
 
 
-def _compute_coherence(vector: np.ndarray, confidence: np.ndarray) -> float:
-    """
-    Coherence Index: measures how internally consistent the DNA profile is.
-
-    Formula:
-      coherence = 1 - (weighted_std / max_possible_std)
-      where weights = per-axis confidence scores.
-
-    Range: 0 (completely scattered / incoherent) → 1 (tightly clustered / coherent)
-    Interpretation: a high score means the listener has a consistent, focused taste.
-    """
+def _compute_coherence(vector, confidence):
     weights = confidence / (confidence.sum() + 1e-9)
-    weighted_mean = float(np.dot(weights, vector))
-    weighted_var  = float(np.dot(weights, (vector - weighted_mean) ** 2))
-    weighted_std  = float(np.sqrt(weighted_var))
-    max_std = 0.5   # theoretical max std for values in [0, 1]
-    coherence = float(np.clip(1.0 - (weighted_std / max_std), 0.0, 1.0))
-    return round(coherence, 4)
-
-
-def _check_version_compatibility(a: DNAVector, b: DNAVector) -> None:
-    if a.schema_version != b.schema_version:
-        warnings.warn(
-            f"Schema version mismatch: {a.schema_version} vs {b.schema_version}. "
-            "Re-generate one of the profiles before matching.",
-            UserWarning,
-            stacklevel=3,
-        )
-
-
-# ─────────────────────────────────────────────
-# Quick demo
-# ─────────────────────────────────────────────
-
-if __name__ == "__main__":
-    # Simulate two pre-computed vectors (as if from DB)
-    dna_a = DNAVector(
-        vector=[0.8, 0.6, 0.7, 0.5, 0.9, 0.8, 0.4, 0.3, 0.6, 0.1, 0.2, 0.3],
-        confidence=[1.0]*12,
-        coherence_index=0.0,
-        source="spotify",
-    )
-    dna_b = DNAVector(
-        vector=[0.75, 0.65, 0.72, 0.48, 0.88, 0.79, 0.42, 0.28, 0.61, 0.12, 0.18, 0.32],
-        confidence=[0.9, 1.0, 1.0, 1.0, 0.8, 0.9, 0.7, 1.0, 1.0, 0.9, 0.9, 0.9],
-        coherence_index=0.0,
-        source="spotify",
-    )
-
-    # Recompute coherence
-    dna_a.coherence_index = _compute_coherence(np.array(dna_a.vector), np.array(dna_a.confidence))
-    dna_b.coherence_index = _compute_coherence(np.array(dna_b.vector), np.array(dna_b.confidence))
-
-    result = match_score(dna_a, dna_b)
-
-    print("=== Music DNA Match Report ===")
-    print(f"Cosine Similarity:          {result['cosine_similarity']}")
-    print(f"Weighted Cosine Similarity: {result['weighted_cosine_similarity']}")
-    print(f"Divergence Score:           {result['divergence_score']}")
-    print(f"Match Mode:                 {result['match_mode']}")
-    print(f"Coherence A:                {dna_a.coherence_index}")
-    print(f"Coherence B:                {dna_b.coherence_index}")
-    print(f"\nPer-Axis Differences:")
-    for label, diff in zip(result["axis_labels"], result["axis_diff"]):
-        bar = "█" * int(diff * 20)
-        print(f"  {label:<22} {bar:<20} {diff:.4f}")
+    mean = float(np.dot(weights, vector))
+    var  = float(np.dot(weights, (vector - mean) ** 2))
+    return float(np.clip(1.0 - (np.sqrt(var) / 0.5), 0.0, 1.0))

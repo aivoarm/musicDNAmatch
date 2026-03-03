@@ -1,109 +1,277 @@
-export interface TrackData {
-    popularity: number;     // 0-100
-    duration_ms: number;
-    release_year: number;
-    genres: string[];       // from artist
-}
+/**
+ * musicDNAmatch — TypeScript DNA Engine
+ * ======================================
+ * Calculates a 12-dimensional Musical DNA vector from:
+ *   - Genre preferences (50% weight)
+ *   - Spotify audio features (25% weight)
+ *   - YouTube metadata (25% weight)
+ */
 
-export interface MusicalDNA {
-    version: string;
-    vector: number[]; // 12 dimensions
-    markers: {
-        tension: number;
-        stability: number;
-        warmth: number;
-    };
-}
+// ── Axis labels ─────────────────────────────────────
+export const AXIS_LABELS = [
+    "spectral_energy", "harmonic_depth", "rhythmic_drive",
+    "melodic_warmth", "structural_complexity", "sonic_texture",
+    "tempo_variance", "tonal_brightness", "dynamic_range",
+    "genre_fusion", "experimental_index", "emotional_density",
+] as const;
 
-// Genre keyword maps to psychoacoustic traits
-const GENRE_TRAITS: Record<string, Partial<Record<string, number>>> = {
-    "electronic": { energy: 0.85, brightness: 0.9, warmth: 0.2 },
-    "ambient": { energy: 0.2, brightness: 0.3, warmth: 0.8 },
-    "jazz": { complexity: 0.85, warmth: 0.9, tension: 0.4 },
-    "classical": { complexity: 0.9, warmth: 0.8, tension: 0.3 },
-    "hip hop": { percussiveness: 0.8, energy: 0.75, brightness: 0.6 },
-    "rock": { energy: 0.9, percussiveness: 0.85, tension: 0.7 },
-    "pop": { brightness: 0.8, energy: 0.7, warmth: 0.5 },
-    "metal": { energy: 1.0, percussiveness: 0.95, tension: 0.9 },
-    "folk": { warmth: 0.9, energy: 0.3, complexity: 0.4 },
-    "r&b": { warmth: 0.85, energy: 0.6, brightness: 0.7 },
-    "soul": { warmth: 0.9, energy: 0.55, tension: 0.3 },
-    "techno": { energy: 0.9, percussiveness: 0.9, brightness: 0.7 },
-    "indie": { brightness: 0.6, warmth: 0.6, complexity: 0.6 },
-    "country": { warmth: 0.8, energy: 0.45, brightness: 0.6 },
+export const DNA_SCHEMA_VERSION = 2;
+
+// ── Genre display list (for the UI picker) ──────────
+export const GENRE_OPTIONS = [
+    { key: "electronic", label: "Electronic", emoji: "⚡" },
+    { key: "hiphop", label: "Hip-Hop", emoji: "🎤" },
+    { key: "indie", label: "Indie/Alt", emoji: "🎸" },
+    { key: "classical", label: "Classical", emoji: "🎻" },
+    { key: "jazz", label: "Jazz", emoji: "🎷" },
+    { key: "rnb", label: "R&B/Soul", emoji: "🎶" },
+    { key: "metal", label: "Metal/Rock", emoji: "🤘" },
+    { key: "pop", label: "Pop", emoji: "✨" },
+    { key: "folk", label: "Folk/Acoustic", emoji: "🪕" },
+    { key: "latin", label: "Latin", emoji: "💃" },
+    { key: "world", label: "World/Global", emoji: "🌍" },
+    { key: "ambient", label: "Ambient/Drone", emoji: "🌫️" },
+] as const;
+
+// ── Genre bias vectors (12-dim per genre) ───────────
+export const GENRE_VECTORS: Record<string, number[]> = {
+    "electronic": [0.9, 0.5, 0.8, 0.3, 0.7, 0.9, 0.6, 0.8, 0.7, 0.7, 0.8, 0.5],
+    "techno": [0.9, 0.4, 0.9, 0.2, 0.6, 0.9, 0.5, 0.7, 0.7, 0.6, 0.8, 0.4],
+    "house": [0.8, 0.5, 0.9, 0.4, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.6, 0.6],
+    "ambient": [0.4, 0.6, 0.2, 0.6, 0.6, 0.9, 0.8, 0.5, 0.9, 0.5, 0.8, 0.6],
+    "hiphop": [0.7, 0.4, 0.9, 0.6, 0.5, 0.7, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
+    "rnb": [0.6, 0.7, 0.7, 0.9, 0.5, 0.7, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
+    "indie": [0.5, 0.6, 0.5, 0.8, 0.7, 0.6, 0.7, 0.5, 0.7, 0.6, 0.6, 0.7],
+    "classical": [0.4, 0.9, 0.3, 0.9, 0.9, 0.5, 0.8, 0.6, 0.9, 0.3, 0.4, 0.8],
+    "jazz": [0.5, 0.9, 0.6, 0.7, 0.8, 0.6, 0.8, 0.5, 0.7, 0.7, 0.7, 0.7],
+    "metal": [0.9, 0.6, 0.9, 0.3, 0.7, 0.8, 0.5, 0.4, 0.8, 0.5, 0.7, 0.7],
+    "rock": [0.8, 0.6, 0.7, 0.5, 0.6, 0.7, 0.5, 0.5, 0.7, 0.5, 0.5, 0.7],
+    "pop": [0.6, 0.5, 0.7, 0.7, 0.4, 0.6, 0.4, 0.8, 0.5, 0.5, 0.3, 0.7],
+    "folk": [0.3, 0.7, 0.4, 0.9, 0.6, 0.4, 0.6, 0.6, 0.8, 0.4, 0.5, 0.8],
+    "latin": [0.6, 0.6, 0.9, 0.7, 0.5, 0.6, 0.5, 0.7, 0.6, 0.7, 0.4, 0.8],
+    "world": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.6, 0.6, 0.9, 0.7, 0.7],
+    "country": [0.4, 0.6, 0.5, 0.8, 0.5, 0.5, 0.4, 0.7, 0.6, 0.4, 0.3, 0.7],
+    "blues": [0.5, 0.8, 0.5, 0.8, 0.6, 0.5, 0.5, 0.4, 0.7, 0.5, 0.5, 0.9],
+    "soul": [0.6, 0.7, 0.6, 0.9, 0.5, 0.6, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
+    "punk": [0.8, 0.4, 0.8, 0.4, 0.4, 0.7, 0.4, 0.5, 0.6, 0.4, 0.6, 0.6],
+    "reggae": [0.4, 0.6, 0.7, 0.8, 0.5, 0.6, 0.5, 0.6, 0.5, 0.6, 0.4, 0.8],
+    "disco": [0.7, 0.5, 0.9, 0.6, 0.4, 0.7, 0.4, 0.8, 0.6, 0.6, 0.4, 0.7],
+    "funk": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.6, 0.7, 0.7, 0.5, 0.8],
+    "synthwave": [0.8, 0.5, 0.7, 0.5, 0.6, 0.9, 0.5, 0.8, 0.7, 0.6, 0.7, 0.6],
+    "lofi": [0.3, 0.5, 0.4, 0.7, 0.4, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5, 0.7],
+    "kpop": [0.7, 0.5, 0.8, 0.6, 0.6, 0.7, 0.5, 0.9, 0.6, 0.7, 0.5, 0.7],
+    "afrobeats": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.7, 0.6, 0.8, 0.5, 0.8],
+    "gospel": [0.5, 0.8, 0.6, 0.9, 0.6, 0.5, 0.5, 0.7, 0.7, 0.4, 0.3, 0.9],
+    "experimental": [0.6, 0.6, 0.5, 0.4, 0.9, 0.8, 0.9, 0.4, 0.8, 0.7, 0.9, 0.5],
 };
 
-function getGenreTraits(genres: string[]) {
-    const traits: Record<string, number[]> = {
-        energy: [], brightness: [], warmth: [], complexity: [], percussiveness: [], tension: []
-    };
+// ── Spotify audio feature → DNA axis mapping ────────
+const SPOTIFY_AXIS_MAP: Record<number, [string, number][]> = {
+    0: [["energy", 0.6], ["loudness_norm", 0.4]],
+    1: [["instrumentalness", 0.5], ["acousticness", 0.5]],
+    2: [["danceability", 0.5], ["tempo_norm", 0.5]],
+    3: [["valence", 0.4], ["acousticness", 0.6]],
+    4: [["time_signature_norm", 0.5], ["key_norm", 0.5]],
+    5: [["liveness", 0.4], ["instrumentalness", 0.6]],
+    6: [["tempo_norm", 0.7], ["time_signature_norm", 0.3]],
+    7: [["valence", 0.5], ["mode_norm", 0.5]],
+    8: [["loudness_norm", 0.5], ["energy", 0.5]],
+    9: [["speechiness", 0.5], ["liveness", 0.5]],
+    10: [["instrumentalness", 0.4], ["acousticness", 0.6]],
+    11: [["valence", 0.4], ["energy", 0.6]],
+};
 
-    for (const genre of genres) {
-        const lowerGenre = genre.toLowerCase();
-        for (const [key, genreMap] of Object.entries(GENRE_TRAITS)) {
-            if (lowerGenre.includes(key)) {
-                for (const [trait, val] of Object.entries(genreMap)) {
-                    if (!traits[trait]) traits[trait] = [];
-                    if (val !== undefined) traits[trait].push(val);
-                }
-            }
-        }
+// YouTube category → genre mapping
+const YT_CATEGORY_GENRE: Record<string, string> = {
+    "10": "pop", "24": "electronic", "17": "rnb",
+    "1": "ambient", "2": "world", "22": "pop",
+    "23": "hiphop", "25": "world", "26": "experimental",
+    "27": "classical", "28": "jazz",
+};
+
+// ── Types ───────────────────────────────────────────
+export interface DNAVector {
+    vector: number[];
+    confidence: number[];
+    coherence_index: number;
+    schema_version: number;
+    source: string;
+    metadata: Record<string, any>;
+}
+
+export interface SpotifyAudioFeatures {
+    energy?: number;
+    valence?: number;
+    danceability?: number;
+    acousticness?: number;
+    instrumentalness?: number;
+    liveness?: number;
+    speechiness?: number;
+    loudness?: number;
+    tempo?: number;
+    key?: number;
+    mode?: number;
+    time_signature?: number;
+}
+
+// ── Core Functions ──────────────────────────────────
+
+/**
+ * Compute a DNA vector from user's selected genres.
+ */
+export function computeGenreVector(selectedGenres: string[]): DNAVector {
+    const normalised = selectedGenres.map(g => g.toLowerCase().replace(/[^a-z]/g, ""));
+    const vecs = normalised
+        .map(g => GENRE_VECTORS[g])
+        .filter(Boolean);
+
+    if (vecs.length === 0) {
+        return makeDNA(Array(12).fill(0.5), Array(12).fill(0.3), "genre", { genres: selectedGenres });
     }
 
-    const avg = (arr: number[]) => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0.5;
-    return {
-        energy: avg(traits.energy),
-        brightness: avg(traits.brightness),
-        warmth: avg(traits.warmth),
-        complexity: avg(traits.complexity),
-        percussiveness: avg(traits.percussiveness),
-        tension: avg(traits.tension),
-    };
+    const vector = Array(12).fill(0).map((_, i) =>
+        vecs.reduce((sum, v) => sum + v[i], 0) / vecs.length
+    );
+    return makeDNA(vector, Array(12).fill(1.0), "genre", { genres: selectedGenres });
 }
 
 /**
- * Computes a 12D Musical DNA vector from track metadata and artist genres.
- * Does NOT require the deprecated /audio-features endpoint.
+ * Compute DNA vector from Spotify audio features.
  */
-export function computeDNA(tracks: TrackData[]): MusicalDNA {
-    if (tracks.length === 0) {
-        return { version: "2.1", vector: new Array(12).fill(0.5), markers: { tension: 0.5, stability: 0.5, warmth: 0.5 } };
+export function computeSpotifyVector(featuresList: SpotifyAudioFeatures[]): DNAVector {
+    if (featuresList.length === 0) {
+        return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "spotify", { track_count: 0 });
     }
 
-    // Aggregate genre traits across all tracks
-    const allGenres = tracks.flatMap(t => t.genres);
-    const genreTraits = getGenreTraits(allGenres);
+    const axisValues: number[][] = Array.from({ length: 12 }, () => []);
 
-    // Normalize track-level metrics
-    const avgPopularity = tracks.reduce((a, t) => a + t.popularity, 0) / tracks.length / 100;
-    const avgDuration = tracks.reduce((a, t) => a + t.duration_ms, 0) / tracks.length;
-    const normDuration = Math.min(avgDuration / 600000, 1); // 10 min max
-    const avgYear = tracks.reduce((a, t) => a + t.release_year, 0) / tracks.length;
-    const normEra = Math.min(Math.max((avgYear - 1960) / 65, 0), 1); // Newer = higher
+    for (const f of featuresList) {
+        const norm: Record<string, number> = {
+            energy: f.energy ?? 0.5,
+            valence: f.valence ?? 0.5,
+            danceability: f.danceability ?? 0.5,
+            acousticness: f.acousticness ?? 0.5,
+            instrumentalness: f.instrumentalness ?? 0.0,
+            liveness: f.liveness ?? 0.1,
+            speechiness: f.speechiness ?? 0.05,
+            loudness_norm: Math.min(((f.loudness ?? -10) + 60) / 60, 1.0),
+            tempo_norm: Math.min((f.tempo ?? 120) / 200, 1.0),
+            key_norm: (f.key ?? 0) / 11,
+            mode_norm: f.mode ?? 1,
+            time_signature_norm: Math.min((f.time_signature ?? 4) / 7, 1.0),
+        };
 
-    // 12D Vector
-    const vector = [
-        genreTraits.brightness,                         // 0: Spectral Centroid
-        genreTraits.percussiveness,                      // 1: Transient Density
-        1 - genreTraits.energy,                          // 2: Harmonicity (inverse energy)
-        normDuration,                                    // 3: Dynamic Range (longer = more expressive)
-        genreTraits.complexity,                          // 4: Polyrhythmic Complexity
-        genreTraits.tension,                             // 5: Intervalic Tension
-        genreTraits.percussiveness * 0.7 + genreTraits.energy * 0.3, // 6: Pulse Saliency
-        genreTraits.warmth,                              // 7: Timbral Warmth
-        1 - avgPopularity,                              // 8: Abstraction (inverse popularity)
-        genreTraits.complexity * 0.5 + normDuration * 0.5, // 9: Spatial Density
-        genreTraits.energy,                              // 10: Energy
-        normEra,                                         // 11: Era Centroid
-    ].map(v => Math.max(0, Math.min(1, v)));
+        for (let axis = 0; axis < 12; axis++) {
+            const mappings = SPOTIFY_AXIS_MAP[axis];
+            const val = mappings.reduce((sum, [key, weight]) => sum + (norm[key] ?? 0.5) * weight, 0);
+            axisValues[axis].push(val);
+        }
+    }
+
+    const vector = axisValues.map(vals => vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0.5);
+    const confidence = axisValues.map(vals => Math.min(1.0, vals.length / 10));
+
+    return makeDNA(vector, confidence, "spotify", { track_count: featuresList.length });
+}
+
+/**
+ * Compute DNA vector from YouTube video metadata.
+ */
+export function computeYouTubeVector(videos: { categoryId?: string; title?: string }[]): DNAVector {
+    if (videos.length === 0) {
+        return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "youtube", { track_count: 0 });
+    }
+
+    const genreVecs = videos.map(v => {
+        const genre = YT_CATEGORY_GENRE[v.categoryId || "10"] || "pop";
+        return GENRE_VECTORS[genre] || GENRE_VECTORS["pop"];
+    });
+
+    const vector = Array(12).fill(0).map((_, i) =>
+        genreVecs.reduce((sum, v) => sum + v[i], 0) / genreVecs.length
+    );
+
+    return makeDNA(vector, Array(12).fill(0.4), "youtube", { track_count: videos.length });
+}
+
+/**
+ * Combine genre (50%) + Spotify (25%) + YouTube (25%) into final DNA.
+ */
+export function combineDNA(
+    genreDNA: DNAVector,
+    spotifyDNA: DNAVector | null,
+    youtubeDNA: DNAVector | null,
+): DNAVector {
+    const vg = genreDNA.vector;
+    const vs = spotifyDNA?.vector ?? genreDNA.vector;
+    const vy = youtubeDNA?.vector ?? genreDNA.vector;
+
+    const cg = genreDNA.confidence;
+    const cs = spotifyDNA?.confidence ?? Array(12).fill(0.3);
+    const cy = youtubeDNA?.confidence ?? Array(12).fill(0.2);
+
+    const vector = Array(12).fill(0).map((_, i) =>
+        0.50 * vg[i] + 0.25 * vs[i] + 0.25 * vy[i]
+    );
+    const confidence = Array(12).fill(0).map((_, i) =>
+        Math.min(1.0, 0.50 * cg[i] + 0.25 * cs[i] + 0.25 * cy[i])
+    );
+
+    return makeDNA(vector, confidence, "combined", {
+        spotify_tracks: spotifyDNA?.metadata.track_count ?? 0,
+        youtube_tracks: youtubeDNA?.metadata.track_count ?? 0,
+        genres: genreDNA.metadata.genres ?? [],
+    });
+}
+
+/**
+ * Compute match score between two DNA vectors.
+ */
+export function matchScore(a: DNAVector, b: DNAVector) {
+    const cosine = cosineSimilarity(a.vector, b.vector);
+    const mode = cosine >= 0.85 ? "convergent" : cosine >= 0.70 ? "resonant" : "divergent";
 
     return {
-        version: "2.1",
-        vector,
-        markers: {
-            tension: vector[5],
-            stability: vector[6],
-            warmth: vector[7],
-        },
+        cosine_similarity: round4(cosine),
+        divergence_score: round4(1.0 - cosine),
+        match_mode: mode,
+        axis_diff: a.vector.map((v, i) => round4(Math.abs(v - b.vector[i]))),
+        axis_labels: [...AXIS_LABELS],
     };
+}
+
+// ── Helpers ─────────────────────────────────────────
+
+function makeDNA(vector: number[], confidence: number[], source: string, metadata: Record<string, any>): DNAVector {
+    return {
+        vector,
+        confidence,
+        coherence_index: computeCoherence(vector, confidence),
+        schema_version: DNA_SCHEMA_VERSION,
+        source,
+        metadata,
+    };
+}
+
+function computeCoherence(vector: number[], confidence: number[]): number {
+    const totalConf = confidence.reduce((a, b) => a + b, 0) + 1e-9;
+    const weights = confidence.map(c => c / totalConf);
+    const mean = weights.reduce((sum, w, i) => sum + w * vector[i], 0);
+    const variance = weights.reduce((sum, w, i) => sum + w * Math.pow(vector[i] - mean, 2), 0);
+    return round4(Math.max(0, Math.min(1, 1.0 - Math.sqrt(variance) / 0.5)));
+}
+
+function cosineSimilarity(a: number[], b: number[]): number {
+    let dot = 0, normA = 0, normB = 0;
+    for (let i = 0; i < a.length; i++) {
+        dot += a[i] * b[i];
+        normA += a[i] * a[i];
+        normB += b[i] * b[i];
+    }
+    const denom = Math.sqrt(normA) * Math.sqrt(normB) + 1e-9;
+    return Math.max(0, Math.min(1, dot / denom));
+}
+
+function round4(n: number): number {
+    return Math.round(n * 10000) / 10000;
 }

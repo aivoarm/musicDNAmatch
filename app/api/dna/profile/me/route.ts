@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createHash } from "crypto";
+import { AXIS_LABELS } from "@/lib/dna";
 
 function toUUID(str: string): string {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -12,38 +13,19 @@ function toUUID(str: string): string {
 
 export async function GET() {
     const cookieStore = await cookies();
-    const googleToken = cookieStore.get("google_access_token")?.value;
     const guestId = cookieStore.get("guest_id")?.value;
 
     try {
-        let rawUserId = "";
-
-        if (googleToken) {
-            const cachedUser = cookieStore.get("google_user")?.value;
-            if (cachedUser) {
-                rawUserId = JSON.parse(cachedUser).sub;
-            } else {
-                const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                    headers: { Authorization: `Bearer ${googleToken}` },
-                });
-                if (userRes.ok) {
-                    const googleUser = await userRes.json();
-                    rawUserId = googleUser.sub;
-                }
-            }
-        } else if (guestId) {
-            rawUserId = guestId;
-        }
-
-        if (!rawUserId) {
+        if (!guestId) {
             return NextResponse.json({ found: false });
         }
 
-        const userId = toUUID(rawUserId);
+        const userId = toUUID(guestId);
+
 
         const { data: profile, error } = await supabase
             .from("dna_profiles")
-            .select("sonic_embedding, metadata")
+            .select("id, sonic_embedding, metadata")
             .eq("user_id", userId)
             .single();
 
@@ -51,17 +33,36 @@ export async function GET() {
             return NextResponse.json({ found: false });
         }
 
+        const meta = profile.metadata || {};
+        let vector = profile.sonic_embedding;
+        if (typeof vector === "string") {
+            try {
+                vector = JSON.parse(vector.replace(/[\[\]]/g, (m) => m === '[' ? '[' : ']').replace(/,/g, ','));
+                // Actually easier:
+                vector = vector.replace(/[\[\]]/g, '').split(',').map(Number);
+            } catch (e) {
+                vector = Array(12).fill(0.5);
+            }
+        }
+
         return NextResponse.json({
             found: true,
+            profileId: profile.id,
+            userId,
             dna: {
-                vector: profile.sonic_embedding,
-                display_name: profile.metadata.display_name,
-                top_genres: profile.metadata.top_genres,
-                recent_tracks: profile.metadata.recent_tracks || [],
-                verbium: profile.metadata.verbium,
-                updated_at: profile.metadata.updated_at,
-                scanned_playlist_id: profile.metadata.scanned_playlist_id || null,
-                scanned_playlist_ids: profile.metadata.scanned_playlist_ids || []
+                vector: Array.isArray(vector) ? vector : Array(12).fill(0.5),
+
+                confidence: meta.confidence || [],
+                coherence_index: meta.coherence_index ?? 0,
+                display_name: meta.display_name,
+                top_genres: meta.top_genres || [],
+                recent_tracks: meta.recent_tracks || [],
+                youtube_tracks: meta.youtube_tracks || [],
+                narrative: meta.narrative || "",
+                source_signals: meta.source_signals || {},
+                schema_version: meta.schema_version ?? 1,
+                updated_at: meta.updated_at,
+                axes: [...AXIS_LABELS],
             }
         });
     } catch (error) {

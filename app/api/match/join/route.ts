@@ -12,32 +12,19 @@ function toUUID(str: string): string {
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
-    const googleToken = cookieStore.get("google_access_token")?.value;
     const guestId = cookieStore.get("guest_id")?.value;
 
     let userId = "";
 
     try {
-        if (googleToken) {
-            // Fetch user info from Google
-            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${googleToken}` },
-            });
-
-            if (userRes.ok) {
-                const googleUser = await userRes.json();
-                userId = toUUID(googleUser.sub);
-            }
-        }
-
-        // Fallback to Guest ID if not authenticated
-        if (!userId && guestId) {
+        if (guestId) {
             userId = toUUID(guestId);
         }
 
         if (!userId) {
             return NextResponse.json({ error: "Unauthorized. Please scan your DNA first." }, { status: 401 });
         }
+
 
         // 1. Parse request body
         const { targetId, email } = await request.json();

@@ -1,98 +1,132 @@
-import { cookies } from "next/headers";
-import { computeDNA } from "@/lib/dna";
 import { supabase } from "@/lib/supabase";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { getPersonalHistory, filterMusicVideos } from "@/lib/youtube";
+import { createHash, randomUUID } from "crypto";
+import {
+    computeGenreVector,
+    computeSpotifyVector,
+    computeYouTubeVector,
+    combineDNA,
+    AXIS_LABELS,
+} from "@/lib/dna";
 
-export async function POST() {
-    const cookieStore = await cookies();
-    const googleToken = cookieStore.get("google_access_token")?.value;
+function toUUID(str: string): string {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(str)) return str;
+    const hash = createHash("sha256").update(str).digest("hex");
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
 
-    // ALLOW ACCESS WITHOUT TOKEN - FALLBACK TO SAMPLE DNA
-    if (!googleToken) {
-        console.log("No auth token. Generating baseline DNA sample.");
-        // Generate a baseline sample DNA if no history is available
-        const sampleTracks = [
-            { genres: ["spectral", "ambient"], popularity: 50, duration_ms: 240000, release_year: 2024 },
-            { genres: ["rhythm", "density"], popularity: 80, duration_ms: 180000, release_year: 2023 }
-        ];
-        const dna = computeDNA(sampleTracks);
-
-        return NextResponse.json({
-            ...dna,
-            top_genres: ["Spectral Synthesis", "Public Signature", "Baseline"],
-            recent_tracks: [],
-            display_name: "Anonymous Signal",
-        });
-    }
-
+/**
+ * POST /api/dna/generate
+ * Body: {
+ *   genres: string[],
+ *   audioFeatures?: SpotifyAudioFeatures[],
+ *   youtubeVideos?: { categoryId, title }[],
+ *   displayName?: string,
+ *   spotifyTracks?: any[],
+ *   youtubeTracks?: any[],
+ * }
+ * 
+ * Computes DNA vector = 50% genre + 25% Spotify + 25% YouTube
+ * Saves to dna_profiles table
+ * Returns: { profileId, vector, coherence_index, confidence, axes, metadata }
+ */
+export async function POST(req: Request) {
     try {
-        let userId = "";
-        let userName = "Anonymous";
-        let userPicture = "";
+        const body = await req.json();
+        const {
+            genres = [],
+            audioFeatures = [],
+            youtubeVideos = [],
+            displayName,
+            email,
+            spotifyTracks = [],
+            youtubeTracks = [],
+        } = body;
 
-        const cachedUser = cookieStore.get("google_user")?.value;
-        if (cachedUser) {
-            const user = JSON.parse(cachedUser);
-            userId = user.sub;
-            userName = user.name;
-            userPicture = user.picture;
-        } else {
-            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                headers: { Authorization: `Bearer ${googleToken}` },
-            });
-            const googleUser = await userRes.json();
-            userId = googleUser.sub;
-            userName = googleUser.name;
-            userPicture = googleUser.picture;
-        }
+        // ── Identify user ──────────────────────────────
+        const cookieStore = await cookies();
+        let rawUserId = cookieStore.get("guest_id")?.value || randomUUID();
+        let finalDisplayName = displayName || "Anonymous Signal";
 
-        const allVideos = await getPersonalHistory(googleToken, 50);
-        const videos = await filterMusicVideos(allVideos);
+        const userId = toUUID(rawUserId);
 
-        if (!videos || videos.length === 0) {
-            return NextResponse.json({
-                error: "No YouTube history detected. Baseline signal generated.",
-                ...computeDNA([])
-            }, { status: 200 }); // Graceful fallback
-        }
 
-        const trackDataList = videos.map((v: any) => {
-            const title = v.title.toLowerCase();
-            const genres: string[] = [];
-            if (title.includes("lofi") || title.includes("chill")) genres.push("ambient", "lofi");
-            if (title.includes("rock")) genres.push("rock");
-            if (title.includes("pop")) genres.push("pop");
-            if (title.includes("techno") || title.includes("house")) genres.push("electronic");
+        // ── Compute DNA ────────────────────────────────
+        const genreDNA = computeGenreVector(genres);
+        const spotifyDNA = audioFeatures.length > 0 ? computeSpotifyVector(audioFeatures) : null;
+        const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
+        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA);
 
-            return { popularity: 80, duration_ms: 210000, release_year: 2024, genres };
-        });
+        // ── Build descriptive summary (no AI) ──────────
+        const topAxes = finalDNA.vector
+            .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 3);
 
-        const dna = computeDNA(trackDataList);
+        const lowestAxis = finalDNA.vector
+            .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
+            .sort((a, b) => a.value - b.value)[0];
 
-        // Optional DB update if we have a user
-        if (userId) {
-            await supabase.from("dna_profiles").upsert({
+        const narrative = [
+            `Your Musical DNA reveals a unique sonic fingerprint with a coherence index of ${(finalDNA.coherence_index * 100).toFixed(1)}%.`,
+            `Your strongest dimensions are ${topAxes.map(a => a.label.replace(/_/g, " ")).join(", ")}.`,
+            `Your discovery frontier lies in ${lowestAxis.label.replace(/_/g, " ")} — exploring this axis could unlock new sonic territories.`,
+            `Based on ${genres.length} genre preferences, ${audioFeatures.length} Spotify tracks, and ${youtubeVideos.length} YouTube songs.`,
+        ].join(" ");
+
+        // ── Save to Supabase ───────────────────────────
+        const metadata = {
+            display_name: finalDisplayName,
+            email,
+            top_genres: genres,
+            recent_tracks: spotifyTracks.slice(0, 10),
+            youtube_tracks: youtubeTracks.slice(0, 5),
+            confidence: finalDNA.confidence,
+            coherence_index: finalDNA.coherence_index,
+            schema_version: finalDNA.schema_version,
+            source: finalDNA.source,
+            source_signals: finalDNA.metadata,
+            narrative,
+            updated_at: new Date().toISOString(),
+        };
+
+
+        const { data: profile, error } = await supabase
+            .from("dna_profiles")
+            .upsert({
                 user_id: userId,
-                sonic_embedding: dna.vector,
-                metadata: {
-                    display_name: userName,
-                    images: [{ url: userPicture }],
-                    dna_version: dna.version,
-                    source: "youtube"
-                },
-                broadcasting: true
-            }, { onConflict: "user_id" });
-        }
+                sonic_embedding: finalDNA.vector,
+                metadata,
+                broadcasting: true,
+            }, { onConflict: "user_id" })
+            .select()
+            .single();
 
-        return NextResponse.json({
-            ...dna,
-            top_genres: Array.from(new Set(trackDataList.flatMap((t: any) => t.genres))).slice(0, 10),
-            recent_tracks: videos.slice(0, 5),
-            display_name: userName,
+        if (error) throw error;
+
+        const response = NextResponse.json({
+            success: true,
+            profileId: profile.id,
+            userId,
+            vector: finalDNA.vector,
+            confidence: finalDNA.confidence,
+            coherence_index: finalDNA.coherence_index,
+            axes: [...AXIS_LABELS],
+            narrative,
+            metadata,
         });
-    } catch (error) {
-        console.error("DNA Generation Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+
+        response.cookies.set("guest_id", rawUserId, {
+            maxAge: 60 * 60 * 24 * 365,
+            path: "/",
+        });
+
+        return response;
+
+    } catch (error: any) {
+        console.error("DNA Generate Error:", error);
+        return NextResponse.json({ error: error.message || "Failed to generate DNA" }, { status: 500 });
     }
 }

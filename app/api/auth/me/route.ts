@@ -1,50 +1,46 @@
+import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
+
+function toUUID(str: string): string {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(str)) return str;
+    const hash = createHash('sha256').update(str).digest('hex');
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
 
 export async function GET() {
     const cookieStore = await cookies();
-    const googleToken = cookieStore.get("google_access_token")?.value;
-    const googleUser = cookieStore.get("google_user")?.value;
+    const guestId = cookieStore.get("guest_id")?.value;
 
-    if (!googleToken) {
-        return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (!guestId) {
+        return NextResponse.json({ error: "No guest session" }, { status: 401 });
     }
 
-    // 1. Try to return user info from the session cookie (more efficient + avoids network issues)
-    if (googleUser) {
-        try {
-            const user = JSON.parse(googleUser);
-            return NextResponse.json({
-                display_name: user.name,
-                email: user.email,
-                images: [{ url: user.picture }],
-                id: user.sub,
-            });
-        } catch (err) {
-            console.error("Cookie Parse Error:", err);
-        }
-    }
+    const userId = toUUID(guestId);
 
-    // 2. Fallback to fetching user info from Google's endpoint if cookie is missing/corrupt
     try {
-        const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${googleToken}` },
-        });
+        const { data: profile } = await supabase
+            .from("dna_profiles")
+            .select("metadata")
+            .eq("user_id", userId)
+            .single();
 
-        if (!res.ok) {
-            return NextResponse.json({ error: "Failed to fetch Google profile" }, { status: res.status });
+        if (!profile) {
+            return NextResponse.json({ id: userId, display_name: "Anonymous Signal" });
         }
 
-        const user = await res.json();
+        const meta = profile.metadata || {};
 
         return NextResponse.json({
-            display_name: user.name,
-            email: user.email,
-            images: [{ url: user.picture }],
-            id: user.sub,
+            id: userId,
+            display_name: meta.display_name || "Anonymous Signal",
+            email: meta.email || null,
         });
     } catch (err) {
-        console.error("Google Profile Fetch Error (Fallback):", err);
+        console.error("Auth Me Error:", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
+

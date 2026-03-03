@@ -12,36 +12,16 @@ function toUUID(str: string): string {
 
 export async function GET() {
     const cookieStore = await cookies();
-    const googleToken = cookieStore.get("google_access_token")?.value;
     const guestId = cookieStore.get("guest_id")?.value;
 
     try {
-        let rawUserId = "";
-
-        if (googleToken) {
-            const cachedUser = cookieStore.get("google_user")?.value;
-            if (cachedUser) {
-                rawUserId = JSON.parse(cachedUser).sub;
-            } else {
-                const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                    headers: { Authorization: `Bearer ${googleToken}` },
-                });
-                if (userRes.ok) {
-                    const googleUser = await userRes.json();
-                    rawUserId = googleUser.sub;
-                }
-            }
-        } else if (guestId) {
-            rawUserId = guestId;
-        }
-
-        // If still no user ID, return public feed
-        if (!rawUserId) {
+        if (!guestId) {
             const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").limit(10);
             return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75 })));
         }
 
-        const userId = toUUID(rawUserId);
+        const userId = toUUID(guestId);
+
 
         // 1. Get current user's DNA profile
         const { data: userProfile, error: profileError } = await supabase
