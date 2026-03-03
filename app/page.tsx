@@ -307,7 +307,7 @@ export default function Home() {
                                 </button>
 
                                 {/* SECONDARY: YOUTUBE */}
-                                <Link href="/youtube"
+                                <Link href="/youtube" prefetch={false}
                                     className="glass p-8 rounded-[2.5rem] border border-white/5 hover:border-white/20 bg-white/2 hover:bg-white/5 transition-all text-left flex items-center gap-8 group mt-4">
 
                                     <div className="h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center text-white/40 group-hover:text-[#FF0000] group-hover:bg-[#FF0000]/20 transition-all duration-300">
