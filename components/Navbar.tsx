@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Waves, User, Users, Search, Brain } from "lucide-react";
+import { Waves, User, Users, Search, Info, Menu, X } from "lucide-react";
 
 export default function Navbar() {
     const pathname = usePathname();
     const [hasDna, setHasDna] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 
     useEffect(() => {
@@ -23,9 +24,12 @@ export default function Navbar() {
         })();
     }, [pathname]);
 
-
-    // Hide Navbar on home if not scanned yet? No, keep it for brand.
-    // But we might want it to be translucent.
+    const navLinks = [
+        { href: "/", label: "Discovery", icon: Search, show: true },
+        { href: "/soulmates", label: "Soulmates", icon: Users, show: hasDna },
+        { href: "/profile", label: "Profile", icon: User, show: hasDna },
+        { href: "https://armanayva.com/en/music-dna", label: "About", icon: Info, show: true, external: true },
+    ];
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-[100] h-16 border-b border-white/10 bg-[#080808]/80 backdrop-blur-xl transition-all">
@@ -40,35 +44,57 @@ export default function Navbar() {
                     </span>
                 </Link>
 
-                {/* Links */}
-                <div className="flex items-center gap-4 sm:gap-6">
-                    <AnimatePresence>
-                        {hasDna && (
-                            <>
-                                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
-                                    <Link href="/soulmates" className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === "/soulmates" ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}>
-                                        <Users className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">Soulmates</span>
-                                    </Link>
-                                </motion.div>
-                                <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-                                    <Link href="/profile" className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === "/profile" ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}>
-                                        <User className="h-3.5 w-3.5" />
-                                        <span className="hidden sm:inline">Profile</span>
-                                    </Link>
-                                </motion.div>
-                            </>
-                        )}
-                        {!loading && !hasDna && pathname !== "/" && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                                <Link href="/" className="mono text-[10px] uppercase tracking-widest text-[#FF0000] border border-[#FF0000]/30 px-3 py-1.5 rounded-lg hover:bg-[#FF0000]/10 transition-all">
-                                    Start Discovery
-                                </Link>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                {/* Desktop Links */}
+                <div className="hidden md:flex items-center gap-6">
+                    {navLinks.filter(link => link.show).map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            target={link.external ? "_blank" : undefined}
+                            className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
+                        >
+                            <link.icon className="h-3.5 w-3.5" />
+                            <span>{link.label}</span>
+                        </Link>
+                    ))}
+                </div>
+
+                {/* Mobile Menu Toggle */}
+                <div className="flex md:hidden items-center gap-4">
+                    <button
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="text-white/60 hover:text-white transition-colors"
+                        aria-label="Toggle menu"
+                    >
+                        {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                    </button>
                 </div>
             </div>
+
+            {/* Mobile Menu Overlay */}
+            <AnimatePresence>
+                {isMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute top-16 left-0 right-0 bg-[#080808] border-b border-white/10 p-6 flex flex-col gap-6 md:hidden z-[90] shadow-2xl"
+                    >
+                        {navLinks.filter(link => link.show).map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                target={link.external ? "_blank" : undefined}
+                                onClick={() => setIsMenuOpen(false)}
+                                className={`mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
+                            >
+                                <link.icon className="h-4 w-4" />
+                                <span>{link.label}</span>
+                            </Link>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </nav>
     );
 }
