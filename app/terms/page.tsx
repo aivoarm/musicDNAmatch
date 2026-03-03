@@ -67,14 +67,19 @@ export default function TermsConditions() {
                     </p>
                 </section>
 
-                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-white/30 uppercase tracking-[0.2em]">
-                    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left font-black">
+                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-white/30 uppercase tracking-[0.2em] font-black">
+                    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
                         <p>© 2026 ARMAN AYVA. ALL RIGHTS RESERVED.</p>
                         <a href="https://www.armanayva.com" className="hover:text-white transition-colors">WWW.ARMANAYVA.COM</a>
                     </div>
-                    <a href="https://dna.armanayva.com/privacy" className="hover:text-white transition-colors">
-                        Privacy Policy
-                    </a>
+                    <div className="flex gap-8">
+                        <a href="https://dna.armanayva.com/privacy" className="hover:text-white transition-colors">
+                            PRIVACY POLICY
+                        </a>
+                        <a href="https://dna.armanayva.com/terms" className="hover:text-white transition-colors">
+                            TERMS & CONDITIONS
+                        </a>
+                    </div>
                 </footer>
             </div>
 

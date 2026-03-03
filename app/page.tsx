@@ -296,13 +296,13 @@ export default function Home() {
                     <p>© 2026 ARMAN AYVA. ALL RIGHTS RESERVED.</p>
                     <a href="https://www.armanayva.com" className="hover:text-[#FF0000] transition-colors">WWW.ARMANAYVA.COM</a>
                 </div>
-                <div className="flex gap-8">
+                <div className="flex gap-8 text-center sm:text-right">
                     <a href="https://dna.armanayva.com/privacy" className="hover:text-[#FF0000] transition-colors">
-                        Privacy Policy
+                        PRIVACY POLICY
                     </a>
-                    <Link href="/terms" className="hover:text-[#FF0000] transition-colors">
-                        Terms & Conditions
-                    </Link>
+                    <a href="https://dna.armanayva.com/terms" className="hover:text-[#FF0000] transition-colors font-black">
+                        TERMS & CONDITIONS
+                    </a>
                 </div>
             </footer>
 
