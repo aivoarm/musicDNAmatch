@@ -94,3 +94,19 @@ BEGIN
   LIMIT match_count;
 END;
 $$;
+-- =====================================================
+-- 6. Match Interests Table (Interest Registration)
+-- This table stores user interest in connecting with another user.
+-- It is used to facilitate the mutual consent reveal of emails.
+-- =====================================================
+CREATE TABLE IF NOT EXISTS match_interests (
+  id          UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id     TEXT    NOT NULL,  -- The user expressing interest (Google sub)
+  target_id   TEXT    NOT NULL,  -- The user they want to connect with (Google sub)
+  email       TEXT    NOT NULL,  -- The email the user wants to reveal upon mutual match
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, target_id)
+);
+
+-- Disable RLS for prototype phase
+ALTER TABLE match_interests DISABLE ROW LEVEL SECURITY;

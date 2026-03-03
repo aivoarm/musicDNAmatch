@@ -63,13 +63,27 @@ export async function GET() {
             caller_id: userId
         });
 
-        if (matchError) {
-            console.error("RPC Match Error:", matchError);
-            const { data: fallback } = await supabase.from("dna_profiles").select("*").neq("user_id", userId).limit(10);
-            return NextResponse.json((fallback || []).map(m => ({ ...m, similarity: 0.8 })));
-        }
+        // 3. Fetch user's interests and active bridges to enrich the match results
+        const [{ data: userInterests }, { data: userBridges }] = await Promise.all([
+            supabase.from("match_interests").select("target_id").eq("user_id", userId),
+            supabase.from("bridges").select("id, user_a, user_b").or(`user_a.eq.${userId},user_b.eq.${userId}`)
+        ]);
 
-        return NextResponse.json(matches);
+        const interestIds = new Set((userInterests || []).map(i => i.target_id));
+        const bridgeMap = new Map();
+        (userBridges || []).forEach(b => {
+            const partnerId = b.user_a === userId ? b.user_b : b.user_a;
+            bridgeMap.set(partnerId, b.id);
+        });
+
+        const enrichedMatches = (matches || []).map((m: any) => ({
+            ...m,
+            has_signal: interestIds.has(m.user_id),
+            bridge_id: bridgeMap.get(m.user_id),
+            is_mutual: bridgeMap.has(m.user_id)
+        }));
+
+        return NextResponse.json(enrichedMatches);
     } catch (error) {
         console.error("Discovery Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

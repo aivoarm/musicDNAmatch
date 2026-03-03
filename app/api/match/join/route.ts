@@ -1,25 +1,44 @@
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
+
+function toUUID(str: string): string {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(str)) return str;
+    const hash = createHash('sha256').update(str).digest('hex');
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
+}
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
     const googleToken = cookieStore.get("google_access_token")?.value;
+    const guestId = cookieStore.get("guest_id")?.value;
 
-    if (!googleToken) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    let userId = "";
 
     try {
-        // Fetch user info from Google for the ID
-        const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-            headers: { Authorization: `Bearer ${googleToken}` },
-        });
+        if (googleToken) {
+            // Fetch user info from Google
+            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${googleToken}` },
+            });
 
-        if (!userRes.ok) return NextResponse.json({ error: "Google session expired" }, { status: 401 });
+            if (userRes.ok) {
+                const googleUser = await userRes.json();
+                userId = toUUID(googleUser.sub);
+            }
+        }
 
-        const googleUser = await userRes.json();
-        const userId = googleUser.sub;
+        // Fallback to Guest ID if not authenticated
+        if (!userId && guestId) {
+            userId = toUUID(guestId);
+        }
+
+        if (!userId) {
+            return NextResponse.json({ error: "Unauthorized. Please scan your DNA first." }, { status: 401 });
+        }
+
         // 1. Parse request body
         const { targetId, email } = await request.json();
 
@@ -31,7 +50,7 @@ export async function POST(request: Request) {
         const { error: matchError } = await supabase
             .from("match_interests")
             .upsert({
-                user_id: userId, // Google ID
+                user_id: userId,
                 target_id: targetId,
                 email: email
             }, {
@@ -40,7 +59,44 @@ export async function POST(request: Request) {
 
         if (matchError) throw matchError;
 
-        return NextResponse.json({ success: true, message: "Interest registered" });
+        // 3. Mutual Match Detection
+        const { data: reciprocalMatch } = await supabase
+            .from("match_interests")
+            .select("email, user_id")
+            .eq("user_id", targetId)
+            .eq("target_id", userId)
+            .single();
+
+        let bridgeId = null;
+        if (reciprocalMatch) {
+            // It's a mutual match! Automatically create bridge
+            const { data: bridge, error: bridgeErr } = await supabase
+                .from("bridges")
+                .insert({
+                    user_a: userId,
+                    user_b: targetId,
+                    common_ground_data: {
+                        status: "mutual",
+                        revealed_emails: {
+                            [userId]: email,
+                            [targetId]: reciprocalMatch.email
+                        }
+                    }
+                })
+                .select()
+                .single();
+
+            if (!bridgeErr && bridge) {
+                bridgeId = bridge.id;
+            }
+        }
+
+        return NextResponse.json({
+            success: true,
+            message: "Interest registered",
+            isMutual: !!reciprocalMatch,
+            bridgeId
+        });
     } catch (error) {
         console.error("Match Interest Error:", error);
         return NextResponse.json({ error: "Failed to create connection request" }, { status: 500 });
