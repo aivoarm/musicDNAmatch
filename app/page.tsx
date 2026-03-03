@@ -63,6 +63,7 @@ export default function Home() {
     const router = useRouter();
     const [existingProfile, setExistingProfile] = useState<any>(null);
     const [checkingSession, setCheckingSession] = useState(true);
+    const [scannedPlaylistIds, setScannedPlaylistIds] = useState<string[]>([]);
 
     useEffect(() => {
         async function checkSession() {
@@ -72,6 +73,12 @@ export default function Home() {
                 if (data.found) {
                     setExistingProfile(data.dna);
                     if (data.dna.top_genres) setSelectedGenres(data.dna.top_genres);
+                    // Track previously scanned playlist IDs
+                    const ids: string[] = data.dna.scanned_playlist_ids || [];
+                    if (data.dna.scanned_playlist_id && !ids.includes(data.dna.scanned_playlist_id)) {
+                        ids.push(data.dna.scanned_playlist_id);
+                    }
+                    setScannedPlaylistIds(ids);
                 }
             } catch (err) {
                 console.error("Session check failed", err);
@@ -88,6 +95,16 @@ export default function Home() {
             ?.split("=")[1];
         if (savedUrl) setSpotifyUserId(decodeURIComponent(savedUrl));
     }, []);
+
+    // Auto-scan: when entering spotify_scan stage with a saved URL, auto-trigger scan
+    const [autoScanned, setAutoScanned] = useState(false);
+    useEffect(() => {
+        if (autoScanned) return;
+        if (stage === 'spotify_scan' && spotifyUserId.trim()) {
+            setAutoScanned(true);
+            handleSpotifyScan(0);
+        }
+    }, [stage, spotifyUserId]);
 
     const handleSpotifyScan = async (offset = 0) => {
         let id = spotifyUserId.trim();
@@ -187,6 +204,10 @@ export default function Home() {
         setDnaData(dna);
         setStage('complete');
 
+        // Track this playlist as scanned
+        const updatedScannedIds = [...scannedPlaylistIds, playlist.id];
+        setScannedPlaylistIds(updatedScannedIds);
+
         // AUTO-SAVE TO SUPABASE
         try {
             await fetch("/api/dna/profile/save", {
@@ -198,7 +219,9 @@ export default function Home() {
                         top_genres: dna.top_genres,
                         recent_tracks: dna.recent_tracks.slice(0, 5),
                         verbium: dna.verbium,
-                        source: "spotify_scan"
+                        source: "spotify_scan",
+                        scanned_playlist_id: playlist.id,
+                        scanned_playlist_ids: updatedScannedIds
                     }
                 }),
                 headers: { "Content-Type": "application/json" }
@@ -399,7 +422,7 @@ export default function Home() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                                {playlists.map((pl: any, i: number) => (
+                                {playlists.filter((pl: any) => !scannedPlaylistIds.includes(pl.id)).map((pl: any, i: number) => (
                                     <motion.div key={pl.id + i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i % 5) * 0.05 }}
                                         className="group relative flex flex-col p-8 rounded-[3rem] glass border-white/10 hover:border-green-500/50 hover:bg-green-500/5 transition-all text-left">
                                         <div className="flex items-start justify-between mb-8">

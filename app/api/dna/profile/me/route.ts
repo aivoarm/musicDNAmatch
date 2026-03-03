@@ -59,7 +59,9 @@ export async function GET() {
                 top_genres: profile.metadata.top_genres,
                 recent_tracks: profile.metadata.recent_tracks || [],
                 verbium: profile.metadata.verbium,
-                updated_at: profile.metadata.updated_at
+                updated_at: profile.metadata.updated_at,
+                scanned_playlist_id: profile.metadata.scanned_playlist_id || null,
+                scanned_playlist_ids: profile.metadata.scanned_playlist_ids || []
             }
         });
     } catch (error) {
