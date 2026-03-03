@@ -86,10 +86,10 @@ export async function GET(request: Request) {
             }
         }
 
-        // Return to the YouTube page with auth success
-        return NextResponse.redirect(new URL("/youtube?status=authenticated", request.url));
+        // Return to the Broadcast page with auth success
+        return NextResponse.redirect(new URL("/broadcast?status=authenticated", request.url));
     } catch (error) {
         console.error("Auth Callback Error:", error);
-        return NextResponse.redirect(new URL("/youtube?error=auth_internal_error", request.url));
+        return NextResponse.redirect(new URL("/broadcast?error=auth_internal_error", request.url));
     }
 }

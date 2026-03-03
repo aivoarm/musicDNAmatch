@@ -34,7 +34,10 @@ export async function searchYouTube(query: string, maxResults = 5): Promise<YouT
         })).filter((v: any) => !!v.id);
 
         // De-duplicate
-        return Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
+        const unique = Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
+
+        // Filter strictly for music category
+        return await filterMusicVideos(unique);
     } catch (err) {
         console.error("Failed to search YouTube:", err);
         return [];
@@ -84,8 +87,9 @@ export async function getTrendingMusic(maxResults = 10): Promise<YouTubeVideo[]>
 export async function getPersonalHistory(accessToken: string, maxResults = 10): Promise<YouTubeVideo[]> {
     if (!accessToken) return [];
 
-    // list activities with mine=true
-    const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&mine=true&maxResults=${maxResults}`;
+    // Fetch more internally so we have enough left after filtering for music
+    const internalLimit = Math.max(maxResults * 3, 50);
+    const url = `https://www.googleapis.com/youtube/v3/activities?part=snippet,contentDetails&mine=true&maxResults=${internalLimit}`;
 
     try {
         const res = await fetch(url, {
@@ -98,7 +102,6 @@ export async function getPersonalHistory(accessToken: string, maxResults = 10): 
             return [];
         }
 
-        // Filters out non-video activities, extract IDs
         const items = (data.items || []).filter((item: any) =>
             item.snippet.type === "upload" || item.snippet.type === "like" || item.snippet.type === "playlistItem"
         );
@@ -119,36 +122,49 @@ export async function getPersonalHistory(accessToken: string, maxResults = 10): 
         }).filter((v: any) => !!v.id);
 
         // De-duplicate
-        return Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
+        const unique = Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
+
+        // Filter strictly for music category and return requested count
+        const musicVideos = await filterMusicVideos(unique);
+        return musicVideos.slice(0, maxResults);
     } catch (err) {
         console.error("Failed to get personal activities:", err);
         return [];
     }
 }
+
 export async function filterMusicVideos(videos: YouTubeVideo[]): Promise<YouTubeVideo[]> {
     if (!API_KEY || videos.length === 0) return videos;
 
-    const videoIds = videos.map(v => v.id).join(',');
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${API_KEY}`;
+    // Split into chunks of 50 (API limit)
+    const filteredResults: YouTubeVideo[] = [];
+    const chunkSize = 50;
 
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
+    for (let i = 0; i < videos.length; i += chunkSize) {
+        const chunk = videos.slice(i, i + chunkSize);
+        const videoIds = chunk.map(v => v.id).join(',');
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoIds}&key=${API_KEY}`;
 
-        if (data.error) {
-            console.error("YouTube Category API error:", data.error);
-            return videos; // Fallback to all videos if API fails
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if (data.error) {
+                console.error("YouTube Category API error:", data.error);
+                continue;
+            }
+
+            const musicVideoIds = new Set(
+                (data.items || [])
+                    .filter((item: any) => item.snippet.categoryId === "10")
+                    .map((item: any) => item.id)
+            );
+
+            filteredResults.push(...chunk.filter(v => musicVideoIds.has(v.id)));
+        } catch (err) {
+            console.error("Failed to filter music chunk:", err);
         }
-
-        const musicVideoIds = new Set(
-            (data.items || [])
-                .filter((item: any) => item.snippet.categoryId === "10")
-                .map((item: any) => item.id)
-        );
-
-        return videos.filter(v => musicVideoIds.has(v.id));
-    } catch (err) {
-        console.error("Failed to filter music videos:", err);
-        return videos;
     }
+
+    return filteredResults;
 }

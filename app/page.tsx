@@ -54,12 +54,34 @@ export default function Home() {
                         <span className="text-white font-bold ml-1">Music DNA</span> is different.
                         It extracts the literal structural geometry of the music you love.
                     </p>
+
+                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-lg mt-4">
+                        <Link
+                            href="/api/auth/google/login"
+                            className="flex-1 flex items-center justify-center gap-3 bg-[#FF0000] text-white px-8 py-4 rounded-full font-black hover:scale-105 active:scale-95 transition-all shadow-lg shadow-red-500/20"
+                        >
+                            <Youtube className="h-5 w-5" />
+                            LOGIN & SYNC
+                        </Link>
+                        <Link
+                            href="/youtube"
+                            className="flex-1 flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-full font-bold border border-white/10 transition-all hover:scale-105 active:scale-95"
+                        >
+                            <Search className="h-5 w-5" />
+                            SEARCH TRACKS
+                        </Link>
+                    </div>
+
+                    <p className="text-[10px] text-white/30 uppercase tracking-[0.3em] font-black text-center max-w-sm">
+                        Login or use YouTube search to define your DNA.
+                    </p>
+
                     <button
                         onClick={nextStep}
-                        className="group flex items-center gap-3 bg-white/5 hover:bg-white/10 px-8 py-4 rounded-full font-bold border border-white/10 transition-all"
+                        className="mt-8 text-sm font-medium text-white/50 hover:text-white flex items-center gap-2 transition-colors"
                     >
-                        How does it work?
-                        <ChevronRight className="h-5 w-5 text-primary" />
+                        How the vectorization works
+                        <ChevronRight className="h-4 w-4" />
                     </button>
                 </div>
             )
