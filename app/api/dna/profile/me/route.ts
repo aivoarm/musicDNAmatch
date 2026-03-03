@@ -25,9 +25,10 @@ export async function GET() {
 
         const { data: profile, error } = await supabase
             .from("dna_profiles")
-            .select("id, sonic_embedding, metadata")
+            .select("id, sonic_embedding, metadata, created_at")
             .eq("user_id", userId)
             .single();
+
 
         if (error || !profile) {
             return NextResponse.json({ found: false });
@@ -50,19 +51,21 @@ export async function GET() {
             profileId: profile.id,
             userId,
             dna: {
+                ...meta,
                 vector: Array.isArray(vector) ? vector : Array(12).fill(0.5),
-
                 confidence: meta.confidence || [],
                 coherence_index: meta.coherence_index ?? 0,
-                display_name: meta.display_name,
+                display_name: meta.display_name || "Anonymous Signal",
                 top_genres: meta.top_genres || [],
                 recent_tracks: meta.recent_tracks || [],
                 youtube_tracks: meta.youtube_tracks || [],
                 narrative: meta.narrative || "",
                 source_signals: meta.source_signals || {},
                 schema_version: meta.schema_version ?? 1,
-                updated_at: meta.updated_at,
+                updated_at: meta.updated_at || profile.created_at,
+                created_at: profile.created_at,
                 axes: [...AXIS_LABELS],
+                metadata: meta, // backward compatibility for some UI components
             }
         });
     } catch (error) {

@@ -165,7 +165,7 @@ export default function ProfilePage() {
 
                                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/50 mono text-[9px] uppercase tracking-widest">
                                     <span className="flex items-center gap-1.5"><Activity className="h-3 w-3 text-[#FF0000]" /> Signal Active</span>
-                                    <span className="flex items-center gap-1.5"><Waves className="h-3 w-3" /> {profile.top_genres?.length || 0} Dimensions</span>
+                                    <span className="flex items-center gap-1.5"><Waves className="h-3 w-3" /> 12 Dimensions</span>
                                     <span className="flex items-center gap-1.5 text-white/30">Established {new Date(profile.created_at).toLocaleDateString()}</span>
                                 </div>
                             </div>
@@ -174,6 +174,32 @@ export default function ProfilePage() {
                                 <span className="text-3xl font-black text-[#FF0000] italic">{((profile.coherence_index ?? 0) * 100).toFixed(1)}%</span>
                             </div>
                         </div>
+
+                        {/* Neural Feedback Summary */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div className="glass rounded-[2rem] p-7 border border-white/10">
+                                <p className="mono text-[9px] text-white/40 uppercase tracking-[0.2em] mb-4">Seed Identity — Your Selection</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {(profile.top_genres || []).map((g: string, i: number) => (
+                                        <span key={g + i} className="bg-white/5 border border-white/10 text-white/60 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest">{g}</span>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="glass rounded-[2rem] p-7 border border-[#FF0000]/15 bg-[#FF0000]/2">
+                                <p className="mono text-[9px] text-[#FF0000]/60 uppercase tracking-[0.2em] mb-4">Neural Highlights — Extracted Dimensions</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {profile.axes?.map((label: string, i: number) => ({ label, value: profile.vector?.[i] || 0 }))
+                                        .sort((a: any, b: any) => b.value - a.value)
+                                        .slice(0, 3)
+                                        .map((axis: any) => (
+                                            <span key={axis.label} className="bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF0000] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,0,0.1)]">
+                                                {axis.label.replace(/_/g, " ")}
+                                            </span>
+                                        ))}
+                                </div>
+                            </div>
+                        </div>
+
 
                         {/* Analysis Grid */}
 

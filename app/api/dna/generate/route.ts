@@ -81,7 +81,12 @@ export async function POST(req: Request) {
             display_name: finalDisplayName,
             email,
             top_genres: genres,
-            recent_tracks: spotifyTracks.slice(0, 10),
+            recent_tracks: [
+                ...spotifyTracks.slice(0, 15),
+
+                ...youtubeTracks.map((t: any) => ({ id: t.id, title: t.title, artist: t.artist, thumbnail: t.thumbnail, url: t.url }))
+
+            ],
             youtube_tracks: youtubeTracks.slice(0, 5),
             confidence: finalDNA.confidence,
             coherence_index: finalDNA.coherence_index,
@@ -91,6 +96,7 @@ export async function POST(req: Request) {
             narrative,
             updated_at: new Date().toISOString(),
         };
+
 
 
         const { data: profile, error } = await supabase

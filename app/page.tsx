@@ -9,6 +9,8 @@ import {
     AlertCircle, Loader2, Search
 } from "lucide-react";
 import Link from "next/link";
+import { AXIS_LABELS } from "@/lib/dna";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────
 type Stage = "intro" | "genre_selection" | "spotify_input" | "playlist_selection" | "youtube_input" | "identity" | "analyzing" | "complete";
@@ -379,11 +381,10 @@ export default function Home() {
                     coherence_index: d.coherence_index,
                     axes: d.axes,
                     narrative: d.narrative,
-                    display_name: d.metadata?.display_name,
-                    top_genres: genres,
-                    recent_tracks: [...spotifyTracks.slice(0, 15), ...ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail }))],
+                    ...d.metadata,
                 });
-            } else {
+            }
+            else {
                 // Fallback: still show something
                 setDna({
                     vector: Array(12).fill(0.5),
@@ -538,12 +539,13 @@ export default function Home() {
                                                     <div className="min-h-[100px] flex flex-wrap gap-2 content-start sb overflow-auto max-h-48">
                                                         {genres.length === 0
                                                             ? <div className="w-full flex items-center justify-center py-6 opacity-40"><p className="mono text-[10px] uppercase tracking-widest">Select genres →</p></div>
-                                                            : genres.map(g => (
-                                                                <motion.span key={g} initial={{ scale: .8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                                                            : genres.map((g, i) => (
+                                                                <motion.span key={g + i} initial={{ scale: .8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                                                                     className="bg-white/10 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wide flex items-center gap-1.5 border border-white/14">
                                                                     {g}<button onClick={() => setGenres(p => p.filter(x => x !== g))} className="hover:text-[#FF0000] transition-colors leading-none">×</button>
                                                                 </motion.span>
                                                             ))
+
                                                         }
                                                     </div>
                                                     <div className="space-y-2.5 pt-2 border-t border-white/14">
@@ -1051,23 +1053,44 @@ export default function Home() {
                                                         <span className="mono text-[9px] text-white/50">12,492 nodes</span>
                                                     </div>
                                                     <div className="flex items-end justify-between border-b border-white/14 pb-5 mb-5">
-                                                        <h4 className="text-xl font-black text-white italic">{dna.display_name}</h4>
-                                                        <div className="text-right">
+                                                        <h4 className="text-xl font-black text-white italic truncate pr-4">{dna.display_name}</h4>
+                                                        <div className="text-right shrink-0">
                                                             <p className="mono text-3xl font-black text-[#FF0000]">{((dna.coherence_index ?? 0.8) * 100).toFixed(1)}%</p>
                                                             <p className="mono text-[9px] text-white/60 uppercase tracking-widest">Coherence</p>
                                                         </div>
                                                     </div>
+
+                                                    {/* Evolution Feedback */}
+                                                    <div className="space-y-6 mb-7">
+                                                        <div>
+                                                            <p className="mono text-[9px] text-white/40 uppercase tracking-[0.2em] mb-3">Seed Identity — Your Selection</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {(dna.top_genres || []).map((g: string, i: number) => (
+                                                                    <span key={g + i} className="bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{g}</span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <p className="mono text-[9px] text-[#FF0000]/60 uppercase tracking-[0.2em] mb-3">Neural Highlights — Extracted Dimensions</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {AXIS_LABELS.map((label, i) => ({ label, value: dna.vector?.[i] || 0 }))
+                                                                    .sort((a, b) => b.value - a.value)
+                                                                    .slice(0, 3)
+                                                                    .map((axis, i) => (
+                                                                        <span key={axis.label} className="bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF0000] px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,0,0.15)]">
+                                                                            {axis.label.replace(/_/g, " ")}
+                                                                        </span>
+                                                                    ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                     <div className="grid grid-cols-2 gap-3 mb-5">
                                                         {[["Vector Dist", "0.198"], ["Dimensions", "12D"]].map(([k, v]) => (
-                                                            <div key={k} className="bg-white/7 p-4 rounded-2xl border border-[#FF0000]/12">
+                                                            <div key={k} className="bg-white/7 p-4 rounded-2xl border border-white/8">
                                                                 <p className="mono text-[9px] text-white/60 uppercase tracking-widest mb-1.5">{k}</p>
                                                                 <p className="mono text-xl font-black text-white">{v}</p>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {(dna.top_genres || []).slice(0, 6).map((g: string, i: number) => (
-                                                            <span key={g + i} className={`rounded-full font-black uppercase tracking-widest bg-[#FF0000] text-white shadow-[0_0_12px_rgba(255,0,0,0.25)] ${i === 0 ? "text-xs py-2 px-5" : i === 1 ? "text-[10px] py-1.5 px-4" : "text-[9px] py-1.5 px-3"}`}>{g}</span>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -1085,6 +1108,7 @@ export default function Home() {
 
                                             </div>
                                         </div>
+
 
                                         {/* Narrative */}
                                         {dna.narrative && (

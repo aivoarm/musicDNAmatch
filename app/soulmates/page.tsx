@@ -202,9 +202,10 @@ export default function SoulmatesPage() {
                                                     </span>
                                                 </div>
                                                 <div className="flex flex-wrap gap-1.5 mb-4">
-                                                    {(match.metadata?.top_genres || []).slice(0, 4).map((g: string) => (
-                                                        <span key={g} className="text-[8px] bg-white/5 border border-white/14 px-2.5 py-1 rounded-lg font-black uppercase tracking-widest text-white/50">{g}</span>
+                                                    {(match.metadata?.top_genres || []).slice(0, 4).map((g: string, i: number) => (
+                                                        <span key={g + i} className="text-[7px] bg-white/5 border border-white/10 text-white/40 px-2 py-0.5 rounded-md font-black uppercase tracking-widest">{g}</span>
                                                     ))}
+
                                                 </div>
                                                 <div className="flex gap-2">
                                                     {match.is_mutual ? (
@@ -274,11 +275,24 @@ export default function SoulmatesPage() {
                                         <p className="mono text-[8px] text-white/55 uppercase tracking-widest">Coherence</p>
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {(userDna.top_genres || []).slice(0, 4).map((g: string) => (
-                                        <span key={g} className="text-[8px] bg-[#FF0000]/15 border border-[#FF0000]/20 text-[#FF0000] px-2.5 py-1 rounded-lg font-black uppercase tracking-widest">{g}</span>
-                                    ))}
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {(userDna.top_genres || []).slice(0, 4).map((g: string, i: number) => (
+                                            <span key={g + i} className="text-[8px] bg-white/5 border border-white/10 text-white/50 px-2 py-1 rounded-md font-black uppercase tracking-widest">{g}</span>
+                                        ))}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {userDna.axes?.map((label: string, i: number) => ({ label, value: userDna.vector?.[i] || 0 }))
+                                            .sort((a: any, b: any) => b.value - a.value)
+                                            .slice(0, 2)
+                                            .map((axis: any) => (
+                                                <span key={axis.label} className="text-[8px] bg-[#FF0000]/15 border border-[#FF0000]/20 text-[#FF0000] px-2 py-1 rounded-md font-black uppercase tracking-widest">
+                                                    {axis.label.replace(/_/g, " ")}
+                                                </span>
+                                            ))}
+                                    </div>
                                 </div>
+
                                 <Link href="/profile" className="flex items-center justify-center gap-2 mt-5 border border-white/10 text-white/50 hover:text-white hover:border-white/20 font-black text-[9px] uppercase tracking-widest py-3 rounded-xl transition-all">
                                     View Full Profile <ChevronRight className="h-3 w-3" />
                                 </Link>
