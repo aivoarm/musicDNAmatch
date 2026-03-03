@@ -291,6 +291,13 @@ export default function Home() {
             <div className={`fixed bottom-1/4 right-1/4 -z-10 h-96 w-96 blur-[150px] rounded-full animate-pulse-glow transition-colors duration-1000 ${step === 1 ? "bg-primary/20" : step === 3 ? "bg-purple-500/10" : "bg-secondary/10"
                 }`} />
 
+            <footer className="w-full max-w-7xl px-10 py-10 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-30">
+                <p>© 2026 MusicDNA PROTOCOL</p>
+                <Link href="/privacy" className="hover:text-primary transition-colors">
+                    Privacy Policy & Signal Usage
+                </Link>
+            </footer>
+
             <style jsx global>{`
                 @keyframes spin-slow {
                     from { transform: rotate(0deg); }
