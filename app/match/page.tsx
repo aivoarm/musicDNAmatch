@@ -123,7 +123,7 @@ export default function MatchPage() {
                                     <div className="relative shrink-0 mx-auto sm:mx-0">
                                         <div className="absolute inset-0 bg-[#FF0000]/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                         <img
-                                            src={match.metadata?.images?.[0]?.url || `https://i.pravatar.cc/100?u=${idx}`}
+                                            src={match.metadata?.images?.[0]?.url || `/avatars/${['sync', 'pulse', 'heart'][idx % 3]}.png`}
                                             alt={match.metadata?.display_name}
                                             className="h-20 w-20 md:h-24 md:w-24 rounded-[1.5rem] md:rounded-3xl object-cover grayscale group-hover:grayscale-0 transition-all ring-1 ring-white/10 group-hover:ring-[#FF0000]/40 scale-100 group-hover:scale-110"
                                         />
@@ -271,8 +271,8 @@ export default function MatchPage() {
                                 <>
                                     <div className="flex items-center gap-4 mb-8">
                                         <img
-                                            src={selectedMatch.metadata?.images?.[0]?.url || ""}
-                                            className="h-14 w-14 rounded-xl object-cover"
+                                            src={selectedMatch.metadata?.images?.[0]?.url || "/avatars/pulse.png"}
+                                            className="h-14 w-14 rounded-xl object-cover ring-1 ring-white/20"
                                             alt="Match avatar"
                                         />
                                         <div>
