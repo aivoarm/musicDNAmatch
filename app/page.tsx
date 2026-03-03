@@ -291,11 +291,19 @@ export default function Home() {
             <div className={`fixed bottom-1/4 right-1/4 -z-10 h-96 w-96 blur-[150px] rounded-full animate-pulse-glow transition-colors duration-1000 ${step === 1 ? "bg-primary/20" : step === 3 ? "bg-purple-500/10" : "bg-secondary/10"
                 }`} />
 
-            <footer className="w-full max-w-7xl px-10 py-10 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-30">
-                <p>© 2026 MusicDNA PROTOCOL</p>
-                <Link href="/privacy" className="hover:text-primary transition-colors">
-                    Privacy Policy & Signal Usage
-                </Link>
+            <footer className="w-full max-w-7xl px-10 py-10 flex flex-col sm:flex-row justify-between items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] opacity-30">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+                    <p>© 2026 ARMAN AYVA. ALL RIGHTS RESERVED.</p>
+                    <a href="https://www.armanayva.com" className="hover:text-[#FF0000] transition-colors">WWW.ARMANAYVA.COM</a>
+                </div>
+                <div className="flex gap-8">
+                    <a href="https://dna.armanayva.com/privacy" className="hover:text-[#FF0000] transition-colors">
+                        Privacy Policy
+                    </a>
+                    <Link href="/terms" className="hover:text-[#FF0000] transition-colors">
+                        Terms & Conditions
+                    </Link>
+                </div>
             </footer>
 
             <style jsx global>{`

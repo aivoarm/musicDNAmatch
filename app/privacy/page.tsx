@@ -90,8 +90,14 @@ export default function PrivacyPolicy() {
                     </div>
                 </section>
 
-                <footer className="pt-10 border-t border-white/5 text-center text-xs text-white/30 uppercase tracking-[0.2em]">
-                    <p>© 2026 MusicDNA Protocol // Built by high-fidelity algorithms.</p>
+                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-white/30 uppercase tracking-[0.2em]">
+                    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left font-black">
+                        <p>© 2026 ARMAN AYVA. ALL RIGHTS RESERVED.</p>
+                        <a href="https://www.armanayva.com" className="hover:text-white transition-colors">WWW.ARMANAYVA.COM</a>
+                    </div>
+                    <Link href="/terms" className="hover:text-white transition-colors">
+                        Terms & Conditions
+                    </Link>
                 </footer>
             </div>
 
