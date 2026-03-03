@@ -1,27 +1,36 @@
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { generateMusicalThesis } from "@/lib/gemini";
 
 export async function GET() {
     const cookieStore = await cookies();
-    const token = cookieStore.get("spotify_access_token")?.value;
+    const googleToken = cookieStore.get("google_access_token")?.value;
 
-    if (!token) {
+    if (!googleToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
-        // 1. Get current user's DNA profile first
-        const userRes = await fetch("https://api.spotify.com/v1/me", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        const userData = await userRes.json();
+        let userId = "";
+        const cachedUser = cookieStore.get("google_user")?.value;
+        if (cachedUser) {
+            userId = JSON.parse(cachedUser).sub;
+        } else {
+            // Fallback to fetch if cookie missing
+            // Fetch user info from Google for the ID
+            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${googleToken}` },
+            });
+            if (!userRes.ok) return NextResponse.json({ error: "Google session expired" }, { status: 401 });
+            const googleUser = await userRes.json();
+            userId = googleUser.sub;
+        }
 
+        // 1. Get current user's DNA profile first
         const { data: userProfile, error: profileError } = await supabase
             .from("dna_profiles")
             .select("sonic_embedding, metadata")
-            .eq("user_id", userData.id)
+            .eq("user_id", userId)
             .single();
 
         if (profileError || !userProfile) {
@@ -33,34 +42,23 @@ export async function GET() {
             query_embedding: userProfile.sonic_embedding,
             match_threshold: 0.1, // Relaxed for prototype
             match_count: 5,
-            caller_id: userData.id
+            caller_id: userId // Google ID is the ID our DB now uses
         });
 
         if (matchError) {
             console.error("Match RPC error:", matchError);
-            // Fallback to simple query if RPC fails
             const { data: fallbackMatches, error: fallbackError } = await supabase
                 .from("dna_profiles")
                 .select("*")
-                .neq("user_id", userData.id)
+                .neq("user_id", userId)
                 .limit(5);
 
             if (fallbackError) throw fallbackError;
-
-            // Map fallback to include a default thesis
-            return NextResponse.json(fallbackMatches.map(m => ({ ...m, similarity: 0.8, thesis: "Significant structural alignment detected." })));
+            return NextResponse.json(fallbackMatches.map(m => ({ ...m, similarity: 0.8 })));
         }
 
-        // 3. Enhance top matches with AI Thesis
-        const enhancedMatches = await Promise.all(matches.map(async (match: any, idx: number) => {
-            let thesis = "Significant structural alignment detected across the vector space.";
-            if (idx < 3) {
-                thesis = await generateMusicalThesis(userProfile.metadata, match.metadata);
-            }
-            return { ...match, thesis };
-        }));
-
-        return NextResponse.json(enhancedMatches);
+        // 3. Return matches
+        return NextResponse.json(matches);
     } catch (error) {
         console.error("Discovery Error:", error);
         return NextResponse.json({ error: "Failed to discover sonic soulmates" }, { status: 500 });

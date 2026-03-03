@@ -6,8 +6,11 @@ import Navbar from "@/components/Navbar";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "Music DNA Match | Vibe Broadcasting",
-    description: "Community-driven, AI-orchestrated music discovery platform.",
+    title: "Music DNA | Vibe Broadcasting",
+    description: "AI-orchestrated musical geometry from your YouTube signal.",
+    icons: {
+        icon: "/icon",
+    },
 };
 
 export default function RootLayout({

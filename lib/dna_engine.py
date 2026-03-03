@@ -43,7 +43,7 @@ def extract_dna_vector(audio_path: str):
 # Mock thesis generation if needed
 def generate_musical_thesis(vector_a, vector_b):
     """
-    Abstract placeholder for Gemini-driven matchmaking logic.
+    Abstract placeholder for matchmaking logic.
     """
     distance = np.linalg.norm(np.array(vector_a) - np.array(vector_b))
     return f"Euclidean Distance: {distance:.4f}"

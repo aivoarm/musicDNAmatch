@@ -4,26 +4,32 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
-    const token = cookieStore.get("spotify_access_token")?.value;
+    const googleToken = cookieStore.get("google_access_token")?.value;
 
-    if (!token) {
+    if (!googleToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
         const { targetUserId } = await request.json();
+        let userId = "";
 
-        // 1. Get current user's Spotify ID
-        const userRes = await fetch("https://api.spotify.com/v1/me", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        const senderData = await userRes.json();
+        const cachedUser = cookieStore.get("google_user")?.value;
+        if (cachedUser) {
+            userId = JSON.parse(cachedUser).sub;
+        } else {
+            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${googleToken}` },
+            });
+            const googleUser = await userRes.json();
+            userId = googleUser.sub;
+        }
 
         // 2. Create the bridge in Supabase
         const { data: bridge, error: bridgeError } = await supabase
             .from("bridges")
             .insert({
-                user_a: senderData.id,
+                user_a: userId,
                 user_b: targetUserId,
                 common_ground_data: {
                     playlist_suggestion: [], // Placeholder for future synthesis

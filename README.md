@@ -116,6 +116,7 @@ MusicDNA/
 │   │       ├── synthesize/route.ts      # AI playlist synthesis
 │   │       └── merge/route.ts           # Create real Spotify playlists
 │   ├── broadcast/page.tsx               # Vibe Broadcast UI
+│   ├── youtube/page.tsx                 # YouTube X-Ray Scanner (NEW)
 │   ├── match/page.tsx                   # Sonic Soulmates UI
 │   ├── temp-room/[id]/page.tsx          # Green Room (real-time chat)
 │   ├── layout.tsx                       # Root layout (includes Navbar)
@@ -126,11 +127,20 @@ MusicDNA/
 │   ├── dna.ts                           # 12D DNA computation engine
 │   ├── gemini.ts                        # Gemini AI utility
 │   ├── spotify.ts                       # Spotify API helpers
+│   ├── youtube.ts                       # YouTube API helpers
 │   └── supabase.ts                      # Supabase client
 └── supabase/
     └── migrations/
         └── setup.sql                    # Complete DB setup (run once)
 ```
+
+---
+
+## ⚙️ YouTube Integration
+The **YouTube X-Ray Scanner** allows you to analyze any video signal for its sonic properties.
+- **Search**: Real-time YouTube Data API integration
+- **Scan**: Visual "X-Ray" of the video to extract DNA markers
+- **Broadcast**: Coming soon — Merge YouTube signals with your primary profile
 
 ---
 

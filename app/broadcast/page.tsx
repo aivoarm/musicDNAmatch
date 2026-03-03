@@ -27,7 +27,7 @@ export default function BroadcastPage() {
             const res = await fetch("/api/dna/generate", { method: "POST" });
 
             if (res.status === 401) {
-                window.location.href = "/api/auth/spotify/login";
+                window.location.href = "/api/auth/google/login";
                 return;
             }
 
@@ -161,7 +161,7 @@ export default function BroadcastPage() {
                                         <div className="flex flex-wrap gap-2">
                                             {dnaData.top_genres.map((genre: string, i: number) => (
                                                 <span key={genre} className={`text-xs font-bold px-3 py-1.5 rounded-full border ${i === 0 ? "bg-primary/20 border-primary/40 text-primary" :
-                                                        i < 3 ? "bg-white/10 border-white/20" : "bg-white/5 border-white/10 opacity-60"
+                                                    i < 3 ? "bg-white/10 border-white/20" : "bg-white/5 border-white/10 opacity-60"
                                                     }`}>
                                                     {genre}
                                                 </span>
@@ -217,8 +217,8 @@ export default function BroadcastPage() {
                                             className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-primary/20 transition-all group"
                                         >
                                             <div className="relative shrink-0">
-                                                {track.image ? (
-                                                    <img src={track.image} alt={track.album} className="h-12 w-12 rounded-xl object-cover" />
+                                                {track.thumbnail ? (
+                                                    <img src={track.thumbnail} alt={track.title} className="h-12 w-12 rounded-xl object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all shadow-lg shadow-black/20" />
                                                 ) : (
                                                     <div className="h-12 w-12 rounded-xl bg-white/10 flex items-center justify-center">
                                                         <Music2 className="h-5 w-5 opacity-40" />
@@ -229,11 +229,11 @@ export default function BroadcastPage() {
                                                 </div>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-bold truncate">{track.name}</div>
-                                                <div className="text-[11px] text-muted-foreground truncate">{track.artist}</div>
+                                                <div className="text-sm font-bold truncate mb-0.5" dangerouslySetInnerHTML={{ __html: track.title }} />
+                                                <div className="text-[10px] text-muted-foreground font-mono uppercase truncate opacity-60 tracking-wider font-medium">{track.channelTitle}</div>
                                             </div>
                                             <div className="text-right shrink-0">
-                                                <div className="text-[10px] font-mono opacity-40">{formatDuration(track.duration_ms)}</div>
+                                                <div className="text-[9px] font-mono opacity-30 uppercase tracking-tighter">Signal Recorded</div>
                                                 <ExternalLink className="h-3.5 w-3.5 opacity-0 group-hover:opacity-40 transition-opacity ml-auto mt-1" />
                                             </div>
                                         </motion.a>

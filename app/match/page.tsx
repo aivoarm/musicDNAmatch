@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Search, MapPin, Share2, Sparkles, MessageSquarePlus, Activity, ArrowRight, ArrowLeft } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, MapPin, Share2, MessageSquarePlus, Activity, ArrowLeft, Mail, CheckCircle2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function MatchPage() {
     const [matches, setMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [creatingBridge, setCreatingBridge] = useState<string | null>(null);
+    const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
+    const [email, setEmail] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [success, setSuccess] = useState(false);
+
     const router = useRouter();
 
     useEffect(() => {
@@ -29,25 +33,34 @@ export default function MatchPage() {
         fetchMatches();
     }, []);
 
-    const createBridge = async (targetUserId: string) => {
-        setCreatingBridge(targetUserId);
+    const handleEmailSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedMatch) return;
+        setSubmitting(true);
         try {
-            const res = await fetch("/api/bridge/create", {
+            const res = await fetch("/api/match/join", {
                 method: "POST",
-                body: JSON.stringify({ targetUserId }),
+                body: JSON.stringify({
+                    targetId: selectedMatch.user_id,
+                    email: email
+                }),
                 headers: { "Content-Type": "application/json" }
             });
 
             if (res.ok) {
-                const bridge = await res.json();
-                router.push(`/temp-room/${bridge.id}`);
+                setSuccess(true);
+                setTimeout(() => {
+                    setSuccess(false);
+                    setSelectedMatch(null);
+                    setEmail("");
+                }, 4000);
             } else {
-                alert("Failed to create bridge. Make sure target user ID is valid.");
+                alert("Failed to register interest. Please try again.");
             }
         } catch (err) {
             console.error(err);
         } finally {
-            setCreatingBridge(null);
+            setSubmitting(false);
         }
     };
 
@@ -63,16 +76,6 @@ export default function MatchPage() {
                         <p className="text-muted-foreground flex items-center gap-1.5 font-mono text-sm">
                             <Search className="h-4 w-4" /> Global Vector Search: {loading ? "Scanning..." : `${matches.length + 12491} Nodes Active`}
                         </p>
-                    </div>
-                    <div className="flex -space-x-3">
-                        {matches.slice(0, 4).map((m, i) => (
-                            <div key={i} className="h-10 w-10 rounded-full border-2 border-[#09090b] overflow-hidden bg-primary/20">
-                                <img src={m.metadata?.images?.[0]?.url || `https://i.pravatar.cc/100?u=${i}`} alt="avatar" />
-                            </div>
-                        ))}
-                        <div className="h-10 w-10 rounded-full border-2 border-[#09090b] bg-primary flex items-center justify-center font-bold text-xs">
-                            +12k
-                        </div>
                     </div>
                 </header>
 
@@ -96,7 +99,7 @@ export default function MatchPage() {
                                 transition={{ delay: idx * 0.1 }}
                                 className="glass rounded-[2rem] p-8 hover:border-primary/20 transition-all duration-500 group"
                             >
-                                <div className="flex gap-6 items-start sm:items-center mb-6">
+                                <div className="flex gap-6 items-start sm:items-center">
                                     <div className="relative">
                                         <img
                                             src={match.metadata?.images?.[0]?.url || `https://i.pravatar.cc/100?u=${idx}`}
@@ -107,50 +110,33 @@ export default function MatchPage() {
                                             {(match.similarity * 100).toFixed(1)}%
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className="flex-1">
                                         <h2 className="text-2xl font-black mb-2">{match.metadata?.display_name || "Anonymous Broadcaster"}</h2>
-                                        <div className="flex flex-wrap gap-1.5">
+                                        <div className="flex flex-wrap gap-1.5 mb-4">
                                             {(match.metadata?.top_genres || []).slice(0, 4).map((genre: string) => (
                                                 <span key={genre} className="text-[9px] border border-white/10 px-2 py-0.5 rounded-full font-bold uppercase opacity-60">
                                                     {genre}
                                                 </span>
                                             ))}
                                         </div>
+
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={() => setSelectedMatch(match)}
+                                                className="flex-1 bg-white text-black font-black py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all text-sm"
+                                            >
+                                                <MessageSquarePlus className="h-4 w-4" />
+                                                Create Contact Group
+                                            </button>
+                                            <button className="p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
+                                                <Share2 className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="ml-auto text-right">
+                                    <div className="text-right hidden sm:block">
                                         <div className="text-[10px] font-mono opacity-40 uppercase">Vector Dist</div>
                                         <div className="text-lg font-black text-primary">{(1 - match.similarity).toFixed(3)}</div>
                                     </div>
-                                </div>
-
-                                <div className="bg-white/5 rounded-2xl p-6 border-l-2 border-primary mb-6">
-                                    <div className="flex items-center gap-2 mb-2 text-primary">
-                                        <Sparkles className="h-4 w-4" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Maestro Thesis</span>
-                                    </div>
-                                    <p className="italic text-muted-foreground leading-relaxed">
-                                        "{match.thesis || "Significant structural alignment detected across the vector space, suggesting a deep aesthetic frequency overlap."}"
-                                    </p>
-                                </div>
-
-                                <div className="flex gap-4">
-                                    <button
-                                        disabled={creatingBridge === match.user_id}
-                                        onClick={() => createBridge(match.user_id)}
-                                        className="flex-1 bg-white text-black font-black p-4 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
-                                    >
-                                        {creatingBridge === match.user_id ? (
-                                            <Activity className="h-5 w-5 animate-spin" />
-                                        ) : (
-                                            <>
-                                                <MessageSquarePlus className="h-5 w-5" />
-                                                Enter Green Room
-                                            </>
-                                        )}
-                                    </button>
-                                    <button className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all">
-                                        <Share2 className="h-5 w-5" />
-                                    </button>
                                 </div>
                             </motion.div>
                         ))}
@@ -170,29 +156,95 @@ export default function MatchPage() {
                                     <MapPin className="h-10 w-10 text-primary animate-float" />
                                 </div>
                                 <h3 className="font-black text-xl mb-1 uppercase italic tracking-tighter">Vector Space</h3>
-                                <p className="text-[10px] text-muted-foreground font-mono">12D HIGH-DIMENSIONAL PROJECTION</p>
-                            </div>
-                        </div>
-
-                        <div className="glass rounded-[2rem] p-8">
-                            <h3 className="text-sm font-bold uppercase tracking-widest mb-6 opacity-40">System Stats</h3>
-                            <div className="space-y-4">
-                                <SidebarStat label="Avg Similarity" value={matches.length > 0 ? `${(matches.reduce((acc, m) => acc + m.similarity, 0) / matches.length * 100).toFixed(1)}%` : "N/A"} />
-                                <SidebarStat label="Discovery Rate" value="+12D" />
+                                <p className="text-[10px] text-muted-foreground font-mono">12D PROJECTION</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
-}
 
-function SidebarStat({ label, value }: { label: string, value: string }) {
-    return (
-        <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-muted-foreground uppercase">{label}</span>
-            <span className="font-black text-sm text-primary italic">{value}</span>
+            {/* Email Modal Overlay */}
+            <AnimatePresence>
+                {selectedMatch && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 sm:p-10">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedMatch(null)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="glass w-full max-w-lg rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden"
+                        >
+                            <button
+                                onClick={() => setSelectedMatch(null)}
+                                className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+
+                            {success ? (
+                                <div className="text-center py-10">
+                                    <div className="inline-flex h-20 w-20 rounded-full bg-green-500/20 items-center justify-center mb-6">
+                                        <CheckCircle2 className="h-10 w-10 text-green-500" />
+                                    </div>
+                                    <h2 className="text-2xl font-black mb-2 italic">Match Group Initialized</h2>
+                                    <p className="text-muted-foreground leading-relaxed">
+                                        Signal received. We'll alert you at <span className="text-white font-bold">{email}</span> as soon as the connection bridge syncs.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-4 mb-8">
+                                        <img
+                                            src={selectedMatch.metadata?.images?.[0]?.url || ""}
+                                            className="h-14 w-14 rounded-xl object-cover"
+                                            alt="Match avatar"
+                                        />
+                                        <div>
+                                            <h2 className="text-xl font-black italic">Form Connection</h2>
+                                            <p className="text-xs text-muted-foreground uppercase font-mono tracking-widest">Target: {selectedMatch.metadata?.display_name}</p>
+                                        </div>
+                                    </div>
+
+                                    <form onSubmit={handleEmailSubmit} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Your Communications Email</label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20" />
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    placeholder="you@ecosystem.com"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground leading-relaxed italic">
+                                            "Entering your email will initialize a private contact group. Interaction protocols will be established once both vectors confirm the link."
+                                        </p>
+
+                                        <button
+                                            disabled={submitting}
+                                            type="submit"
+                                            className="w-full bg-primary text-primary-foreground font-black py-5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all glow-primary"
+                                        >
+                                            {submitting ? <Activity className="h-5 w-5 animate-spin" /> : "Deploy Signal"}
+                                        </button>
+                                    </form>
+                                </>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

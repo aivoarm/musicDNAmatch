@@ -70,8 +70,8 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 4%;
     --popover-foreground: 0 0% 98%;
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -82,7 +82,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 263.4 70% 50.4%;
+    --ring: 0 100% 50%;
     --radius: 0.75rem;
   }
 }
@@ -90,10 +90,10 @@
 @utility antigravity-mesh {
   background-color: hsla(240, 10%, 4%, 1);
   background-image:
-    radial-gradient(at 0% 0%, hsla(263, 70%, 50%, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, hsla(280, 80%, 60%, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, hsla(230, 90%, 50%, 0.15) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, hsla(320, 70%, 50%, 0.15) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(0, 100%, 50%, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(20, 100%, 50%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(350, 100%, 50%, 0.1) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(0, 100%, 50%, 0.05) 0px, transparent 50%);
   background-attachment: fixed;
 }
 

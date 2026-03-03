@@ -4,27 +4,33 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
-    const token = cookieStore.get("spotify_access_token")?.value;
+    const googleToken = cookieStore.get("google_access_token")?.value;
 
-    if (!token) {
+    if (!googleToken) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     try {
         const { bridgeId, content } = await request.json();
+        let userId = "";
 
-        // 1. Get current user's Spotify ID
-        const userRes = await fetch("https://api.spotify.com/v1/me", {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        const senderData = await userRes.json();
+        const cachedUser = cookieStore.get("google_user")?.value;
+        if (cachedUser) {
+            userId = JSON.parse(cachedUser).sub;
+        } else {
+            const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                headers: { Authorization: `Bearer ${googleToken}` },
+            });
+            const googleUser = await userRes.json();
+            userId = googleUser.sub;
+        }
 
         // 2. Insert message
         const { data: message, error } = await supabase
             .from("bridge_messages")
             .insert({
                 bridge_id: bridgeId,
-                sender_id: senderData.id,
+                sender_id: userId,
                 content: content
             })
             .select()

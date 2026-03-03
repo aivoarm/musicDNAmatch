@@ -160,7 +160,7 @@ export default function TempRoomPage({ params }: { params: Promise<{ id: string 
                             <span className="bg-primary/20 text-primary text-[10px] font-black px-2 py-0.5 rounded-full ring-1 ring-primary/30 uppercase tracking-widest">Active Bridge</span>
                             <span className="text-white/40 text-[10px] font-mono">RX-{bridgeId.slice(0, 4)}</span>
                         </div>
-                        <h1 className="text-4xl font-black mb-2">The <span className="text-primary italic">Green</span> Room</h1>
+                        <h1 className="text-4xl font-black mb-2">The <span className="text-[#FF0000] italic">Green</span> Room</h1>
                         <p className="text-muted-foreground flex items-center gap-2">
                             <Timer className="h-4 w-4 text-primary" />
                             Room Expires in <span className="text-white font-mono">{formatTime(timeLeft)}</span>
@@ -259,7 +259,7 @@ export default function TempRoomPage({ params }: { params: Promise<{ id: string 
                                             className="w-full bg-green-500 p-6 rounded-[1.5rem] font-black text-black text-center flex items-center justify-center gap-2 animate-glow-green"
                                         >
                                             <Check className="h-5 w-5" />
-                                            OPEN ON SPOTIFY
+                                            OPEN ON YOUTUBE
                                             <ExternalLink className="h-4 w-4" />
                                         </a>
                                         <p className="text-[10px] text-center mt-4 text-green-500 font-bold uppercase tracking-widest">Shared DNA Successfully Merged</p>
