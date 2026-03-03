@@ -1,8 +1,8 @@
 -- Create a table to store match connection interests
 CREATE TABLE IF NOT EXISTS match_interests (
   id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      TEXT    NOT NULL,  -- Current user's Spotify ID
-  target_id    TEXT    NOT NULL,  -- Match's Spotify ID
+  user_id      TEXT    NOT NULL,  -- Current user's Google ID
+  target_id    TEXT    NOT NULL,  -- Match's Google ID
   email        TEXT    NOT NULL,  -- The community email they provided
   created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(user_id, target_id)

@@ -9,15 +9,16 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- =====================================================
 -- 2. DNA Profiles Table
--- NOTE: user_id is TEXT (not UUID) because Spotify
--- user IDs are strings like "armanayva123"
+-- DNA Profiles
+-- NOTE: user_id is TEXT (not UUID) because Google 'sub' is a long string
+-- This table stores the calculated 12D sonic vector for each broadcaster.
 -- =====================================================
 CREATE TABLE IF NOT EXISTS dna_profiles (
   id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      TEXT    UNIQUE NOT NULL,  -- Spotify user ID
-  sonic_embedding VECTOR(12),            -- 12-dimensional DNA vector
-  broadcasting BOOLEAN DEFAULT true,
-  metadata     JSONB   DEFAULT '{}'::jsonb,
+  user_id      TEXT    UNIQUE NOT NULL,  -- Google sub ID
+  sonic_embedding VECTOR(12),            -- 12-dimensional psychoacoustic signature
+  broadcasting BOOLEAN DEFAULT true,     -- Whether user is discoverable by others
+  metadata     JSONB   DEFAULT '{}'::jsonb, -- User info (display_name, images, etc)
   created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -25,17 +26,20 @@ CREATE TABLE IF NOT EXISTS dna_profiles (
 CREATE INDEX IF NOT EXISTS dna_profiles_embedding_idx
   ON dna_profiles USING hnsw (sonic_embedding vector_l2_ops);
 
--- Disable RLS for prototype (enable + add policies for production)
+-- Realtime: Disable RLS for prototype (ENABLE in production!)
 ALTER TABLE dna_profiles DISABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 3. Bridges Table (Collaborative Green Rooms)
+-- Bridges (Ephemeral Collaboration Spaces)
+-- This table links two users who have a high-fidelity match.
+-- Bridges expire after 48 hours.
 -- =====================================================
 CREATE TABLE IF NOT EXISTS bridges (
   id                  UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_a              TEXT    NOT NULL,  -- Spotify user ID
-  user_b              TEXT    NOT NULL,  -- Spotify user ID
-  common_ground_data  JSONB   DEFAULT '{}'::jsonb,
+  user_a              TEXT    NOT NULL,  -- Google sub ID
+  user_b              TEXT    NOT NULL,  -- Google sub ID
+  common_ground_data  JSONB   DEFAULT '{}'::jsonb, -- Common genres/theses
   expires_at          TIMESTAMP WITH TIME ZONE DEFAULT (NOW() + interval '48 hours'),
   created_at          TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -44,11 +48,13 @@ ALTER TABLE bridges DISABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 4. Bridge Messages Table (Real-time chat)
+-- Bridge Messages (Real-time Communication)
+-- Stores messages for the ephemeral chat bridge.
 -- =====================================================
 CREATE TABLE IF NOT EXISTS bridge_messages (
   id         UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
   bridge_id  UUID    REFERENCES bridges(id) ON DELETE CASCADE,
-  sender_id  TEXT    NOT NULL,  -- Spotify user ID
+  sender_id  TEXT    NOT NULL,  -- Google sub ID
   content    TEXT    NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -57,13 +63,14 @@ ALTER TABLE bridge_messages DISABLE ROW LEVEL SECURITY;
 
 -- =====================================================
 -- 5. Sonic Soulmate Matching Function
--- Uses pgvector Euclidean distance (<->) for similarity
+-- RPC: discovery function using pgvector
+-- Finds users whose sonic_embedding is closest to the query_embedding.
 -- =====================================================
 CREATE OR REPLACE FUNCTION match_sonic_soulmates (
   query_embedding VECTOR(12),
   match_threshold FLOAT,
   match_count     INT,
-  caller_id       TEXT  -- Spotify user ID (TEXT, not UUID)
+  caller_id       TEXT  -- Google sub ID
 )
 RETURNS TABLE (
   id         UUID,
