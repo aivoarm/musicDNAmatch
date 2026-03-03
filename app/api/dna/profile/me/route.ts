@@ -35,43 +35,35 @@ export async function GET() {
             rawUserId = guestId;
         }
 
-        // If still no user ID, return public feed
         if (!rawUserId) {
-            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75 })));
+            return NextResponse.json({ found: false });
         }
 
         const userId = toUUID(rawUserId);
 
-        // 1. Get current user's DNA profile
-        const { data: userProfile, error: profileError } = await supabase
+        const { data: profile, error } = await supabase
             .from("dna_profiles")
-            .select("sonic_embedding")
+            .select("sonic_embedding, metadata")
             .eq("user_id", userId)
             .single();
 
-        if (profileError || !userProfile) {
-            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").neq("user_id", userId).limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.7 })));
+        if (error || !profile) {
+            return NextResponse.json({ found: false });
         }
 
-        // 2. Match
-        const { data: matches, error: matchError } = await supabase.rpc('match_sonic_soulmates', {
-            query_embedding: userProfile.sonic_embedding,
-            match_threshold: 0.01,
-            match_count: 10,
-            caller_id: userId
+        return NextResponse.json({
+            found: true,
+            dna: {
+                vector: profile.sonic_embedding,
+                display_name: profile.metadata.display_name,
+                top_genres: profile.metadata.top_genres,
+                recent_tracks: profile.metadata.recent_tracks || [],
+                verbium: profile.metadata.verbium,
+                updated_at: profile.metadata.updated_at
+            }
         });
-
-        if (matchError) {
-            console.error("RPC Match Error:", matchError);
-            const { data: fallback } = await supabase.from("dna_profiles").select("*").neq("user_id", userId).limit(10);
-            return NextResponse.json((fallback || []).map(m => ({ ...m, similarity: 0.8 })));
-        }
-
-        return NextResponse.json(matches);
     } catch (error) {
-        console.error("Discovery Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        console.error("Profile Fetch Error:", error);
+        return NextResponse.json({ found: false }, { status: 500 });
     }
 }

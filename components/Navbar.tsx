@@ -12,21 +12,8 @@ export default function Navbar() {
     const [checking, setChecking] = useState(true);
 
     useEffect(() => {
-        const checkUser = async () => {
-            try {
-                const res = await fetch("/api/auth/me");
-                if (res.ok) {
-                    const data = await res.json();
-                    setUser({ name: data.display_name, image: data.images?.[0]?.url || "" });
-                } else {
-                    setUser(null);
-                }
-            } catch {
-                setUser(null);
-            }
-            setChecking(false);
-        };
-        checkUser();
+        // Session polling disabled for frictionless discovery
+        setChecking(false);
     }, [pathname]);
 
     const handleLogout = async () => {
@@ -43,7 +30,6 @@ export default function Navbar() {
     const navLinks = [
         { href: "/broadcast", label: "Broadcast" },
         { href: "/match", label: "Match" },
-        { href: "/youtube", label: "YouTube" },
     ];
 
     return (
@@ -56,64 +42,39 @@ export default function Navbar() {
                 <span>Music<span className="text-[#FF0000]">DNA</span></span>
             </Link>
 
-            {/* Nav links */}
-            <div className="hidden sm:flex items-center gap-1">
-                {navLinks.map(link => (
-                    <Link
-                        key={link.href}
-                        href={link.href}
-                        className={`text-sm px-4 py-1.5 rounded-full font-medium transition-all ${pathname === link.href
-                            ? "bg-white/10 text-white"
-                            : "text-white/50 hover:text-white hover:bg-white/5"
-                            }`}
-                    >
-                        {link.label}
-                    </Link>
-                ))}
-            </div>
+            {/* Navbar links removed to focus on home journey */}
 
             {/* Right side */}
             <div className="ml-auto flex items-center gap-3">
-                {!checking && (
-                    user ? (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-3"
-                        >
-                            <div className="text-right hidden sm:block">
-                                <div className="text-xs font-bold leading-none">{user.name}</div>
-                                <div className="text-[10px] text-[#FF0000] font-mono mt-0.5">● BROADCASTING</div>
+                {!checking && user && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-3"
+                    >
+                        <div className="text-right hidden sm:block">
+                            <div className="text-xs font-bold leading-none">{user.name}</div>
+                            <div className="text-[10px] text-[#FF0000] font-mono mt-0.5">● BROADCASTING</div>
+                        </div>
+                        {user.image ? (
+                            <img
+                                src={user.image}
+                                alt={user.name}
+                                className="h-8 w-8 rounded-full ring-2 ring-[#FF0000]/40 object-cover"
+                            />
+                        ) : (
+                            <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 ring-2 ring-[#FF0000]/40 flex items-center justify-center">
+                                <User className="h-4 w-4 text-[#FF0000]" />
                             </div>
-                            {user.image ? (
-                                <img
-                                    src={user.image}
-                                    alt={user.name}
-                                    className="h-8 w-8 rounded-full ring-2 ring-[#FF0000]/40 object-cover"
-                                />
-                            ) : (
-                                <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 ring-2 ring-[#FF0000]/40 flex items-center justify-center">
-                                    <User className="h-4 w-4 text-[#FF0000]" />
-                                </div>
-                            )}
-                            <button
-                                onClick={handleLogout}
-                                className="h-8 w-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-[#FF0000] transition-all"
-                                title="Sign Out"
-                            >
-                                <LogOut className="h-4 w-4" />
-                            </button>
-                        </motion.div>
-                    ) : (
-                        <motion.a
-                            href="/api/auth/google/login"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="flex items-center gap-2 bg-[#FF0000] text-white font-black text-sm px-4 py-2 rounded-full hover:bg-[#e00000] hover:scale-105 active:scale-95 transition-all"
+                        )}
+                        <button
+                            onClick={handleLogout}
+                            className="h-8 w-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center hover:bg-white/10 text-white/50 hover:text-[#FF0000] transition-all"
+                            title="Sign Out"
                         >
-                            Sign in with Google
-                        </motion.a>
-                    )
+                            <LogOut className="h-4 w-4" />
+                        </button>
+                    </motion.div>
                 )}
             </div>
         </nav>

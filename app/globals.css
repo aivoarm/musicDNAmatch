@@ -75,20 +75,20 @@
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --muted-foreground: 240 5% 85%;
+    --accent: 240 3.7% 25%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
+    --border: 240 3.7% 25%;
+    --input: 240 3.7% 25%;
     --ring: 0 100% 50%;
     --radius: 0.75rem;
   }
 }
 
 @utility antigravity-mesh {
-  background-color: hsla(240, 10%, 4%, 1);
+  background-color: hsla(240, 10%, 2%, 1);
   background-image:
     radial-gradient(at 0% 0%, hsla(0, 100%, 50%, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, hsla(20, 100%, 50%, 0.1) 0px, transparent 50%),
@@ -98,10 +98,10 @@
 }
 
 @utility glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 @utility glow-primary {
