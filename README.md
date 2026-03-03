@@ -1,63 +1,28 @@
-# 🎵 Music DNA Match (YouTube Edition)
+# 🎵 Music DNA Match
+> **Sonic Structural Mapping & Neural Discovery Protocol.**
 
-> **AI-orchestrated musical geometry extracted from your YouTube signal.**  
-> We strip away cultural labels and focus on the underlying mathematics of sound activity.
+[Live Site: dna.armanayva.com](https://dna.armanayva.com/)
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?logo=next.js)](https://nextjs.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase)](https://supabase.com/)
-[![YouTube](https://img.shields.io/badge/YouTube-API-FF0000?logo=youtube)](https://developers.google.com/youtube/v3)
-[![Gemini](https://img.shields.io/badge/Gemini-2.0--flash-4285F4?logo=google)](https://ai.google.dev/)
+Music DNA Match is a high-fidelity musical discovery engine that strips away cultural labels and genres to focus on the underlying mathematics of sound. By scanning your digital music footprint (Spotify & YouTube), it generates a **12-dimensional sonic vector**—a mathematical fingerprint of your unique musical identity.
 
 ---
 
-## ✨ What is Music DNA Match?
+## ✨ Features
 
-Music DNA Match converts a user's **YouTube Watch History** into a **12-dimensional sonic vector** — a mathematical fingerprint of their musical identity. This "DNA" is then used to:
+### 🎧 Multimodal Signal Capture
+- **Spotify Native Scan:** A pure TypeScript implementation that systematically scans Spotify discovery signals (Playlists, Top Tracks) without requiring a Python environment.
+- **YouTube Frequency Extraction:** Real-time extraction of structural audio DNA from any YouTube signal (Artist, Track, or Vibe).
+- **Frictionless Discovery:** No login required for standard frequency scanning.
 
-1. **Match** you with other listeners whose musical DNA is closest to yours via high-dimensional vector similarity search.
-2. **Generate AI theses** via Gemini explaining the spectral and temporal resonance of your connection.
-3. **Open an ephemeral Bridge** where matched users can chat and collaborate in a shared "Green Room".
-4. **Merge Signals** — Create a collaborative YouTube playlist placeholder for your shared vibe.
+### 🧬 Neural Discovery Protocol
+- **Vector Space Mapping:** Your DNA is quantized across 12 distinct axes (Spectral, Harmonic, Transient, etc.) and projected into a high-dimensional vector space.
+- **Euclidean Matching:** High-precision similarity search finds "Sonic Soulmates" by calculating the multi-dimensional distance between user profiles.
+- **Coherence Index:** A geometric measurement of your signal's internal consistency and structured complexity.
 
----
-
-## 🧬 How the DNA Works
-
-The 12D Musical DNA vector is computed by scanning your YouTube watch history and filtering specifically for **Music Category (10)** activities. 
-
-| Source | What we extract |
-29: |---|---|
-| YouTube Data API v3 | Recent watch history metadata (titles, channel, category) |
-| lib/youtube.ts | Strictly filtered music-only signals |
-
-Each dimension of the vector maps to a psychoacoustic trait derived from visual and musical signals:
-- Spectral Centroid, Transient Density, Harmonicity, Pulse Saliency, Timbral Warmth, Era Centroid, etc.
-
----
-
-## 🚀 Features
-
-### 🎙️ Vibe Broadcast
-- Authenticate with **Google OAuth 2.0**.
-- Compute your 12D DNA vector from your YouTube listening history.
-- Real-time "X-Ray" scanner for individual video signals.
-- Store your sonic embedding in Supabase using `pgvector`.
-
-### 🔎 Sonic Soulmate Discovery
-- Vector similarity search using Euclidean distance (`<->` operator).
-- Matches sorted by closeness in 12D space.
-- AI-generated "Musical Thesis" (why you two are compatible).
-
-### 🌿 The Green Room (Bridge)
-- Ephemeral collaboration space created between two matched users.
-- Real-time chat powered by **Supabase Realtime**.
-- **YouTube Merge** — Initializing a shared connection bridge.
-
-### 🔐 Authentication & Compliance
-- Full **Google Identity Protocol** integration.
-- CSRF protection via secure `state` parameters.
-- Built-in **Privacy Policy** and **Terms of Service** at the root protocol.
-- Secure HTTP-only session management.
+### 📱 Premium Mobile Experience
+- **Fluid Layouts:** Fully responsive design system optimized for all screen sizes, from mobile devices to desktop workstations.
+- **Glassmorphism UI:** A stunning, translucent interface with vibrant gradients and micro-animations.
+- **Performance Optimized:** Strategic link prefetching and native edge-compatible logic for instantaneous transitions.
 
 ---
 
@@ -66,42 +31,51 @@ Each dimension of the vector maps to a psychoacoustic trait derived from visual 
 | Layer | Technology |
 |---|---|
 | **Framework** | Next.js 16 (App Router, Turbopack) |
-| **Language** | TypeScript |
-| **Styling** | Vanilla CSS + custom CSS variables |
-| **Animations** | Framer Motion |
-| **Database** | Supabase (PostgreSQL + pgvector) |
+| **Language** | TypeScript (Native Edge-Compatible Logic) |
+| **Logic** | Custom Spotify Structural Fetcher (Pure TS) |
+| **Styling** | Vanilla CSS + Tailwind Utility Layer |
+| **Animations** | Framer Motion (60FPS Micro-interactions) |
+| **Database** | Supabase (PostgreSQL + `pgvector`) |
 | **Realtime** | Supabase Realtime Channels |
-| **Auth** | Google OAuth 2.0 (OIDC) |
-| **AI** | Google Gemini 2.0 Flash |
-| **Music API** | YouTube Data API v3 |
-| **Icons** | Lucide React |
+| **AI** | Google Gemini 2.0 Flash (Signal Synthesis) |
+| **Music APIs** | Spotify Public API + YouTube Data API v3 |
+
+---
+
+## 🚀 Recent Improvements
+
+1. **Python-Free Architecture:** Ported the core Spotify scanning logic from a Python child process to a native TypeScript `SpotifyPublicFetcher`. This enables seamless deployment on Edge runtimes (Vercel, Cloudflare) and improves performance.
+2. **Mobile-First Refactoring:** Extensively updated global paddings, font sizes, and input behaviors to ensure the "Neural Matching Protocol" looks premium on small screens.
+3. **Optimized Prefetching:** Reduced unnecessary network noise by disabling background prefetching on heavy data routes, resulting in faster perceived page loads.
 
 ---
 
 ## ⚙️ Setup & Installation
 
-### Prerequisites
-- Node.js 18+
-- pnpm
-- A [Google Cloud Console](https://console.cloud.google.com/) project with **YouTube Data API v3** enabled.
-- A [Supabase](https://supabase.com) project with `pgvector` enabled.
-
 ### 1. Environment Variables
 Create `.env.local`:
 ```env
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# API Signals
 YOUTUBE_API_KEY=...
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
+
+# Site Config
+NEXT_PUBLIC_SITE_URL=https://dna.armanayva.com
 ```
 
-### 2. Database Setup
-Run `supabase/migrations/setup.sql` in your Supabase SQL editor. Note that user IDs are now Google `sub` strings.
+### 2. Initialization
+```bash
+npm install
+npm run dev
+```
 
 ---
 
 ## 📄 License
-© 2026 Arman Ayva. All rights reserved. www.armanayva.com
+© 2026 Arman Ayva. All rights reserved. [dna.armanayva.com](https://dna.armanayva.com/)
 MIT License for protocol implementation.

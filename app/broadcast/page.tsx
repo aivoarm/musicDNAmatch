@@ -531,9 +531,9 @@ function BroadcastContent() {
 
                                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                                         <Link href="/match" prefetch={false}
-                                            className="flex w-full items-center justify-between bg-primary p-8 rounded-3xl font-black text-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all glow-primary group">
-                                            <span>Find Soulmates</span>
-                                            <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-2" />
+                                            className="flex w-full items-center justify-between bg-primary p-6 md:p-8 rounded-2xl md:rounded-3xl font-black text-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all glow-primary group">
+                                            <span className="text-sm md:text-base">Find Soulmates</span>
+                                            <ChevronRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />
                                         </Link>
                                     </motion.div>
                                 </div>
@@ -542,8 +542,8 @@ function BroadcastContent() {
                             {/* Recent tracks used for analysis */}
                             {dnaData.recent_tracks?.length > 0 && (
                                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                                    className="glass rounded-[2.5rem] p-10 border-white/10">
-                                    <h3 className="font-bold flex items-center gap-2 mb-8 uppercase tracking-widest text-xs text-white/60 font-black">
+                                    className="glass rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border-white/10">
+                                    <h3 className="font-bold flex items-center gap-2 mb-6 md:mb-8 uppercase tracking-widest text-[10px] md:text-xs text-white/60 font-black">
                                         <Activity className="h-4 w-4" /> Captured Audio Signals
                                     </h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

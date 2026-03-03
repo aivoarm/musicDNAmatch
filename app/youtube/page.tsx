@@ -102,39 +102,39 @@ export default function YouTubeAnalyzer() {
     return (
         <div className="min-h-screen pt-24 px-6 sm:px-10 pb-20 flex flex-col items-center">
             <div className="max-w-5xl w-full">
-                <header className="mb-12 flex justify-between items-end">
-                    <div>
-                        <button onClick={() => router.back()} className="flex items-center gap-2 text-xs font-bold uppercase text-white/60 hover:text-white transition-colors mb-4">
-                            <ArrowLeft className="h-3.5 w-3.5" /> Back
+                <header className="mb-10 md:mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-6 text-left">
+                    <div className="flex-1">
+                        <button onClick={() => router.back()} className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase text-white/60 hover:text-white transition-colors mb-4">
+                            <ArrowLeft className="h-3 md:h-3.5 w-3 md:w-3.5" /> Back
                         </button>
-                        <h1 className="text-4xl font-black mb-2 text-white">YouTube <span className="text-[#FF0000] italic">Scanner</span></h1>
-                        <p className="text-white/80 font-medium">Extracting structural audio DNA from any YouTube signal. No login required.</p>
+                        <h1 className="text-3xl md:text-4xl font-black mb-2 text-white">YouTube <span className="text-[#FF0000] italic">Scanner</span></h1>
+                        <p className="text-sm md:text-base text-white/80 font-medium">Extracting structural audio DNA from any YouTube signal. No login required.</p>
                     </div>
-                    <div className="p-4 rounded-2xl bg-[#FF0000]/10 border border-[#FF0000]/20 hidden sm:block">
-                        <Youtube className="h-8 w-8 text-[#FF0000]" />
+                    <div className="p-4 rounded-2xl bg-[#FF0000]/10 border border-[#FF0000]/20 self-start sm:self-auto">
+                        <Youtube className="h-6 w-6 md:h-8 md:w-8 text-[#FF0000]" />
                     </div>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                     {/* Left Column: Search & Trends */}
                     <div className="space-y-8">
-                        <div className="glass p-10 rounded-[3rem] border-white/20 bg-gradient-to-br from-white/5 to-transparent">
-                            <h2 className="text-xl font-black mb-8 flex items-center gap-3 text-white">
-                                <Search className="h-6 w-6 text-[#FF0000]" />
+                        <div className="glass p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] border-white/20 bg-gradient-to-br from-white/5 to-transparent">
+                            <h2 className="text-lg md:text-xl font-black mb-6 md:mb-8 flex items-center gap-3 text-white">
+                                <Search className="h-5 w-5 md:h-6 md:w-6 text-[#FF0000]" />
                                 Initialize Frequency
                             </h2>
-                            <form onSubmit={handleSearch} className="relative mb-6">
+                            <form onSubmit={handleSearch} className="relative flex flex-col sm:block mb-6 gap-2">
                                 <input
                                     type="text"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Search Artist, Track, or Vibe..."
-                                    className="w-full bg-white/5 border border-white/20 rounded-2xl py-5 pl-7 pr-24 focus:outline-none focus:ring-2 focus:ring-[#FF0000]/40 transition-all font-bold text-white placeholder:text-white/20"
+                                    placeholder="Search..."
+                                    className="w-full bg-white/5 border border-white/20 rounded-2xl py-4 sm:py-5 pl-5 sm:pl-7 pr-4 sm:pr-24 focus:outline-none focus:ring-2 focus:ring-[#FF0000]/40 transition-all font-bold text-white placeholder:text-white/20 text-sm sm:text-base"
                                 />
                                 <button
                                     type="submit"
                                     disabled={searching}
-                                    className="absolute right-3 top-3 bottom-3 px-8 bg-[#FF0000] text-white rounded-xl font-black text-xs uppercase tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-lg shadow-[#FF0000]/20"
+                                    className="sm:absolute right-2 sm:right-3 top-2 sm:top-3 bottom-2 sm:bottom-3 px-6 sm:px-8 bg-[#FF0000] text-white rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-widest hover:scale-[1.03] active:scale-95 transition-all shadow-lg shadow-[#FF0000]/20 py-4 sm:py-0"
                                 >
                                     {searching ? <Activity className="h-5 w-5 animate-spin" /> : "FIND"}
                                 </button>

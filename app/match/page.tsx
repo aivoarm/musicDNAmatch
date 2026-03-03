@@ -76,21 +76,21 @@ export default function MatchPage() {
     return (
         <div className="min-h-screen pt-20 px-6 sm:px-10 pb-20">
             <div className="max-w-6xl w-full mx-auto">
-                <header className="mb-12 flex justify-between items-center bg-black/40 backdrop-blur-3xl p-10 rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden group">
+                <header className="mb-8 md:mb-12 flex flex-col md:flex-row justify-between items-start md:items-center bg-black/40 backdrop-blur-3xl p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-white/10 shadow-2xl relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-10 opacity-5 group-hover:opacity-10 transition-opacity">
                         <Binary className="h-40 w-40" />
                     </div>
 
                     <div className="relative z-10">
-                        <button onClick={() => router.back()} className="flex items-center gap-2 text-[10px] font-black uppercase text-white/40 hover:text-[#FF0000] transition-colors mb-4 tracking-[0.3em]">
-                            <ArrowLeft className="h-4 w-4" /> Return to DNA
+                        <button onClick={() => router.back()} className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase text-white/40 hover:text-[#FF0000] transition-colors mb-4 tracking-[0.3em]">
+                            <ArrowLeft className="h-3.5 md:h-4 w-3.5 md:w-4" /> Return to DNA
                         </button>
-                        <h1 className="text-5xl font-black mb-3 italic tracking-tighter">Sonic <span className="text-[#FF0000] not-italic">Soulmates</span></h1>
-                        <div className="flex items-center gap-4">
-                            <p className="text-[#FF0000] flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.3em] bg-[#FF0000]/10 px-4 py-2 rounded-full border border-[#FF0000]/20">
-                                <Activity className="h-4 w-4 animate-pulse" /> Neural Protocol Active
+                        <h1 className="text-3xl md:text-5xl font-black mb-3 italic tracking-tighter">Sonic <span className="text-[#FF0000] not-italic">Soulmates</span></h1>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                            <p className="text-[#FF0000] flex items-center gap-2 font-black text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.3em] bg-[#FF0000]/10 px-3 sm:px-4 py-2 rounded-full border border-[#FF0000]/20">
+                                <Activity className="h-3 md:h-4 w-3 md:w-4 animate-pulse" /> Neural Protocol Active
                             </p>
-                            <span className="text-white/40 font-mono text-[9px] uppercase tracking-[0.4em]">12,492 Signal Nodes Active</span>
+                            <span className="text-white/40 font-mono text-[8px] md:text-[9px] uppercase tracking-[0.3em] md:tracking-[0.4em]">12,492 Signal Nodes Active</span>
                         </div>
                     </div>
                 </header>
@@ -119,44 +119,44 @@ export default function MatchPage() {
                                     <Brain className="h-16 w-16" />
                                 </div>
 
-                                <div className="flex gap-8 items-start sm:items-center relative z-10">
-                                    <div className="relative shrink-0">
+                                <div className="flex flex-col sm:flex-row gap-6 md:gap-8 items-start sm:items-center relative z-10">
+                                    <div className="relative shrink-0 mx-auto sm:mx-0">
                                         <div className="absolute inset-0 bg-[#FF0000]/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                                         <img
                                             src={match.metadata?.images?.[0]?.url || `https://i.pravatar.cc/100?u=${idx}`}
                                             alt={match.metadata?.display_name}
-                                            className="h-24 w-24 rounded-3xl object-cover grayscale group-hover:grayscale-0 transition-all ring-1 ring-white/10 group-hover:ring-[#FF0000]/40 scale-100 group-hover:scale-110"
+                                            className="h-20 w-20 md:h-24 md:w-24 rounded-[1.5rem] md:rounded-3xl object-cover grayscale group-hover:grayscale-0 transition-all ring-1 ring-white/10 group-hover:ring-[#FF0000]/40 scale-100 group-hover:scale-110"
                                         />
-                                        <div className="absolute -bottom-3 -right-3 bg-[#FF0000] text-[12px] font-black px-3 py-1.5 rounded-xl text-white shadow-xl">
+                                        <div className="absolute -bottom-2 -right-2 bg-[#FF0000] text-[10px] md:text-[12px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-lg md:rounded-xl text-white shadow-xl">
                                             {(match.similarity * 100).toFixed(1)}%
                                         </div>
                                     </div>
-                                    <div className="flex-1">
-                                        <h2 className="text-3xl font-black mb-3 italic tracking-tighter group-hover:text-[#FF0000] transition-colors">{match.metadata?.display_name || "Anonymous Broadcaster"}</h2>
-                                        <div className="flex flex-wrap gap-2 mb-6">
-                                            {(match.metadata?.top_genres || []).slice(0, 4).map((genre: string) => (
-                                                <span key={genre} className="text-[9px] bg-white/5 border border-white/10 px-3 py-1 rounded-lg font-black uppercase tracking-widest text-white/60 group-hover:text-white group-hover:border-white/20 transition-all">
+                                    <div className="flex-1 w-full text-center sm:text-left">
+                                        <h2 className="text-2xl md:text-3xl font-black mb-2 md:mb-3 italic tracking-tighter group-hover:text-[#FF0000] transition-colors truncate">{match.metadata?.display_name || "Anonymous Broadcaster"}</h2>
+                                        <div className="flex flex-wrap justify-center sm:justify-start gap-2 mb-6">
+                                            {(match.metadata?.top_genres || []).slice(0, 3).map((genre: string) => (
+                                                <span key={genre} className="text-[8px] md:text-[9px] bg-white/5 border border-white/10 px-2 md:px-3 py-0.5 md:py-1 rounded-lg font-black uppercase tracking-widest text-white/60 group-hover:text-white group-hover:border-white/20 transition-all">
                                                     {genre}
                                                 </span>
                                             ))}
                                         </div>
 
-                                        <div className="flex gap-4">
+                                        <div className="flex flex-col sm:flex-row gap-3">
                                             <button
                                                 onClick={() => setSelectedMatch(match)}
-                                                className="flex-1 bg-white text-black font-black py-4 rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all text-sm uppercase tracking-widest shadow-lg"
+                                                className="flex-1 bg-white text-black font-black py-3 md:py-4 rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all text-xs md:text-sm uppercase tracking-widest shadow-lg"
                                             >
-                                                <MessageSquarePlus className="h-5 w-5" />
+                                                <MessageSquarePlus className="h-4 w-4 md:h-5 md:w-5" />
                                                 Create Connection
                                             </button>
-                                            <button className="p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-white/40 hover:text-white">
-                                                <Share2 className="h-5 w-5" />
+                                            <button className="p-3 md:p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-white/40 hover:text-white flex justify-center items-center">
+                                                <Share2 className="h-4 w-4 md:h-5 md:w-5" />
                                             </button>
                                         </div>
                                     </div>
                                     <div className="text-right hidden sm:block">
                                         <div className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Euclidean Dist</div>
-                                        <div className="text-2xl font-mono font-black text-[#FF0000] group-hover:scale-110 transition-transform origin-right">{(1 - match.similarity).toFixed(3)}</div>
+                                        <div className="text-xl md:text-2xl font-mono font-black text-[#FF0000] group-hover:scale-110 transition-transform origin-right">{(1 - match.similarity).toFixed(3)}</div>
                                         <div className="text-[8px] font-bold text-white/20 uppercase mt-1">Structural Gap</div>
                                     </div>
                                 </div>
@@ -167,19 +167,19 @@ export default function MatchPage() {
                     {/* Sidebar Area */}
                     <div className="space-y-6">
                         {/* Primary Signal Explanation */}
-                        <div className="glass rounded-[2.5rem] p-10 border-[#FF0000]/30 bg-[#FF0000]/5 ring-1 ring-[#FF0000]/20 relative overflow-hidden">
-                            <h3 className="font-black flex items-center gap-2 uppercase tracking-[0.2em] text-[10px] text-[#FF0000] mb-8">
-                                <Brain className="h-5 w-5" /> Active Protocol
+                        <div className="glass rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 border-[#FF0000]/30 bg-[#FF0000]/5 ring-1 ring-[#FF0000]/20 relative overflow-hidden">
+                            <h3 className="font-black flex items-center gap-2 uppercase tracking-[0.2em] text-[9px] md:text-[10px] text-[#FF0000] mb-6 md:mb-8">
+                                <Brain className="h-4 md:h-5 w-4 md:w-5" /> Active Protocol
                             </h3>
 
-                            <div className="space-y-8 relative z-10">
+                            <div className="space-y-6 md:space-y-8 relative z-10">
                                 <div className="border-b border-white/10 pb-6">
                                     <p className="text-[10px] font-black text-white/60 uppercase tracking-widest mb-2 font-mono">My Primary Signal</p>
                                     <div className="flex items-end justify-between">
-                                        <h4 className="text-2xl font-black text-white italic truncate pr-4">{userDna?.display_name || "Scanning..."}</h4>
+                                        <h4 className="text-xl md:text-2xl font-black text-white italic truncate pr-4">{userDna?.display_name || "Scanning..."}</h4>
                                         <div className="text-right shrink-0">
-                                            <p className="text-3xl font-mono font-black text-[#FF0000] tracking-tighter">80.2%</p>
-                                            <p className="text-[9px] font-black text-white uppercase tracking-widest">COHERENCE</p>
+                                            <p className="text-2xl md:text-3xl font-mono font-black text-[#FF0000] tracking-tighter">80.2%</p>
+                                            <p className="text-[8px] md:text-[9px] font-black text-white uppercase tracking-widest">COHERENCE</p>
                                         </div>
                                     </div>
                                 </div>

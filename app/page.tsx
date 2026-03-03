@@ -237,8 +237,8 @@ export default function Home() {
                                     <Waves className="h-20 w-20 text-[#FF0000]" />
                                 </div>
                             </div>
-                            <h1 className="text-5xl md:text-8xl font-black mb-6 leading-none tracking-tighter text-white">Sonic <span className="text-[#FF0000] italic">Soulmates</span></h1>
-                            <p className="text-xl md:text-2xl text-white font-medium leading-relaxed mb-12 max-w-2xl">
+                            <h1 className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 leading-none tracking-tighter text-white">Sonic <span className="text-[#FF0000] italic">Soulmates</span></h1>
+                            <p className="text-lg md:text-2xl text-white font-medium leading-relaxed mb-12 max-w-2xl">
                                 We use your <span className="text-[#FF0000] font-black">Spotify public playlists</span> to extract your literal music DNA—finding your structural soulmate to connect, collaborate, and harmonize in real-time.
                             </p>
                             <div className="flex flex-col items-center gap-4">
@@ -333,58 +333,58 @@ export default function Home() {
                     {/* STAGE: SPOTIFY SCAN INSTRUCTIONS & INPUT */}
                     {stage === 'spotify_scan' && (
                         <motion.div key="spotify" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }}
-                            className="py-12 w-full max-w-2xl mx-auto">
-                            <div className="text-center mb-12">
-                                <h2 className="text-4xl font-black mb-4 text-white">Capture Spotify URL</h2>
-                                <p className="text-white/60 font-medium">Paste your Spotify profile link to systematically scan your discovery signals.</p>
+                            className="py-6 md:py-12 w-full max-w-2xl mx-auto">
+                            <div className="text-center mb-8 md:mb-12">
+                                <h2 className="text-3xl md:text-4xl font-black mb-4 text-white uppercase tracking-tight">Capture Spotify URL</h2>
+                                <p className="text-white/60 font-medium px-4">Paste your Spotify profile link to systematically scan your discovery signals.</p>
                             </div>
 
-                            <div className="glass p-10 rounded-[2.5rem] border-white/20 mb-8">
-                                <div className="flex gap-2 p-2 bg-white/5 border border-white/20 rounded-2xl focus-within:ring-2 focus-within:ring-green-500/30 transition-all mb-4">
+                            <div className="glass p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] border-white/20 mb-8">
+                                <div className="flex flex-col sm:flex-row gap-2 p-1.5 sm:p-2 bg-white/5 border border-white/20 rounded-2xl focus-within:ring-2 focus-within:ring-green-500/30 transition-all mb-4">
                                     <input
                                         type="text"
                                         value={spotifyUserId}
                                         onChange={(e) => setSpotifyUserId(e.target.value)}
                                         placeholder="Paste Spotify Profile Link..."
-                                        className="flex-1 bg-transparent py-4 px-6 focus:outline-none font-mono text-sm text-white placeholder:text-white/20"
+                                        className="flex-1 bg-transparent py-4 px-6 focus:outline-none font-mono text-xs sm:text-sm text-white placeholder:text-white/20"
                                     />
                                     <button onClick={() => handleSpotifyScan(0)} disabled={scanningSpotify}
-                                        className="bg-[#1DB954] text-white font-black px-10 py-4 rounded-xl hover:bg-[#1ed760] transition-all hover:scale-[1.02] active:scale-95 text-sm uppercase tracking-widest flex items-center gap-2">
-                                        {scanningSpotify ? <Activity className="h-5 w-5 animate-spin" /> : <Scan className="h-5 w-5" />}
+                                        className="bg-[#1DB954] text-white font-black px-6 sm:px-10 py-4 rounded-xl hover:bg-[#1ed760] transition-all hover:scale-[1.02] active:scale-95 text-xs sm:text-sm uppercase tracking-widest flex items-center justify-center gap-2">
+                                        {scanningSpotify ? <Activity className="h-5 w-5 animate-spin" /> : <Scan className="h-4 w-4 sm:h-5 sm:w-5" />}
                                         SCAN
                                     </button>
                                 </div>
                                 {scanError && <p className="text-red-400 text-xs font-black bg-red-500/10 p-3 rounded-lg border border-red-500/20 text-center uppercase tracking-widest">{scanError}</p>}
                             </div>
 
-                            <div className="glass p-8 rounded-3xl border-white/10">
-                                <div className="flex items-center justify-between mb-6">
-                                    <div className="flex items-center gap-2 text-[#1DB954] font-black uppercase text-xs tracking-widest">
+                            <div className="glass p-6 md:p-8 rounded-[2rem] md:rounded-3xl border-white/10">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                                    <div className="flex items-center gap-2 text-[#1DB954] font-black uppercase text-[10px] md:text-xs tracking-widest">
                                         <HelpCircle className="h-4 w-4" /> Protocol: How to capture URL
                                     </div>
                                     <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer"
-                                        className="flex items-center gap-2 text-white/40 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest bg-white/5 py-2 px-4 rounded-full border border-white/10">
+                                        className="flex items-center gap-2 text-white/40 hover:text-white transition-all text-[9px] md:text-[10px] font-black uppercase tracking-widest bg-white/5 py-2 px-4 rounded-full border border-white/10 w-full sm:w-auto justify-center sm:justify-start">
                                         Open Spotify <ExternalLink className="h-3 w-3" />
                                     </a>
                                 </div>
-                                <div className="space-y-4 text-sm text-white/60 font-medium border-t border-white/5 pt-6">
+                                <div className="space-y-4 text-xs md:text-sm text-white/60 font-medium border-t border-white/5 pt-6">
                                     <div className="flex gap-4">
-                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-xs shrink-0 text-white font-bold">1</span>
+                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] shrink-0 text-white font-bold">1</span>
                                         <p>Click on your <span className="text-white font-bold">Profile Name</span> within the Spotify interface.</p>
                                     </div>
                                     <div className="flex gap-4">
-                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-xs shrink-0 text-white font-bold">2</span>
+                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] shrink-0 text-white font-bold">2</span>
                                         <p>Locate the <span className="text-white font-bold">Menu (···)</span> button or Right-Click your name.</p>
                                     </div>
                                     <div className="flex gap-4">
-                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-xs shrink-0 text-white font-bold">3</span>
+                                        <span className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] shrink-0 text-white font-bold">3</span>
                                         <p>Select <span className="text-white font-bold">Copy link to profile</span> (found under the Share menu).</p>
                                     </div>
-                                    <p className="text-[10px] text-primary/80 italic pl-10">* Ensure discovery is set to public in your Spotify social settings.</p>
+                                    <p className="text-[9px] md:text-[10px] text-primary/80 italic pl-10">* Ensure discovery is set to public in your Spotify social settings.</p>
                                 </div>
                             </div>
-                            <div className="flex justify-center mt-12">
-                                <button onClick={() => setStage('source_selection')} className="text-xs font-black uppercase tracking-[0.3em] text-white/30 hover:text-white transition-all">← Back to Options</button>
+                            <div className="flex justify-center mt-12 pb-12">
+                                <button onClick={() => setStage('source_selection')} className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-white/30 hover:text-white transition-all px-6 py-3 border border-white/5 rounded-full hover:bg-white/5">← Back to Options</button>
                             </div>
                         </motion.div>
                     )}
@@ -463,20 +463,20 @@ export default function Home() {
                         <motion.div key="complete" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="space-y-12 w-full py-10 pb-40">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                                 {/* Left: DNA Visualization */}
-                                <div className="glass rounded-[3rem] p-12 overflow-hidden relative border-white/20">
-                                    <h3 className="font-mono text-xs uppercase text-white/60 font-black tracking-widest mb-12">Structural Map Vector</h3>
-                                    <div className="space-y-10">
+                                <div className="glass rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 overflow-hidden relative border-white/20">
+                                    <h3 className="font-mono text-[10px] md:text-xs uppercase text-white/60 font-black tracking-widest mb-8 md:mb-12">Structural Map Vector</h3>
+                                    <div className="space-y-8 md:space-y-10">
                                         <DNAField label="Spectral Centroid" value={dnaData.vector?.[0] ?? 0} />
                                         <DNAField label="Transient Density" value={dnaData.vector?.[1] ?? 0} color="secondary" />
                                         <DNAField label="Harmonicity" value={dnaData.vector?.[2] ?? 0} />
                                         <DNAField label="Temporal Polarity" value={dnaData.vector?.[5] ?? 0} color="secondary" />
                                     </div>
 
-                                    <div className="mt-16 h-56 flex flex-col items-center justify-center text-[#FF0000] relative">
-                                        <div className="absolute inset-0 bg-[#FF0000]/10 blur-[80px] rounded-full" />
-                                        <CheckCircle2 className="h-32 w-32 mb-8 relative drop-shadow-2xl" />
-                                        <span className="text-2xl font-black tracking-[0.4em] uppercase relative text-white italic">Sync Verified</span>
-                                        <span className="text-xs font-mono text-white/40 uppercase tracking-widest mt-4 font-black">{dnaData.display_name}</span>
+                                    <div className="mt-12 md:mt-16 h-48 md:h-56 flex flex-col items-center justify-center text-[#FF0000] relative">
+                                        <div className="absolute inset-0 bg-[#FF0000]/10 blur-[60px] md:blur-[80px] rounded-full" />
+                                        <CheckCircle2 className="h-24 w-24 md:h-32 md:w-32 mb-6 md:mb-8 relative drop-shadow-2xl" />
+                                        <span className="text-lg md:text-2xl font-black tracking-[0.4em] uppercase relative text-white italic">Sync Verified</span>
+                                        <span className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-4 font-black">{dnaData.display_name}</span>
                                     </div>
                                 </div>
 
@@ -578,19 +578,19 @@ export default function Home() {
                                         <div className="absolute -inset-2 bg-[#FF0000] rounded-[3rem] blur-3xl opacity-20 group-hover/btn:opacity-60 transition-opacity duration-700 animate-pulse" />
 
                                         <Link href={{ pathname: "/match", query: { genres: selectedGenres.join(",") } }}
-                                            className="relative flex w-full items-center justify-between bg-[#FF0000] p-12 rounded-[2.5rem] font-black text-white uppercase tracking-[0.4em] text-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-[0_20px_80px_rgba(255,0,0,0.5)] overflow-hidden group">
+                                            className="relative flex w-full flex-col sm:flex-row items-center justify-between bg-[#FF0000] p-6 md:p-12 rounded-[2rem] md:rounded-[2.5rem] font-black text-white uppercase tracking-[0.1em] sm:tracking-[0.4em] text-xl md:text-2xl hover:scale-[1.01] active:scale-95 transition-all shadow-[0_20px_80px_rgba(255,0,0,0.5)] overflow-hidden group">
 
                                             {/* Shimmer Effect Flash */}
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full animate-shimmer pointer-events-none" />
 
-                                            <span className="relative z-10 flex items-center gap-6">
-                                                <Users className="h-10 w-10 fill-white" />
+                                            <span className="relative z-10 flex items-center gap-4 md:gap-6 mb-4 sm:mb-0">
+                                                <Users className="h-8 w-8 md:h-10 md:w-10 fill-white" />
                                                 FIND SOLEMATES
                                             </span>
 
-                                            <div className="flex items-center gap-4 relative z-10 bg-black/20 py-3 px-6 rounded-2xl border border-white/10">
+                                            <div className="flex items-center gap-4 relative z-10 bg-black/20 py-2 md:py-3 px-4 md:px-6 rounded-2xl border border-white/10 w-full sm:w-auto justify-center sm:justify-start">
                                                 <span className="text-[10px] font-mono text-white/80 tracking-[0.3em] hidden md:block">INITIATE MATCH</span>
-                                                <ChevronRight className="h-10 w-10 transition-transform group-hover:translate-x-3 text-white" />
+                                                <ChevronRight className="h-6 w-6 md:h-10 md:w-10 transition-transform group-hover:translate-x-3 text-white" />
                                             </div>
                                         </Link>
                                     </motion.div>
