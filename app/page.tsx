@@ -13,7 +13,7 @@ import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "intro" | "genre_selection" | "spotify_input" | "playlist_selection" | "youtube_input" | "identity" | "analyzing" | "complete";
+type Stage = "intro" | "welcome_name" | "welcome_story" | "genre_selection" | "spotify_input" | "playlist_selection" | "youtube_input" | "identity" | "analyzing" | "complete";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -457,7 +457,7 @@ export default function Home() {
                                         We analyse your Spotify playlists and YouTube songs to build a <span className="text-white">12-dimensional Musical DNA vector</span> — then match you with listeners who hear the world the same way.
                                     </motion.p>
                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }} className="flex flex-col sm:flex-row gap-4">
-                                        <button onClick={() => setStage("genre_selection")} className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.35)] overflow-hidden">
+                                        <button onClick={() => setStage("welcome_name")} className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.35)] overflow-hidden">
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                             <Play className="h-4 w-4 fill-white" />Start DNA Discovery
                                         </button>
@@ -506,6 +506,106 @@ export default function Home() {
 
                         <div className="max-w-5xl mx-auto px-4 md:px-8 pt-24 pb-40 w-full">
                             <AnimatePresence mode="wait">
+
+                                {/* ── WELCOME NAME ── */}
+                                {stage === "welcome_name" && (
+                                    <motion.div key="wn" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto flex flex-col pt-12">
+                                        <div className="flex flex-col items-center text-center">
+                                            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-white/5 border border-white/10 mb-8 shrink-0">
+                                                <User className="h-6 w-6 text-white/70" />
+                                            </div>
+                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+                                                Welcome to <span className="text-[#FF0000] italic">MusicDNA</span>
+                                            </h2>
+                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-12">Who are we tuning the frequencies for?</p>
+                                        </div>
+
+                                        <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col items-center">
+                                            <input
+                                                type="text"
+                                                value={displayName}
+                                                onChange={(e) => setDisplayName(e.target.value)}
+                                                onKeyDown={(e) => e.key === "Enter" && displayName.trim() && setStage("welcome_story")}
+                                                placeholder="Enter your first name"
+                                                autoFocus
+                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-xl font-bold mb-6 text-white placeholder:text-white/30"
+                                            />
+                                            <button
+                                                onClick={() => setStage("welcome_story")}
+                                                disabled={!displayName.trim()}
+                                                className="w-full sm:w-auto px-12 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,0,0,0.2)]"
+                                            >
+                                                Continue <ArrowRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="flex justify-center mt-8">
+                                            <button onClick={() => setStage("intro")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest">← Back</button>
+                                        </div>
+                                    </motion.div>
+                                )}
+
+                                {/* ── WELCOME STORY ── */}
+                                {stage === "welcome_story" && (
+                                    <motion.div key="ws" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
+                                        <div className="text-center mb-12">
+                                            <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tighter mb-4">
+                                                Nice to meet you, <span className="text-[#FF0000] not-italic">{displayName || "Traveler"}</span>.
+                                            </h2>
+                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Let us show you what we're building here.</p>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16 relative">
+                                            {/* Connection beam */}
+                                            <div className="hidden md:block absolute top-[40%] left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[#FF0000]/60 to-transparent -translate-y-1/2 z-0" />
+
+                                            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative z-10 text-center flex flex-col items-center">
+                                                <div className="relative mb-6">
+                                                    <div className="absolute inset-0 bg-[#FF0000]/20 blur-xl rounded-full" />
+                                                    <img src="/avatars/pulse.png" alt="Jane" className="h-24 w-24 rounded-full object-cover relative ring-2 ring-[#FF0000]/30" />
+                                                </div>
+                                                <h3 className="text-xl font-black uppercase mb-1 text-white">Jane</h3>
+                                                <p className="text-[10px] mono uppercase text-[#FF0000] tracking-widest mb-4">98% Match</p>
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Ambient</span>
+                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Techno</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative z-10 text-center flex flex-col items-center">
+                                                <div className="relative mb-6">
+                                                    <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full" />
+                                                    <img src="/avatars/sync.png" alt="Jack" className="h-24 w-24 rounded-full object-cover relative ring-2 ring-green-500/30" />
+                                                </div>
+                                                <h3 className="text-xl font-black uppercase mb-1 text-white">Jack</h3>
+                                                <p className="text-[10px] mono uppercase text-[#FF0000] tracking-widest mb-4">98% Match</p>
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">House</span>
+                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Techno</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-center max-w-2xl mx-auto flex flex-col items-center justify-center space-y-8 glass py-12 px-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#FF0000]/10 to-transparent pointer-events-none" />
+                                            <div className="relative z-10">
+                                                <Users className="h-8 w-8 text-[#FF0000] mx-auto opacity-80 mb-6" />
+                                                <p className="text-lg md:text-xl font-medium leading-relaxed text-white/90 mb-4 px-4">
+                                                    Jane and Jack were total strangers, but their Musical DNA matched perfectly. They connected on our platform, discovered shared underground artists, and collaborated on a common Spotify playlist.
+                                                </p>
+                                                <p className="text-sm md:text-base font-black uppercase tracking-widest leading-relaxed text-[#FF0000] mb-10">
+                                                    Who is waiting to hear the world the same way you do?
+                                                </p>
+                                                <button
+                                                    onClick={() => setStage("genre_selection")}
+                                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-xs md:text-sm uppercase tracking-widest px-10 py-5 rounded-xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_30px_rgba(255,0,0,0.3)] relative overflow-hidden"
+                                                >
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
+                                                    Run Your DNA Test <Play className="h-4 w-4 fill-white" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
 
                                 {/* ── GENRE SELECTION ── */}
                                 {stage === "genre_selection" && (
