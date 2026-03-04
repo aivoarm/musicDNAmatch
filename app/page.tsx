@@ -451,7 +451,7 @@ export default function Home() {
                                         <div className="h-px w-8 bg-[#FF0000]" /><span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.4em]">Sonic Structural Mapping Protocol</span>
                                     </motion.div>
                                     <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }} className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.92] tracking-tight mb-6 text-white">
-                                        Your music<br />has a<br /><span className="text-[#FF0000] italic">fingerprint.</span>
+                                        Your musical taste<br />has a<br /><span className="text-[#FF0000] italic">fingerprint.</span>
                                     </motion.h1>
                                     <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }} className="text-white/50 text-base md:text-lg leading-relaxed mb-10 max-w-[480px] font-medium">
                                         We analyse your Spotify playlists and YouTube songs to build a <span className="text-white">12-dimensional Musical DNA vector</span> — then match you with listeners who hear the world the same way.
