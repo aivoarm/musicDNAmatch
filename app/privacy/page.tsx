@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ShieldCheck, Lock, Eye, Database, Share2, UserCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Lock, Eye, Database, Share2, UserCheck, User, Users } from "lucide-react";
 
 export default function PrivacyPolicy() {
     return (
@@ -90,17 +90,12 @@ export default function PrivacyPolicy() {
                     </div>
                 </section>
 
-                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] text-white/30 tracking-[0.2em] font-black">
-                    <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left font-mono">
-                        <p>© 2026 Arman Ayva. <a href="https://www.armanayva.com" className="hover:text-white transition-colors">www.armanayva.com</a></p>
-                    </div>
-                    <div className="flex gap-8">
-                        <a href="https://dna.armanayva.com/privacy" className="hover:text-white transition-colors">
-                            PRIVACY POLICY
-                        </a>
-                        <a href="https://dna.armanayva.com/terms" className="hover:text-white transition-colors">
-                            TERMS & CONDITIONS
-                        </a>
+                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. www.armanayva.com</span>
+                    <div className="flex gap-6">
+                        <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
+                        <Link href="/match" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
+                        <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>
                     </div>
                 </footer>
             </div>

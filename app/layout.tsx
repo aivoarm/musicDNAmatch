@@ -36,11 +36,13 @@ export const metadata: Metadata = {
         title: "musicDNAmatch — Discover Your Musical DNA",
         description:
             "Build your 12-dimensional Musical DNA fingerprint and find your sonic soulmates.",
+        images: ["/icon.png"],
     },
     twitter: {
         card: "summary_large_image",
         title: "musicDNAmatch",
         description: "Discover your Musical DNA and find your sonic soulmates.",
+        images: ["/icon.png"],
     },
     robots: { index: true, follow: true },
     icons: { icon: "/icon" },
