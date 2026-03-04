@@ -197,6 +197,12 @@ export default function Home() {
                 const d = await r.json();
                 if (d.found) {
                     setExisting(d.dna);
+                    if (d.dna.display_name && d.dna.display_name !== "Anonymous Signal") {
+                        setDisplayName(d.dna.display_name);
+                    }
+                    if (d.dna.metadata && d.dna.metadata.email) {
+                        setEmail(d.dna.metadata.email);
+                    }
                     if (d.dna.top_genres) setGenres(d.dna.top_genres);
                     const ids: string[] = d.dna.scanned_playlist_ids || [];
                     if (d.dna.scanned_playlist_id && !ids.includes(d.dna.scanned_playlist_id)) ids.push(d.dna.scanned_playlist_id);
@@ -457,7 +463,7 @@ export default function Home() {
                                         We analyse your Spotify playlists and YouTube songs to build a <span className="text-white">12-dimensional Musical DNA vector</span> — then match you with listeners who hear the world the same way.
                                     </motion.p>
                                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }} className="flex flex-col sm:flex-row gap-4">
-                                        <button onClick={() => setStage("welcome_name")} className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.35)] overflow-hidden">
+                                        <button onClick={() => setStage(existing ? "genre_selection" : "welcome_name")} className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.35)] overflow-hidden">
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                             <Play className="h-4 w-4 fill-white" />Start DNA Discovery
                                         </button>
