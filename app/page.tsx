@@ -491,7 +491,13 @@ export default function Home() {
                                 <div className="flex gap-6">
                                     <Link href="/about" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                                     <Link href="/profile" className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
-                                    <Link href="/match" className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
+                                    <Link href="/match" onClick={() => {
+                                        fetch('/api/dna/intent', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ intent: 'find_soulmates' })
+                                        }).catch(console.error);
+                                    }} className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                                     <Link href="/privacy" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>
                                 </div>
                             </div>
@@ -1202,6 +1208,13 @@ export default function Home() {
                                                     </div>
                                                 </div>
                                                 <Link href={{ pathname: "/match", query: { genres: genres.join(",") } }}
+                                                    onClick={() => {
+                                                        fetch('/api/dna/intent', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ intent: 'find_soulmates' })
+                                                        }).catch(console.error);
+                                                    }}
                                                     className="relative flex items-center justify-between bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
                                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                                     <span className="flex items-center gap-3 relative z-10"><Users className="h-6 w-6 fill-white" />Find Soulmates</span>

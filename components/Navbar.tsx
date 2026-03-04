@@ -50,6 +50,11 @@ export default function Navbar() {
                         <Link
                             key={link.href}
                             href={link.href}
+                            onClick={() => {
+                                if (link.label === "Soulmates") {
+                                    fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                                }
+                            }}
                             className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
                         >
                             <link.icon className="h-3.5 w-3.5" />
@@ -83,7 +88,12 @@ export default function Navbar() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                onClick={() => setIsMenuOpen(false)}
+                                onClick={() => {
+                                    setIsMenuOpen(false);
+                                    if (link.label === "Soulmates") {
+                                        fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                                    }
+                                }}
                                 className={`mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
                             >
                                 <link.icon className="h-4 w-4" />

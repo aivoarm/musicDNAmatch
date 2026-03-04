@@ -234,6 +234,9 @@ export default function ProfilePage() {
                         {/* Actions */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <Link href="/match"
+                                onClick={() => {
+                                    fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                                }}
                                 className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_36px_rgba(255,0,0,0.28)] overflow-hidden">
                                 <Users className="h-4 w-4" />Find Soulmates<ArrowRight className="h-3.5 w-3.5" />
                             </Link>

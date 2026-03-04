@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft, Brain, Code2, Music2, Sparkles, Users, Activity, BarChart, Network, User } from "lucide-react";
 
@@ -107,12 +109,43 @@ export default function AboutPage() {
                     </div>
                 </section>
 
+                {/* FAQ Section */}
+                <section className="space-y-8 mt-16 pt-16 border-t border-white/5">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                        <Brain className="h-6 w-6 text-[#FF0000]" /> Frequently Asked Questions
+                    </h2>
+
+                    <div className="space-y-6">
+                        <div className="glass p-6 rounded-2xl border border-white/5">
+                            <h3 className="text-lg font-black text-white mb-2">What is the "Coherence" percentage?</h3>
+                            <p className="text-sm text-white/70 leading-relaxed">
+                                Coherence is a mathematical measurement of how consistent or "focused" your musical taste is across our 12 DNA dimensions. We calculate the Weighted Variance of your track data. <br /><br />
+                                A <strong>High Coherence</strong> (e.g., 85%+) means you have a highly specialized sound profile with sharp preferences (you strongly love specific traits and strongly dislike others). A <strong>Low Coherence</strong> means your tastes are eclectic and spread out across many different styles.
+                            </p>
+                        </div>
+                        <div className="glass p-6 rounded-2xl border border-white/5">
+                            <h3 className="text-lg font-black text-white mb-2">How exactly does matching work?</h3>
+                            <p className="text-sm text-white/70 leading-relaxed">
+                                Every profile in our database is assigned a 12-dimensional array. When you click "Find Soulmates", our engine runs a Cosine Similarity Search inside the database using pgvector. It compares your 12 points against everyone else's 12 points to find the profiles geographically closest to you in that mathematical multi-dimensional space.
+                            </p>
+                        </div>
+                        <div className="glass p-6 rounded-2xl border border-white/5">
+                            <h3 className="text-lg font-black text-white mb-2">What are the 12 Dimensions?</h3>
+                            <p className="text-sm text-white/70 leading-relaxed">
+                                We don't just use "Rock" or "Pop" to match you. We use 12 distinct auditory axes ranging from <strong>Spectral Energy</strong> (intense soundscapes) and <strong>Rhythmic Drive</strong> (groove-forward music) to <strong>Melodic Warmth</strong> and <strong>Experimental Index</strong>. These dimensions capture exactly <em>why</em> you like the music you do.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
                 <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
                     <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
                     <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
                         <Link href="/about" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                         <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
-                        <Link href="/match" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
+                        <Link href="/match" onClick={() => {
+                            fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                        }} className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                         <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>
                     </div>
                 </footer>
