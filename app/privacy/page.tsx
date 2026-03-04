@@ -31,11 +31,12 @@ export default function PrivacyPolicy() {
                         <Eye className="h-5 w-5 text-[#FF0000]" /> 1. Data Intelligence Collection
                     </h2>
                     <p className="mb-4">
-                        MusicDNA ("the Application") integrates with Google OAuth services to construct your unique musical signature. We access the following specific information:
+                        MusicDNA ("the Application") analyzes your musical tastes to construct your unique signature. We collect the following specific information:
                     </p>
                     <ul className="list-disc list-inside space-y-2 ml-4">
-                        <li><span className="text-white font-medium">Google Profile Info:</span> Name, email, and profile picture to personalize your broadcast signal.</li>
-                        <li><span className="text-white font-medium">YouTube Activity:</span> We fetch your most recent public and private watch history (specifically categorized as "Music") to calculate your 12-dimensional DNA vector.</li>
+                        <li><span className="text-white font-medium">Public Information:</span> We only process public information, specifically public Spotify playlists and public YouTube videos you provide.</li>
+                        <li><span className="text-white font-medium">Profile Data:</span> Your name and email address are collected securely and stored only to allow you to revisit your profile and to suggest potential matches with other people.</li>
+                        <li><span className="text-white font-medium">Communications:</span> We will ask for your explicit consent before sending any newsletters or promotional materials.</li>
                     </ul>
                 </section>
 
@@ -81,18 +82,19 @@ export default function PrivacyPolicy() {
                     <div className="flex flex-wrap gap-4">
                         <div className="px-6 py-4 rounded-xl bg-black border border-white/10 flex-1 min-w-[200px]">
                             <p className="text-xs font-bold uppercase mb-1">Signed Out</p>
-                            <p className="text-sm opacity-50">Nukes all local and session cookies immediately.</p>
+                            <p className="text-sm opacity-50">Nukes all session cookies immediately.</p>
                         </div>
                         <div className="px-6 py-4 rounded-xl bg-black border border-white/10 flex-1 min-w-[200px]">
-                            <p className="text-xs font-bold uppercase mb-1">Revoke Access</p>
-                            <p className="text-sm opacity-50">Disconnect via your Google Security portal to stop all API synching.</p>
+                            <p className="text-xs font-bold uppercase mb-1">Request Deletion</p>
+                            <p className="text-sm opacity-50">Contact us at privacy@armanayva.com to completely erase your DNA vector and profile data from our servers.</p>
                         </div>
                     </div>
                 </section>
 
                 <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. www.armanayva.com</span>
+                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
                     <div className="flex gap-6">
+                        <Link href="/about" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                         <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
                         <Link href="/match" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                         <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>

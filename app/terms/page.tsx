@@ -40,9 +40,10 @@ export default function TermsConditions() {
                         <Zap className="h-5 w-5 text-[#FF0000]" /> 2. Signal Integrity
                     </h2>
                     <p>
-                        Our Service utilizes Google OAuth to synchronize with your YouTube musical activities. You agree that:
+                        Our Service processes public Spotify playlists and YouTube videos to calculate your musical DNA. You agree that:
                     </p>
                     <ul className="list-disc list-inside space-y-2 ml-4">
+                        <li>You will only provide links to public playlists and videos you have the right to share.</li>
                         <li>You will not use automated scripts to forge musical signals.</li>
                         <li>You are responsible for maintaining the security of your node session.</li>
                         <li>The Service is provided "as is" – we compute vectors based on raw signal input.</li>
@@ -68,8 +69,9 @@ export default function TermsConditions() {
                 </section>
 
                 <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. www.armanayva.com</span>
+                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
                     <div className="flex gap-6">
+                        <Link href="/about" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                         <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
                         <Link href="/match" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                         <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>

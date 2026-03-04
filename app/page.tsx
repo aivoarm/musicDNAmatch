@@ -481,8 +481,9 @@ export default function Home() {
                         <Ticker />
                         <footer className="border-t border-white/10 px-6 py-8">
                             <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-                                <span className="mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. www.armanayva.com</span>
+                                <span className="mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
                                 <div className="flex gap-6">
+                                    <Link href="/about" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                                     <Link href="/profile" className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
                                     <Link href="/match" className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                                     <Link href="/privacy" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>

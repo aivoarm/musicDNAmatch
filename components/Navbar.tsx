@@ -28,7 +28,7 @@ export default function Navbar() {
         { href: "/", label: "Discovery", icon: Search, show: true },
         { href: "/soulmates", label: "Soulmates", icon: Users, show: hasDna },
         { href: "/profile", label: "Profile", icon: User, show: hasDna },
-        { href: "https://armanayva.com/en/music-dna", label: "About", icon: Info, show: true, external: true },
+        { href: "/about", label: "About", icon: Info, show: true },
     ];
 
     return (
@@ -50,7 +50,6 @@ export default function Navbar() {
                         <Link
                             key={link.href}
                             href={link.href}
-                            target={link.external ? "_blank" : undefined}
                             className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
                         >
                             <link.icon className="h-3.5 w-3.5" />
@@ -84,7 +83,6 @@ export default function Navbar() {
                             <Link
                                 key={link.href}
                                 href={link.href}
-                                target={link.external ? "_blank" : undefined}
                                 onClick={() => setIsMenuOpen(false)}
                                 className={`mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/60 hover:text-white"}`}
                             >

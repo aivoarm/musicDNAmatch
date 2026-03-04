@@ -1,0 +1,128 @@
+import Link from "next/link";
+import { ArrowLeft, Brain, Code2, Music2, Sparkles, Users, Activity, BarChart, Network, User } from "lucide-react";
+
+export default function AboutPage() {
+    return (
+        <div className="min-h-screen bg-black text-white pt-24 pb-20 px-6 sm:px-10 max-w-4xl mx-auto">
+            <Link
+                href="/"
+                className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground hover:text-white transition-colors mb-10 group"
+            >
+                <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
+                Back to Pulse
+            </Link>
+
+            <header className="mb-16 relative">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF0000] text-[10px] font-black uppercase tracking-widest mb-6 relative z-10">
+                    <Sparkles className="h-3 w-3" /> Project Vision & Science
+                </div>
+                <h1 className="text-5xl sm:text-7xl font-black tracking-tighter mb-6 relative z-10">
+                    The <span className="text-[#FF0000] italic">Science</span> of Sound.
+                </h1>
+                <p className="text-xl sm:text-2xl text-white/70 font-medium leading-relaxed max-w-2xl relative z-10">
+                    We believe that the music we listen to isn't just a preference—it's a direct reflection of how our brains process emotion, rhythm, and life itself.
+                </p>
+
+                {/* Decorative background element */}
+                <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-[#FF0000]/20 blur-[120px] rounded-full -z-0 pointer-events-none" />
+            </header>
+
+            <div className="space-y-16 leading-relaxed text-white/70 relative z-10">
+                {/* Vision Section */}
+                <section className="glass rounded-[2rem] p-8 sm:p-12 border-white/5 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
+                        <Users className="h-40 w-40" />
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-6 flex items-center gap-3 tracking-tight">
+                        <Users className="h-6 w-6 text-[#FF0000]" /> 1. The Vision: Musical Soulmates
+                    </h2>
+                    <div className="space-y-4 text-base sm:text-lg">
+                        <p>
+                            Music has always been the ultimate unifier. Before language, there was rhythm. The frequencies we gravitate towards govern our physiological state and emotional baselines.
+                        </p>
+                        <p>
+                            Our core thesis is simple: <strong className="text-white">People whose brains crave the same sonic architectures are fundamentally compatible.</strong> Whether for deep friendships, romantic relationships, or creative collaborations, shared musical DNA is one of the strongest predictors of resonance between two human beings.
+                        </p>
+                        <p>
+                            MusicDNAmatch wasn't built to just analyze data; it was built to bridge the gap between isolated listeners, using quantitative measurements of art to bring people together.
+                        </p>
+                    </div>
+                </section>
+
+                {/* Science Section */}
+                <section className="space-y-8">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3 tracking-tight">
+                        <Activity className="h-6 w-6 text-[#FF0000]" /> 2. The 12-Dimensional Vector Space
+                    </h2>
+                    <p className="text-base sm:text-lg">
+                        We map human musical taste into a mathematical space consisting of 12 distinct axes. When you provide public Spotify playlists and YouTube videos, our engine extracts the core metadata, genres, and audio features (such as acousticness, valence, danceability, tempo, and energy) of up to 50 tracks.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                        {/* Box 1 */}
+                        <div className="glass p-6 rounded-2xl border border-white/5 bg-white/2">
+                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <BarChart className="h-4 w-4" /> Feature Extraction
+                            </h3>
+                            <p className="text-sm">
+                                Each track is broken down into numerical values representing its mood, pacing, and instrumentation. We aggregate these features to find the mean frequencies and distributions of your listening habits.
+                            </p>
+                        </div>
+                        {/* Box 2 */}
+                        <div className="glass p-6 rounded-2xl border border-white/5 bg-white/2">
+                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Network className="h-4 w-4" /> Semantic Genre Analysis
+                            </h3>
+                            <p className="text-sm">
+                                We utilize natural language processing (NLP) to cluster the countless specific sub-genres associated with your tracks into broader, comparable categories across our global pool.
+                            </p>
+                        </div>
+                    </div>
+
+                    <p className="text-base sm:text-lg mt-6">
+                        These inputs are then combined with your explicit genre selections to calculate a single, unified 12D array: your <strong className="text-white">Musical DNA Vector</strong>.
+                    </p>
+                </section>
+
+                {/* Algorithm Section */}
+                <section className="glass rounded-[2rem] p-8 sm:p-12 border-white/5 bg-gradient-to-br from-[#FF0000]/10 to-transparent relative overflow-hidden">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-6 flex items-center gap-3 tracking-tight">
+                        <Code2 className="h-6 w-6 text-[#FF0000]" /> 3. Euclidean Distance Matching
+                    </h2>
+                    <div className="space-y-4 text-base sm:text-lg">
+                        <p>
+                            Once your node is established in the matrix, finding your "soulmates" becomes a geometry problem. We query the database for other active nodes and compute the <strong className="text-white">Cosine Similarity</strong> and <strong className="text-white">Euclidean Distance</strong> between your 12-dimensional vector and theirs.
+                        </p>
+                        <p>
+                            Because the dimensions are normalized (ranging from 0.0 to 1.0), distance represents true structural discordance.
+                        </p>
+                        <ul className="list-disc list-inside space-y-2 ml-4 text-sm sm:text-base mt-4 font-mono">
+                            <li><span className="text-white">90%+ Similarity:</span> Deep Neural Resonance (True Soulmates)</li>
+                            <li><span className="text-white">75%-89% Similarity:</span> Harmonic Alignment (Great Collaborators)</li>
+                            <li><span className="text-white">&lt;70% Similarity:</span> Sonic Divergence (Opposite Tastes)</li>
+                        </ul>
+                        <p className="text-sm italic text-white/50 mt-4">
+                            Note: We use LLMs to translate these high-dimensional math outputs into human-readable narratives, explaining exactly *why* your brain prefers distorted 808s or ethereal synthwave.
+                        </p>
+                    </div>
+                </section>
+
+                <footer className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <span className="font-mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
+                    <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+                        <Link href="/about" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
+                        <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
+                        <Link href="/match" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
+                        <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>
+                    </div>
+                </footer>
+            </div>
+
+            {/* Ambient Backgrounds */}
+            <div className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none overflow-hidden opacity-30">
+                <div className="absolute top-[30%] right-[10%] w-[600px] h-[600px] bg-[#FF0000]/5 blur-[150px] rounded-full animate-float" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#FF0000]/10 blur-[150px] rounded-full animate-pulse-glow" />
+            </div>
+        </div>
+    );
+}
