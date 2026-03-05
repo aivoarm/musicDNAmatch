@@ -535,7 +535,7 @@ function BroadcastContent() {
                                     </div>
 
                                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                                        <Link href="/match" prefetch={false}
+                                        <Link href="/soulmates" prefetch={false}
                                             className="flex w-full items-center justify-between bg-primary p-6 md:p-8 rounded-2xl md:rounded-3xl font-black text-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all glow-primary group">
                                             <span className="text-sm md:text-base">Find Soulmates</span>
                                             <ChevronRight className="h-5 w-5 md:h-6 md:w-6 transition-transform group-hover:translate-x-2" />

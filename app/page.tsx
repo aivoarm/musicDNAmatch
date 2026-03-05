@@ -13,7 +13,7 @@ import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "intro" | "welcome_name" | "welcome_story" | "genre_selection" | "spotify_input" | "playlist_selection" | "youtube_input" | "identity" | "analyzing" | "complete";
+type Stage = "intro" | "welcome_name" | "welcome_story" | "sources" | "genre_selection" | "analyzing" | "complete" | "email_capture";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -117,7 +117,7 @@ function Ticker() {
 }
 
 // ─── Step progress bar ───────────────────────────────────────────────────
-const STEP_LABELS = ["Genres", "Sources", "Analyse"];
+const STEP_LABELS = ["Sources", "Genres", "Analyse"];
 function Stepper({ step }: { step: number }) {
     return (
         <div className="flex items-center gap-1 mb-10">
@@ -147,6 +147,383 @@ function DnaBar({ label, value, red = true }: { label: string; value: number; re
                     className={`h-full rounded-full ${red ? "bg-[#FF0000] shadow-[0_0_16px_rgba(255,0,0,0.6)]" : "bg-white/50"}`} />
             </div>
         </div>
+    );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONVERSATIONAL ONBOARDING
+// ═══════════════════════════════════════════════════════════════════════════
+
+type ChatStep = "greeting" | "name_input" | "story_jack" | "story_jane" | "story_match" | "story_result" | "cta";
+
+interface ConversationalOnboardingProps {
+    existing: any;
+    checking: boolean;
+    displayName: string;
+    setDisplayName: (n: string) => void;
+    onResume: () => void;
+    onBegin: () => void;
+}
+
+interface ChatMessage {
+    id: string;
+    from: "system" | "user";
+    content: React.ReactNode;
+    delay?: number;
+}
+
+function TypingIndicator() {
+    return (
+        <div className="flex items-end gap-2">
+            <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 border border-[#FF0000]/30 flex items-center justify-center shrink-0">
+                <Waves className="h-3.5 w-3.5 text-[#FF0000]" />
+            </div>
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-2xl rounded-bl-sm px-4 py-3">
+                <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0 }} className="h-1.5 w-1.5 rounded-full bg-white/50 inline-block" />
+                <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="h-1.5 w-1.5 rounded-full bg-white/50 inline-block" />
+                <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="h-1.5 w-1.5 rounded-full bg-white/50 inline-block" />
+            </div>
+        </div>
+    );
+}
+
+function SystemBubble({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, delay, ease: "easeOut" }}
+            className="flex items-end gap-2.5 max-w-[85%] md:max-w-[70%]"
+        >
+            <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 border border-[#FF0000]/30 flex items-center justify-center shrink-0 mb-0.5">
+                <Waves className="h-3.5 w-3.5 text-[#FF0000]" />
+            </div>
+            <div className="bg-white/6 border border-white/10 rounded-2xl rounded-bl-sm px-5 py-3.5 text-white/85 text-sm leading-relaxed font-medium">
+                {children}
+            </div>
+        </motion.div>
+    );
+}
+
+function UserBubble({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.4, delay, ease: "easeOut" }}
+            className="flex justify-end"
+        >
+            <div className="bg-[#FF0000] rounded-2xl rounded-br-sm px-5 py-3.5 text-white text-sm font-black max-w-[60%]">
+                {children}
+            </div>
+        </motion.div>
+    );
+}
+
+// Story card for Jack & Jane
+function StoryCard({ name, color, genres, delay = 0 }: { name: string; color: string; genres: string[]; delay?: number }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.4 }}
+            className={`flex-1 min-w-[140px] rounded-2xl border p-4 ${color}`}
+        >
+            <div className="mono text-[9px] uppercase tracking-widest opacity-60 mb-1">Listener</div>
+            <div className="font-black text-lg italic mb-3">{name}</div>
+            <div className="flex flex-wrap gap-1.5">
+                {genres.map(g => (
+                    <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/10 border border-white/10">{g}</span>
+                ))}
+            </div>
+        </motion.div>
+    );
+}
+
+function ConversationalOnboarding({ existing, checking, displayName, setDisplayName, onResume, onBegin }: ConversationalOnboardingProps) {
+    const [step, setStep] = useState<ChatStep>("greeting");
+    const [nameInput, setNameInput] = useState(displayName || "");
+    const [typing, setTyping] = useState(false);
+    const [visibleMessages, setVisibleMessages] = useState(1);
+    const bottomRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    // Auto-scroll to bottom whenever messages change
+    useEffect(() => {
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 100);
+    }, [visibleMessages, step, typing]);
+
+    // Simulate typing then reveal next message
+    const revealWithDelay = (afterMs: number, then: () => void) => {
+        setTyping(true);
+        setTimeout(() => { setTyping(false); then(); }, afterMs);
+    };
+
+    // On mount: show greeting, then after a beat show the name prompt
+    useEffect(() => {
+        revealWithDelay(900, () => setVisibleMessages(2));
+    }, []);
+
+    const handleNameSubmit = () => {
+        const name = nameInput.trim();
+        if (!name) return;
+        setDisplayName(name);
+        document.cookie = `display_name=${encodeURIComponent(name)};max-age=31536000;path=/`;
+        setStep("story_jack");
+        setVisibleMessages(0);
+        // Cascade story messages
+        revealWithDelay(800, () => {
+            setVisibleMessages(1);
+            revealWithDelay(1000, () => {
+                setVisibleMessages(2);
+                revealWithDelay(1200, () => {
+                    setVisibleMessages(3);
+                    revealWithDelay(1400, () => {
+                        setVisibleMessages(4);
+                        revealWithDelay(1000, () => {
+                            setVisibleMessages(5);
+                            setStep("cta");
+                        });
+                    });
+                });
+            });
+        });
+    };
+
+    const firstName = (nameInput.trim() || displayName || "").split(" ")[0] || "you";
+
+    return (
+        <motion.div
+            key="conv"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="min-h-screen w-full flex flex-col"
+        >
+            {/* Ambient background */}
+            <div className="fixed inset-0 -z-10 pointer-events-none">
+                <div className="absolute top-1/4 left-1/3 h-[500px] w-[500px] blur-[180px] rounded-full bg-[#FF0000]/7" />
+                <div className="absolute bottom-1/4 right-1/4 h-[400px] w-[400px] blur-[160px] rounded-full bg-orange-900/6" />
+            </div>
+
+            {/* Top brand bar */}
+            <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 border-b border-white/5 bg-[#080808]/80 backdrop-blur-xl">
+                <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-[#FF0000] flex items-center justify-center">
+                        <Waves className="h-3.5 w-3.5 text-white" />
+                    </div>
+                    <span className="font-black text-white text-sm uppercase tracking-widest">musicDNA<span className="text-[#FF0000]">match</span></span>
+                </div>
+                <div className="flex gap-5 items-center">
+                    <Link href="/profile" className="mono text-[10px] text-white/30 hover:text-white transition-colors uppercase tracking-[0.2em] hidden md:flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
+                    <Link href="/soulmates" className="mono text-[10px] text-white/30 hover:text-white transition-colors uppercase tracking-[0.2em] hidden md:flex items-center gap-1.5"><Users className="h-3 w-3" />Soulmates</Link>
+                </div>
+            </div>
+
+            {/* Chat window */}
+            <div className="flex-1 flex flex-col max-w-2xl mx-auto w-full px-4 pt-24 pb-8">
+
+                {/* ── GREETING step ── */}
+                {step === "greeting" && (
+                    <div className="flex flex-col gap-4 flex-1">
+                        <SystemBubble delay={0.1}>
+                            Hey there 👋 Welcome to <span className="text-white font-black">musicDNAmatch</span>.
+                        </SystemBubble>
+
+                        {visibleMessages >= 2 && !typing && (
+                            <SystemBubble delay={0}>
+                                Before we map your sound — what should we call you?
+                            </SystemBubble>
+                        )}
+
+                        {typing && <TypingIndicator />}
+
+                        {visibleMessages >= 2 && !typing && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="flex gap-2 mt-2"
+                            >
+                                <input
+                                    ref={inputRef}
+                                    autoFocus
+                                    type="text"
+                                    value={nameInput}
+                                    onChange={e => setNameInput(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && nameInput.trim() && handleNameSubmit()}
+                                    placeholder="Your first name…"
+                                    className="flex-1 bg-white/5 border border-white/12 rounded-2xl px-5 py-4 text-white font-bold text-base focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                />
+                                <button
+                                    onClick={handleNameSubmit}
+                                    disabled={!nameInput.trim()}
+                                    className="bg-[#FF0000] text-white font-black px-6 py-4 rounded-2xl hover:bg-red-500 active:scale-95 transition-all disabled:opacity-25 flex items-center gap-2 text-sm uppercase tracking-wide shadow-[0_0_24px_rgba(255,0,0,0.3)]"
+                                >
+                                    <ArrowRight className="h-4 w-4" />
+                                </button>
+                            </motion.div>
+                        )}
+
+                        {/* Resume option */}
+                        {existing && !checking && visibleMessages >= 2 && !typing && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+                                className="flex justify-center pt-2">
+                                <button onClick={onResume} className="flex items-center gap-2 mono text-[10px] text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest border border-white/8 px-5 py-2.5 rounded-full hover:border-white/15">
+                                    <CheckCircle2 className="h-3 w-3 text-[#FF0000]" />Resume my previous signal
+                                </button>
+                            </motion.div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── STORY step ── */}
+                {(step === "story_jack" || step === "story_jane" || step === "story_match" || step === "story_result" || step === "cta") && (
+                    <div className="flex flex-col gap-4 flex-1">
+                        {/* User replied with name */}
+                        <UserBubble delay={0}>{firstName}</UserBubble>
+
+                        {visibleMessages >= 1 && (
+                            <SystemBubble delay={0}>
+                                Nice to meet you, <span className="text-white font-black">{firstName}</span> 🎵
+                            </SystemBubble>
+                        )}
+
+                        {typing && visibleMessages < 2 && <TypingIndicator />}
+
+                        {visibleMessages >= 2 && (
+                            <SystemBubble delay={0}>
+                                Let me tell you about <span className="text-white font-black">Jack and Jane</span> — two strangers who found each other through music.
+                            </SystemBubble>
+                        )}
+
+                        {typing && visibleMessages < 3 && <TypingIndicator />}
+
+                        {visibleMessages >= 3 && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="ml-10">
+                                <div className="bg-white/4 border border-white/8 rounded-2xl rounded-tl-sm p-5 space-y-4">
+                                    {/* Jack & Jane portrait cards */}
+                                    <div className="flex gap-3">
+                                        <StoryCard
+                                            name="Jack"
+                                            color="border-blue-500/20 text-blue-200"
+                                            genres={["Techno", "Industrial", "Ambient"]}
+                                            delay={0.1}
+                                        />
+                                        <StoryCard
+                                            name="Jane"
+                                            color="border-purple-500/20 text-purple-200"
+                                            genres={["Ambient", "Dream Pop", "Electronic"]}
+                                            delay={0.2}
+                                        />
+                                    </div>
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="text-sm text-white/60 leading-relaxed font-medium italic"
+                                    >
+                                        Complete strangers. Different cities. Jack was into heavy Techno and dark Industrial. Jane loved ethereal Dream Pop and soft Ambient textures.
+                                    </motion.p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {typing && visibleMessages < 4 && <TypingIndicator />}
+
+                        {visibleMessages >= 4 && (
+                            <SystemBubble delay={0}>
+                                <p className="mb-3">We ran their music through our <span className="text-white font-black">12-dimensional DNA engine</span>.</p>
+                                {/* Match visualization */}
+                                <div className="mt-3 bg-black/30 rounded-xl p-4 border border-white/8">
+                                    <div className="mono text-[9px] text-white/40 uppercase tracking-widest mb-3">Sonic overlap detected</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex-1 h-2 rounded-full bg-blue-500/30 overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: "78%" }}
+                                                transition={{ delay: 0.3, duration: 1.2, ease: "easeOut" }}
+                                                className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                                            />
+                                        </div>
+                                        <span className="mono text-sm font-black text-white shrink-0">78%</span>
+                                    </div>
+                                    <div className="flex gap-2 mt-3 flex-wrap">
+                                        {["Ambient", "Sonic Texture", "Experimental Index"].map(tag => (
+                                            <span key={tag} className="text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#FF0000]/15 border border-[#FF0000]/25 text-[#FF0000]">{tag}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </SystemBubble>
+                        )}
+
+                        {typing && visibleMessages < 5 && <TypingIndicator />}
+
+                        {visibleMessages >= 5 && (
+                            <SystemBubble delay={0}>
+                                They shared a <span className="text-white font-black">deep resonance</span> neither expected — a love for dark Ambient textures hiding beneath their different surfaces. Today they co-curate a playlist with 4,000 followers. 🎧
+                            </SystemBubble>
+                        )}
+
+                        {/* ── CTA ── */}
+                        {step === "cta" && visibleMessages >= 5 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5, duration: 0.5 }}
+                                className="mt-4 space-y-3"
+                            >
+                                <SystemBubble delay={0.2}>
+                                    <span className="text-white font-black">Your story is waiting to be written, {firstName}.</span> Who shares your sound?
+                                </SystemBubble>
+
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.8 }}
+                                    className="ml-10 flex flex-col gap-3"
+                                >
+                                    {/* How it works — compact */}
+                                    <div className="bg-white/4 border border-white/8 rounded-2xl p-4 space-y-3">
+                                        <div className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black">How it works</div>
+                                        {[
+                                            ["🎵", "Connect Spotify or YouTube"],
+                                            ["🧬", "Generate your 12D Musical DNA"],
+                                            ["🔍", "Match with sonic soulmates worldwide"],
+                                        ].map(([icon, text]) => (
+                                            <div key={text} className="flex items-center gap-3 text-sm text-white/70 font-medium">
+                                                <span className="text-base">{icon}</span>{text}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={onBegin}
+                                        className="relative w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.4)] overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
+                                        <Play className="h-4 w-4 fill-white" />
+                                        Start My Journey, {firstName}
+                                    </button>
+
+                                    {existing && !checking && (
+                                        <button onClick={onResume} className="flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/50 hover:text-white hover:border-white/20 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all">
+                                            <CheckCircle2 className="h-4 w-4 text-[#FF0000]" />Resume Previous Signal
+                                        </button>
+                                    )}
+
+                                    <p className="text-center mono text-[9px] text-white/20 uppercase tracking-widest">
+                                        © 2026 Arman Ayva · <a href="https://www.armanayva.com" target="_blank" className="hover:text-white/40 transition-colors">armanayva.com</a>
+                                    </p>
+                                </motion.div>
+                            </motion.div>
+                        )}
+                    </div>
+                )}
+
+                <div ref={bottomRef} className="h-4" />
+            </div>
+        </motion.div>
     );
 }
 
@@ -186,8 +563,8 @@ export default function Home() {
     const [email, setEmail] = useState("");
     const [progress, setProgress] = useState(0);
 
-
     const [dna, setDna] = useState<any>(null);
+    const [fetchedSources, setFetchedSources] = useState<any>(null);
 
     // ── Init ──────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -216,7 +593,7 @@ export default function Home() {
 
     // Auto-scan when entering spotify_input with a saved URL
     useEffect(() => {
-        if (autoScanned || stage !== "spotify_input" || !spotifyUrl.trim()) return;
+        if (autoScanned || stage !== "sources" || !spotifyUrl.trim()) return;
         setAutoScanned(true); scanSpotify(0);
     }, [stage, spotifyUrl]);
 
@@ -246,7 +623,6 @@ export default function Home() {
             if (offset === 0 && !d.playlists?.length) { setScanErr("No public playlists found."); return; }
             setPlaylists(p => [...p, ...(d.playlists || [])]);
             setPlTotal(d.total || 0); setPlOffset(offset);
-            setStage("playlist_selection");
         } catch { setScanErr("Connection failed. Try again."); }
         finally { setScanning(false); setLoadingMore(false); }
     };
@@ -320,8 +696,8 @@ export default function Home() {
         return () => document.removeEventListener("mousedown", handler);
     }, []);
 
-    // ── Run analysis ──────────────────────────────────────────────────────
-    const runAnalysis = async () => {
+    // ── Fetch metadata from sources ───────────────────────────────────────
+    const fetchSourcesAndPreselect = async () => {
         setStage("analyzing"); setProgress(0);
 
         let audioFeatures: any[] = [];
@@ -331,7 +707,7 @@ export default function Home() {
 
         // Step 1: Scan Spotify playlists (multi-playlist mode)
         if (selPlaylists.length > 0) {
-            setProgress(10);
+            setProgress(30);
             try {
                 const r = await fetch("/api/spotify/scan", {
                     method: "POST", headers: { "Content-Type": "application/json" },
@@ -345,7 +721,7 @@ export default function Home() {
                 audioFeatures = d.audioFeatures || [];
             } catch { }
         }
-        setProgress(35);
+        setProgress(60);
 
         // Step 2: Process YouTube tracks
         const ytOkTracks = ytTracks.filter(t => t.status === "ok");
@@ -359,9 +735,56 @@ export default function Home() {
                 youtubeVideos = d.videos || [];
             } catch { }
         }
-        setProgress(55);
+        setProgress(90);
 
-        // Step 3: Generate DNA via the engine
+        const ytFormattedTracks = ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail, url: t.url }));
+        setFetchedSources({ audioFeatures, spotifyTracks, youtubeVideos, youtubeTracks: ytFormattedTracks });
+
+        // Step 3: Fast dry_run DNA to get suggested genres based on the signals
+        try {
+            const r = await fetch("/api/dna/generate", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    genres: [],
+                    displayName,
+                    email,
+                    audioFeatures,
+                    youtubeVideos,
+                    spotifyTracks,
+                    youtubeTracks: ytFormattedTracks,
+                    dry_run: true
+                })
+            });
+            const d = await r.json();
+            if (d.success && d.suggested_genres) {
+                // Add suggested ones if they exist in GENRES list
+                const preselected: string[] = [];
+                for (const sg of d.suggested_genres) {
+                    const match = GENRES.find(g => g.toLowerCase() === sg.toLowerCase());
+                    if (match) preselected.push(match);
+                }
+                if (preselected.length > 0) {
+                    setGenres(preselected);
+                }
+            }
+        } catch { }
+
+        // Go to genre selection
+        setStage("genre_selection");
+        setProgress(0);
+    };
+
+    // ── Run final analysis & save to database ─────────────────────────────
+    const runAnalysis = async () => {
+        setStage("analyzing"); setProgress(0);
+
+        let audioFeatures = fetchedSources?.audioFeatures || [];
+        let spotifyTracks = fetchedSources?.spotifyTracks || [];
+        let youtubeVideos = fetchedSources?.youtubeVideos || [];
+        let youtubeTracks = fetchedSources?.youtubeTracks || [];
+        setProgress(50);
+
+        // Step 3: Generate and save final DNA
         try {
             const r = await fetch("/api/dna/generate", {
                 method: "POST", headers: { "Content-Type": "application/json" },
@@ -369,12 +792,11 @@ export default function Home() {
                     genres,
                     displayName,
                     email,
-
-
                     audioFeatures,
                     youtubeVideos,
                     spotifyTracks,
-                    youtubeTracks: ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail, url: t.url })),
+                    youtubeTracks,
+                    dry_run: false
                 })
             });
             const d = await r.json();
@@ -441,188 +863,33 @@ export default function Home() {
             <AnimatePresence mode="wait">
 
                 {/* ═══════════════════════════════════════════════════════ */}
-                {/* HOMEPAGE                                                */}
+                {/* CONVERSATIONAL ONBOARDING                               */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {stage === "intro" && (
-                    <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full">
-
-
-                        {/* Hero */}
-                        <section className="relative min-h-screen flex items-center pt-16">
-                            <div className="absolute right-0 top-0 bottom-0 w-full md:w-[55%] opacity-60 pointer-events-none"><DNAHelix /></div>
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full blur-[160px] bg-[#FF0000]/8 pointer-events-none" />
-                            <div className="relative z-10 max-w-6xl mx-auto px-6 md:px-10 w-full py-24">
-                                <div className="max-w-[640px]">
-                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .1 }} className="flex items-center gap-3 mb-8">
-                                        <div className="h-px w-8 bg-[#FF0000]" /><span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.4em]">Sonic Structural Mapping Protocol</span>
-                                    </motion.div>
-                                    <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .2 }} className="text-5xl md:text-7xl lg:text-8xl font-black leading-[0.92] tracking-tight mb-6 text-white">
-                                        Your musical taste<br />has a<br /><span className="text-[#FF0000] italic">fingerprint.</span>
-                                    </motion.h1>
-                                    <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .3 }} className="text-white/50 text-base md:text-lg leading-relaxed mb-10 max-w-[480px] font-medium">
-                                        We analyse your Spotify playlists and YouTube songs to build a <span className="text-white">12-dimensional Musical DNA vector</span> — then match you with listeners who hear the world the same way.
-                                    </motion.p>
-                                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: .4 }} className="flex flex-col sm:flex-row gap-4">
-                                        <button onClick={() => setStage(existing ? "genre_selection" : "welcome_name")} className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.35)] overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                            <Play className="h-4 w-4 fill-white" />Start DNA Discovery
-                                        </button>
-                                        {existing && !checking && (
-                                            <button onClick={() => { setDna(existing); setStage("complete"); }} className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/60 hover:text-white hover:border-white/25 font-black text-xs uppercase tracking-widest px-8 py-4 rounded-2xl transition-all">
-                                                <CheckCircle2 className="h-4 w-4 text-[#FF0000]" />Resume Previous Signal
-                                            </button>
-                                        )}
-                                    </motion.div>
-                                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: .7 }} className="flex items-center gap-8 mt-14 pt-8 border-t border-white/10">
-                                        {[["12", "DNA Dimensions"], ["55", "Max Tracks"], ["∞", "Possible Soulmates"]].map(([v, l], i) => (
-                                            <div key={l} className={i > 0 ? "flex items-center gap-8" : ""}>
-                                                {i > 0 && <div className="w-px h-8 bg-white/10" />}
-                                                <div><div className={`mono text-2xl font-black ${i === 2 ? "text-[#FF0000]" : "text-white"}`}>{v === "∞" ? "∞" : <Ctr to={parseInt(v)} />}</div><div className="mono text-[9px] text-white/55 uppercase tracking-widest">{l}</div></div>
-                                            </div>
-                                        ))}
-                                    </motion.div>
-                                </div>
-                            </div>
-                        </section>
-                        <Ticker />
-                        <footer className="border-t border-white/10 px-6 py-8">
-                            <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-                                <span className="mono text-[10px] text-white/50 tracking-widest">© 2026 Arman Ayva. <a href="https://www.armanayva.com" target="_blank" className="hover:text-white transition-colors">www.armanayva.com</a></span>
-                                <div className="flex gap-6">
-                                    <Link href="/about" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
-                                    <Link href="/profile" className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
-                                    <Link href="/match" onClick={() => {
-                                        fetch('/api/dna/intent', {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({ intent: 'find_soulmates' })
-                                        }).catch(console.error);
-                                    }} className="mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
-                                    <Link href="/privacy" className="mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>
-                                </div>
-                            </div>
-                        </footer>
-                        <div className="fixed inset-0 -z-10 pointer-events-none">
-                            <div className="absolute top-1/4 left-1/4 h-[500px] w-[500px] blur-[180px] rounded-full bg-[#FF0000]/6" />
-                            <div className="absolute bottom-1/3 right-1/4 h-[400px] w-[400px] blur-[160px] rounded-full bg-orange-900/8" />
-                        </div>
-                    </motion.div>
+                {(stage === "intro" || stage === "welcome_name" || stage === "welcome_story") && (
+                    <ConversationalOnboarding
+                        existing={existing}
+                        checking={checking}
+                        displayName={displayName}
+                        setDisplayName={setDisplayName}
+                        onResume={() => { setDna(existing); setStage("complete"); }}
+                        onBegin={() => setStage("sources")}
+                    />
                 )}
 
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* INNER STAGES                                            */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {stage !== "intro" && (
+                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && (
                     <motion.div key="inner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen">
 
 
                         <div className="max-w-5xl mx-auto px-4 md:px-8 pt-24 pb-40 w-full">
                             <AnimatePresence mode="wait">
 
-                                {/* ── WELCOME NAME ── */}
-                                {stage === "welcome_name" && (
-                                    <motion.div key="wn" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto flex flex-col pt-12">
-                                        <div className="flex flex-col items-center text-center">
-                                            <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-white/5 border border-white/10 mb-8 shrink-0">
-                                                <User className="h-6 w-6 text-white/70" />
-                                            </div>
-                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
-                                                Welcome to <span className="text-[#FF0000] italic">MusicDNA</span>
-                                            </h2>
-                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-12">Who are we tuning the frequencies for?</p>
-                                        </div>
-
-                                        <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col items-center">
-                                            <input
-                                                type="text"
-                                                value={displayName}
-                                                onChange={(e) => setDisplayName(e.target.value)}
-                                                onKeyDown={(e) => e.key === "Enter" && displayName.trim() && setStage("welcome_story")}
-                                                placeholder="Enter your first name"
-                                                autoFocus
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-xl font-bold mb-6 text-white placeholder:text-white/30"
-                                            />
-                                            <button
-                                                onClick={() => setStage("welcome_story")}
-                                                disabled={!displayName.trim()}
-                                                className="w-full sm:w-auto px-12 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,0,0,0.2)]"
-                                            >
-                                                Continue <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex justify-center mt-8">
-                                            <button onClick={() => setStage("intro")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest">← Back</button>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {/* ── WELCOME STORY ── */}
-                                {stage === "welcome_story" && (
-                                    <motion.div key="ws" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
-                                        <div className="text-center mb-12">
-                                            <h2 className="text-3xl md:text-5xl font-black text-white italic tracking-tighter mb-4">
-                                                Nice to meet you, <span className="text-[#FF0000] not-italic">{displayName || "Traveler"}</span>.
-                                            </h2>
-                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Let us show you what we're building here.</p>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-16 relative">
-                                            {/* Connection beam */}
-                                            <div className="hidden md:block absolute top-[40%] left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[#FF0000]/60 to-transparent -translate-y-1/2 z-0" />
-
-                                            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative z-10 text-center flex flex-col items-center">
-                                                <div className="relative mb-6">
-                                                    <div className="absolute inset-0 bg-[#FF0000]/20 blur-xl rounded-full" />
-                                                    <img src="/avatars/pulse.png" alt="Jane" className="h-24 w-24 rounded-full object-cover relative ring-2 ring-[#FF0000]/30" />
-                                                </div>
-                                                <h3 className="text-xl font-black uppercase mb-1 text-white">Jane</h3>
-                                                <p className="text-[10px] mono uppercase text-[#FF0000] tracking-widest mb-4">98% Match</p>
-                                                <div className="flex flex-wrap justify-center gap-2">
-                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Ambient</span>
-                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Techno</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="glass p-8 rounded-[2.5rem] border border-white/10 relative z-10 text-center flex flex-col items-center">
-                                                <div className="relative mb-6">
-                                                    <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full" />
-                                                    <img src="/avatars/sync.png" alt="Jack" className="h-24 w-24 rounded-full object-cover relative ring-2 ring-green-500/30" />
-                                                </div>
-                                                <h3 className="text-xl font-black uppercase mb-1 text-white">Jack</h3>
-                                                <p className="text-[10px] mono uppercase text-[#FF0000] tracking-widest mb-4">98% Match</p>
-                                                <div className="flex flex-wrap justify-center gap-2">
-                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">House</span>
-                                                    <span className="text-[9px] uppercase font-bold bg-white/5 px-3 py-1.5 rounded-lg border border-white/10 text-white/70">Techno</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="text-center max-w-2xl mx-auto flex flex-col items-center justify-center space-y-8 glass py-12 px-8 rounded-[2.5rem] border border-white/10 relative overflow-hidden">
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#FF0000]/10 to-transparent pointer-events-none" />
-                                            <div className="relative z-10">
-                                                <Users className="h-8 w-8 text-[#FF0000] mx-auto opacity-80 mb-6" />
-                                                <p className="text-lg md:text-xl font-medium leading-relaxed text-white/90 mb-4 px-4">
-                                                    Jane and Jack were total strangers, but their Musical DNA matched perfectly. They connected on our platform, discovered shared underground artists, and collaborated on a common Spotify playlist.
-                                                </p>
-                                                <p className="text-sm md:text-base font-black uppercase tracking-widest leading-relaxed text-[#FF0000] mb-10">
-                                                    Who is waiting to hear the world the same way you do?
-                                                </p>
-                                                <button
-                                                    onClick={() => setStage("genre_selection")}
-                                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-xs md:text-sm uppercase tracking-widest px-10 py-5 rounded-xl hover:bg-red-500 transition-all hover:scale-[1.03] active:scale-95 shadow-[0_0_30px_rgba(255,0,0,0.3)] relative overflow-hidden"
-                                                >
-                                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                                    Run Your DNA Test <Play className="h-4 w-4 fill-white" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-
                                 {/* ── GENRE SELECTION ── */}
                                 {stage === "genre_selection" && (
                                     <motion.div key="gs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                                        <Stepper step={0} />
+                                        <Stepper step={1} />
                                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                                             <div className="lg:col-span-8 space-y-6">
                                                 <div>
@@ -662,7 +929,7 @@ export default function Home() {
                                                         }
                                                     </div>
                                                     <div className="space-y-2.5 pt-2 border-t border-white/14">
-                                                        <button onClick={() => setStage("spotify_input")} disabled={genres.length === 0}
+                                                        <button onClick={runAnalysis} disabled={genres.length === 0}
                                                             className="w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,0,0,0.2)] disabled:opacity-40 disabled:scale-100 overflow-hidden relative">
                                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full shimmer pointer-events-none" />
                                                             Confirm & Continue <ArrowRight className="h-4 w-4" />
@@ -675,430 +942,117 @@ export default function Home() {
                                     </motion.div>
                                 )}
 
-                                {/* ── SPOTIFY INPUT ── */}
-                                {stage === "spotify_input" && (
-                                    <motion.div key="si" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-2xl mx-auto">
-                                        <Stepper step={1} />
-                                        <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-1">
-                                            Connect <span className="text-[#1DB954]">Spotify</span>
-                                        </h2>
-                                        <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-10">Paste your public Spotify profile URL to scan your playlists</p>
-
-                                        {/* URL input */}
-                                        <div className="glass rounded-[2rem] border border-white/14 p-7 mb-5">
-                                            <div className="flex flex-col sm:flex-row gap-2 p-2 bg-white/5 border border-white/12 rounded-2xl focus-within:border-[#1DB954]/40 transition-all mb-3">
-                                                <input type="text" value={spotifyUrl}
-                                                    onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }}
-                                                    onKeyDown={e => e.key === "Enter" && scanSpotify(0)}
-                                                    placeholder="https://open.spotify.com/user/…"
-                                                    className="flex-1 bg-transparent py-3.5 px-5 focus:outline-none mono text-sm text-white placeholder:text-white/35" />
-                                                <button onClick={() => scanSpotify(0)} disabled={scanning || !spotifyUrl.trim()}
-                                                    className="bg-[#1DB954] text-white font-black px-8 py-3.5 rounded-xl hover:bg-[#1ed760] transition-all text-xs uppercase tracking-widest flex items-center gap-2 disabled:opacity-40">
-                                                    {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />}
-                                                    {scanning ? "Scanning…" : "Scan"}
-                                                </button>
-                                            </div>
-                                            <AnimatePresence>
-                                                {scanErr && (
-                                                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                                        className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
-                                                        <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
-                                                        <p className="mono text-[11px] text-red-400 uppercase tracking-wide">{scanErr}</p>
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
+                                {/* ── SOURCES ── */}
+                                {stage === "sources" && (
+                                    <motion.div key="srcs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
+                                        <Stepper step={0} />
+                                        <div className="text-center mb-10">
+                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+                                                Music <span className="text-[#1DB954]">Spotify</span> & <span className="text-[#FF0000]">YouTube</span>
+                                            </h2>
+                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Provide your musical footprint from either or both sources.</p>
                                         </div>
 
-                                        {/* How-to */}
-                                        <div className="glass rounded-[2rem] border border-white/14 p-7 mb-7">
-                                            <div className="flex items-center justify-between mb-5">
-                                                <span className="flex items-center gap-2 mono text-[10px] text-[#1DB954] uppercase tracking-widest"><HelpCircle className="h-3.5 w-3.5" />How to get your URL</span>
-                                                <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" className="mono text-[9px] text-white/55 hover:text-white transition-all uppercase tracking-widest flex items-center gap-1.5 bg-white/5 px-4 py-2 rounded-full border border-white/14">
-                                                    Open Spotify <ExternalLink className="h-3 w-3" />
-                                                </a>
-                                            </div>
-                                            <div className="space-y-4 border-t border-white/10 pt-5">
-                                                {[["1", "Click your", "Profile Name", "in Spotify"], ["2", "Click", "⋯ (more options)", "or right-click your name"], ["3", "Choose", "Copy link to profile", "under Share"]].map(([n, a, b, c]) => (
-                                                    <div key={n} className="flex items-start gap-4">
-                                                        <span className="h-6 w-6 rounded-full bg-[#1DB954]/12 border border-[#1DB954]/25 flex items-center justify-center mono text-[10px] text-[#1DB954] font-black shrink-0">{n}</span>
-                                                        <p className="text-sm text-white/45 font-medium leading-snug">{a} <span className="text-white font-black">{b}</span> {c}</p>
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                            {/* SPOTIFY CARD */}
+                                            <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col">
+                                                <div className="flex items-center gap-3 mb-6">
+                                                    <div className="h-10 w-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center">
+                                                        <Music2 className="h-5 w-5 text-[#1DB954]" />
                                                     </div>
-                                                ))}
-                                                <p className="mono text-[9px] text-[#1DB954]/50 italic pl-10">* Make sure your playlists are set to public</p>
-                                            </div>
-                                        </div>
-
-                                        {/* Divider */}
-                                        <div className="flex items-center gap-4 my-6">
-                                            <div className="flex-1 h-px bg-white/8" /><span className="mono text-[10px] text-white/50 uppercase tracking-[0.3em]">or</span><div className="flex-1 h-px bg-white/8" />
-                                        </div>
-
-                                        {/* Skip to YouTube */}
-                                        <button onClick={() => { setYtMode("only"); setStage("youtube_input"); }}
-                                            className="w-full flex items-center justify-between p-5 rounded-2xl border border-white/14 bg-white/3 hover:bg-[#FF0000]/5 hover:border-[#FF0000]/25 transition-all group">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center group-hover:bg-[#FF0000]/12 group-hover:border-[#FF0000]/25 transition-all">
-                                                    <Youtube className="h-5 w-5 text-white/65 group-hover:text-[#FF0000] transition-colors" />
+                                                    <h3 className="text-2xl font-black text-white">Spotify</h3>
                                                 </div>
-                                                <div className="text-left">
-                                                    <p className="font-black text-white/60 text-sm uppercase tracking-tight group-hover:text-white transition-colors">I don't have Spotify</p>
-                                                    <p className="mono text-[9px] text-white/50 uppercase tracking-widest mt-0.5">Use YouTube links instead</p>
+
+                                                <div className="flex flex-col gap-2 p-2 bg-white/5 border border-white/12 rounded-2xl focus-within:border-[#1DB954]/40 transition-all mb-4">
+                                                    <input type="text" value={spotifyUrl} onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }} onKeyDown={e => e.key === "Enter" && scanSpotify(0)} placeholder="Profile URL (open.spotify.com/user...)" className="bg-transparent py-3 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/35 w-full" />
+                                                    <button onClick={() => scanSpotify(0)} disabled={scanning || !spotifyUrl.trim()} className="bg-[#1DB954] text-white font-black px-6 py-3 rounded-xl hover:bg-[#1ed760] transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40">
+                                                        {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />} Scan
+                                                    </button>
                                                 </div>
-                                            </div>
-                                            <ChevronRight className="h-5 w-5 text-white/45 group-hover:text-white/50 group-hover:translate-x-1 transition-all" />
-                                        </button>
+                                                {scanErr && <p className="mono text-[10px] text-red-400 mb-4">{scanErr}</p>}
 
-                                        <button onClick={() => setStage("genre_selection")} className="w-full mono text-[10px] text-white/50 hover:text-white transition-all text-center py-3 uppercase tracking-widest mt-6">← Back to genres</button>
-                                    </motion.div>
-                                )}
-
-                                {/* ── PLAYLIST SELECTION ── */}
-                                {stage === "playlist_selection" && (
-                                    <motion.div key="ps" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                                        <Stepper step={1} />
-                                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-                                            <div>
-                                                <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-1">
-                                                    Select <span className="text-[#1DB954]">Playlists</span>
-                                                </h2>
-                                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Up to 5 playlists · 10 tracks each</p>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <motion.span key={selPlaylists.length}
-                                                    initial={{ scale: .9 }} animate={{ scale: 1 }}
-                                                    className={`mono text-[10px] px-4 py-2 rounded-full border font-black uppercase tracking-widest transition-all ${selPlaylists.length > 0 ? "border-[#1DB954]/40 text-[#1DB954] bg-[#1DB954]/8" : "border-white/10 text-white/55"}`}>
-                                                    {selPlaylists.length}/5 selected
-                                                </motion.span>
-                                                <button onClick={() => scanSpotify(0)} className="mono text-[9px] text-white/55 hover:text-white transition-all flex items-center gap-1.5 px-3 py-2 rounded-full border border-white/14 hover:border-white/18">
-                                                    <Scan className="h-3 w-3" />Re-scan
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Playlist grid */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                                            {playlists.filter(pl => !scannedIds.includes(pl.id)).map((pl, i) => {
-                                                const sel = !!selPlaylists.find(p => p.id === pl.id);
-                                                const maxed = !sel && selPlaylists.length >= 5;
-                                                return (
-                                                    <motion.button key={pl.id + i}
-                                                        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: (i % 6) * .04 }}
-                                                        onClick={() => !maxed && togglePlaylist(pl)}
-                                                        className={`relative text-left rounded-[1.75rem] border p-5 transition-all overflow-hidden group
-                                                            ${sel ? "border-[#1DB954]/50 bg-[#1DB954]/7 shadow-[0_0_24px_rgba(29,185,84,0.1)]"
-                                                                : maxed ? "border-white/10 bg-white/2 opacity-35 cursor-not-allowed"
-                                                                    : "border-white/14 bg-white/3 hover:border-[#1DB954]/25 hover:bg-[#1DB954]/4 cursor-pointer"}`}
-                                                    >
-                                                        {/* Check circle */}
-                                                        <div className={`absolute top-4 right-4 h-6 w-6 rounded-full border flex items-center justify-center transition-all
-                                                            ${sel ? "border-[#1DB954] bg-[#1DB954]" : "border-white/15 group-hover:border-[#1DB954]/35"}`}>
-                                                            {sel && <Check className="h-3.5 w-3.5 text-white" />}
+                                                {playlists.length > 0 && (
+                                                    <div className="flex-1 min-h-[250px] flex flex-col mt-2">
+                                                        <div className="flex justify-between items-center mb-3">
+                                                            <span className="mono text-[10px] text-white/60 uppercase">Select Playlists</span>
+                                                            <span className="mono text-[10px] text-[#1DB954]">{selPlaylists.length}/5</span>
                                                         </div>
-
-                                                        {/* Cover art */}
-                                                        <div className={`h-[72px] w-[72px] rounded-2xl overflow-hidden bg-white/8 mb-4 ring-1 transition-all ${sel ? "ring-[#1DB954]/35" : "ring-white/8 group-hover:ring-[#1DB954]/15"}`}>
-                                                            {pl.image
-                                                                ? <img src={pl.image} alt={pl.name} className={`h-full w-full object-cover transition-all ${sel ? "opacity-100 grayscale-0" : "grayscale opacity-45 group-hover:opacity-70 group-hover:grayscale-0"}`} />
-                                                                : <div className="h-full w-full flex items-center justify-center"><Music2 className="h-7 w-7 opacity-30" /></div>}
+                                                        <div className="flex-1 overflow-y-auto max-h-64 space-y-2 pr-2 sb">
+                                                            {playlists.filter(pl => !scannedIds.includes(pl.id)).map(pl => {
+                                                                const sel = !!selPlaylists.find(p => p.id === pl.id);
+                                                                const maxed = !sel && selPlaylists.length >= 5;
+                                                                return (
+                                                                    <button key={pl.id} onClick={() => !maxed && togglePlaylist(pl)} className={`w-full text-left p-3 rounded-xl border flex items-center gap-3 transition-all ${sel ? "bg-[#1DB954]/20 border-[#1DB954]/50" : maxed ? "opacity-30 border-white/10" : "bg-white/5 border-white/10 hover:border-[#1DB954]/30"}`}>
+                                                                        {pl.image ? <img src={pl.image} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" /> : <div className="w-10 h-10 rounded-lg bg-white/10 flex-shrink-0" />}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-white font-bold text-sm truncate">{pl.name}</p>
+                                                                            <p className="text-white/50 mono text-[9px]">{pl.track_count} tracks</p>
+                                                                        </div>
+                                                                        {sel && <CheckCircle2 className="h-4 w-4 text-[#1DB954]" />}
+                                                                    </button>
+                                                                )
+                                                            })}
                                                         </div>
-
-                                                        <h3 className={`font-black text-sm capitalize leading-tight mb-1 pr-8 transition-colors ${sel ? "text-white" : "text-white/60 group-hover:text-white/90"}`}>
-                                                            {pl.name.toLowerCase()}
-                                                        </h3>
-                                                        <div className="flex items-center justify-between">
-                                                            <p className="mono text-[9px] text-white/55 uppercase tracking-widest">{pl.track_count} tracks</p>
-                                                            {pl.url && <a href={pl.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="text-white/70 hover:text-white transition-colors"><ExternalLink className="h-3 w-3" /></a>}
-                                                        </div>
-                                                    </motion.button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* Load more */}
-                                        {playlists.length < plTotal && (
-                                            <div className="flex justify-center mb-8">
-                                                <button onClick={() => scanSpotify(plOffset + 6)} disabled={loadingMore}
-                                                    className="flex items-center gap-2 bg-white/5 border border-white/10 px-8 py-3 rounded-full hover:bg-white/8 transition-all mono text-[10px] text-white/70 hover:text-white uppercase tracking-widest disabled:opacity-40">
-                                                    {loadingMore ? <Loader2 className="h-3.5 w-3.5 animate-spin text-[#1DB954]" /> : <Plus className="h-3.5 w-3.5 text-[#1DB954]" />}
-                                                    Load more
-                                                </button>
-                                            </div>
-                                        )}
-
-                                        {/* ── Sticky bottom action bar ── */}
-                                        <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#080808]/96 backdrop-blur-xl border-t border-white/14">
-                                            <div className="max-w-5xl mx-auto px-4 py-4">
-                                                {/* Selected playlist pills */}
-                                                {selPlaylists.length > 0 && (
-                                                    <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 sb">
-                                                        <span className="mono text-[9px] text-white/50 uppercase tracking-widest shrink-0">Selected:</span>
-                                                        {selPlaylists.map(pl => (
-                                                            <div key={pl.id} className="flex items-center gap-1.5 bg-[#1DB954]/12 border border-[#1DB954]/25 px-3 py-1.5 rounded-full shrink-0">
-                                                                {pl.image && <img src={pl.image} alt="" className="h-4 w-4 rounded object-cover" />}
-                                                                <span className="font-black text-[10px] text-[#1DB954] uppercase truncate max-w-[90px]">{pl.name}</span>
-                                                                <button onClick={() => togglePlaylist(pl)} className="text-[#1DB954]/50 hover:text-[#1DB954] transition-colors"><X className="h-3 w-3" /></button>
-                                                            </div>
-                                                        ))}
                                                     </div>
                                                 )}
-
-                                                {/* Buttons */}
-                                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                                                    {/* No Spotify fallback */}
-                                                    <button onClick={() => { setYtMode("only"); setStage("youtube_input"); }}
-                                                        className="sm:mr-auto flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/65 hover:text-white/70 hover:border-white/20 font-black text-[10px] uppercase tracking-widest px-5 py-3 rounded-xl transition-all">
-                                                        <Youtube className="h-3.5 w-3.5" />YouTube only
-                                                    </button>
-
-                                                    {/* Add YouTube */}
-                                                    <button onClick={() => { if (selPlaylists.length > 0) { setYtMode("addon"); setStage("youtube_input"); } }}
-                                                        disabled={selPlaylists.length === 0}
-                                                        className="flex items-center justify-center gap-2 border border-white/15 bg-white/5 text-white/60 hover:text-white hover:border-white/28 font-black text-[11px] uppercase tracking-wider px-5 py-3.5 rounded-xl transition-all disabled:opacity-25 disabled:cursor-not-allowed">
-                                                        <Youtube className="h-3.5 w-3.5" />+ Add YouTube
-                                                    </button>
-
-                                                    {/* Extract DNA */}
-                                                    <button onClick={runAnalysis} disabled={selPlaylists.length === 0}
-                                                        className="relative flex items-center justify-center gap-2 bg-[#FF0000] text-white font-black text-[11px] uppercase tracking-wider px-7 py-3.5 rounded-xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_28px_rgba(255,0,0,0.28)] disabled:opacity-25 disabled:scale-100 disabled:cursor-not-allowed overflow-hidden">
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/18 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                                        Extract DNA<ArrowRight className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <button onClick={() => setStage("spotify_input")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest py-2">← Back to URL input</button>
-                                    </motion.div>
-                                )}
-
-                                {/* ── YOUTUBE INPUT ── */}
-                                {stage === "youtube_input" && (
-                                    <motion.div key="yi" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-2xl mx-auto">
-                                        <Stepper step={1} />
-
-                                        {/* Context banner for addon mode */}
-                                        <AnimatePresence>
-                                            {ytMode === "addon" && selPlaylists.length > 0 && (
-                                                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                                                    className="flex items-center gap-4 bg-[#1DB954]/7 border border-[#1DB954]/22 rounded-2xl px-5 py-4 mb-8">
-                                                    <CheckCircle2 className="h-5 w-5 text-[#1DB954] shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-black text-[#1DB954] text-sm uppercase tracking-tight">
-                                                            {selPlaylists.length} Spotify playlist{selPlaylists.length !== 1 ? "s" : ""} ready
-                                                        </p>
-                                                        <p className="mono text-[9px] text-white/55 uppercase tracking-widest mt-0.5 truncate">
-                                                            {selPlaylists.map(p => p.name).join(" · ")}
-                                                        </p>
-                                                    </div>
-                                                    <button onClick={() => setStage("playlist_selection")}
-                                                        className="mono text-[9px] text-white/55 hover:text-white transition-all uppercase tracking-widest border border-white/10 px-3 py-1.5 rounded-full hover:border-white/25 shrink-0">
-                                                        Change
-                                                    </button>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        {/* Heading */}
-                                        <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-1">
-                                            {ytMode === "only" ? <>YouTube <span className="text-[#FF0000]">Songs</span></> : <>Add <span className="text-[#FF0000]">YouTube</span></>}
-                                        </h2>
-                                        <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-8">
-                                            {ytMode === "only"
-                                                ? "Search or paste up to 5 YouTube links · these form your full DNA signal"
-                                                : "Search or paste up to 5 YouTube links to supplement your Spotify data"}
-                                        </p>
-
-                                        {/* ── YouTube Search Bar ── */}
-                                        <div ref={ytSearchRef} className="relative mb-6">
-                                            <div className="glass rounded-2xl border border-white/10 focus-within:border-[#FF0000]/40 transition-all">
-                                                <div className="flex items-center gap-3 px-4 py-1">
-                                                    <Search className="h-4 w-4 text-white/55 shrink-0" />
-                                                    <input type="text" value={ytQuery}
-                                                        onChange={e => { setYtQuery(e.target.value); setYtShowSearch(true); }}
-                                                        onKeyDown={e => { if (e.key === "Enter") searchYt(ytQuery); }}
-                                                        onFocus={() => setYtShowSearch(true)}
-                                                        placeholder="Search YouTube for a song…"
-                                                        className="flex-1 bg-transparent mono text-sm text-white placeholder:text-white/35 focus:outline-none py-3" />
-                                                    <button onClick={() => searchYt(ytQuery)} disabled={ytSearching || !ytQuery.trim()}
-                                                        className="bg-[#FF0000] text-white font-black px-5 py-2 rounded-xl hover:bg-red-500 transition-all text-[10px] uppercase tracking-widest flex items-center gap-1.5 disabled:opacity-30">
-                                                        {ytSearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-                                                        Search
-                                                    </button>
-                                                </div>
                                             </div>
 
-                                            {/* Search Results Dropdown */}
-                                            <AnimatePresence>
-                                                {ytShowSearch && ytResults.length > 0 && (
-                                                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
-                                                        className="absolute top-full left-0 right-0 z-50 mt-2 glass rounded-2xl border border-white/12 shadow-2xl shadow-black/50 overflow-hidden max-h-[360px] overflow-y-auto sb">
-                                                        {ytResults.map((v: any) => {
-                                                            const alreadyAdded = ytTracks.some(t => t.url.includes(v.id) && t.status === "ok");
-                                                            return (
-                                                                <button key={v.id} onClick={() => !alreadyAdded && addYtSearchResult(v)} disabled={alreadyAdded}
-                                                                    className={`w-full flex items-center gap-3 p-3 border-b border-white/10 last:border-0 transition-all text-left
-                                                                        ${alreadyAdded ? "opacity-30 cursor-not-allowed" : "hover:bg-white/6 cursor-pointer"}`}>
-                                                                    <div className="h-12 w-18 rounded-lg overflow-hidden shrink-0 bg-white/5">
-                                                                        {v.thumbnail && <img src={v.thumbnail} alt="" className="h-full w-full object-cover" />}
-                                                                    </div>
-                                                                    <div className="flex-1 min-w-0">
-                                                                        <p className="text-xs font-black text-white truncate" dangerouslySetInnerHTML={{ __html: v.title || "" }} />
-                                                                        <p className="mono text-[9px] text-white/60 uppercase truncate mt-0.5">{v.channelTitle}</p>
-                                                                    </div>
-                                                                    {alreadyAdded
-                                                                        ? <CheckCircle2 className="h-4 w-4 text-[#FF0000] shrink-0" />
-                                                                        : <Plus className="h-4 w-4 text-white/55 group-hover:text-[#FF0000] shrink-0" />}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-
-                                        {/* ── Divider ── */}
-                                        <div className="flex items-center gap-3 mb-5">
-                                            <div className="h-px flex-1 bg-white/8" />
-                                            <span className="mono text-[9px] text-white/45 uppercase tracking-widest">or paste links directly</span>
-                                            <div className="h-px flex-1 bg-white/8" />
-                                        </div>
-
-                                        {/* Input rows */}
-                                        <div className="space-y-2.5 mb-7">
-                                            {ytTracks.map((tr, idx) => (
-                                                <div key={tr.id} className={`glass rounded-2xl border overflow-hidden transition-all
-                                                    ${tr.status === "ok" ? "border-[#FF0000]/25" : tr.status === "error" ? "border-red-500/20" : "border-white/14 hover:border-white/14"}`}>
-                                                    <div className="flex items-center gap-3 p-3 pl-4">
-                                                        {/* Icon */}
-                                                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 transition-all
-                                                            ${tr.status === "ok" ? "bg-[#FF0000]/15 border border-[#FF0000]/25"
-                                                                : tr.status === "error" ? "bg-red-500/10 border border-red-500/18"
-                                                                    : tr.status === "loading" ? "bg-white/8 border border-white/10"
-                                                                        : "bg-white/5 border border-white/14"}`}>
-                                                            {tr.status === "loading" ? <Loader2 className="h-3.5 w-3.5 text-white/60 animate-spin" />
-                                                                : tr.status === "ok" ? <Youtube className="h-3.5 w-3.5 text-[#FF0000]" />
-                                                                    : tr.status === "error" ? <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-                                                                        : <span className="mono text-[9px] text-white/50 font-black">{idx + 1}</span>}
-                                                        </div>
-                                                        <input type="text" value={tr.url}
-                                                            onChange={e => setYtTracks(t => t.map((x, i) => i === idx ? { ...x, url: e.target.value, status: "idle", title: undefined, channel: undefined } : x))}
-                                                            onBlur={e => resolveYt(idx, e.target.value)}
-                                                            onKeyDown={e => e.key === "Enter" && resolveYt(idx, tr.url)}
-                                                            placeholder={`YouTube link ${idx + 1}…`}
-                                                            className="flex-1 bg-transparent mono text-xs text-white placeholder:text-white/70 focus:outline-none py-2" />
-                                                        {tr.url && (
-                                                            <button onClick={() => resolveYt(idx, "")} className="text-white/45 hover:text-white/50 transition-colors p-1.5 shrink-0">
-                                                                <X className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        )}
+                                            {/* YOUTUBE CARD */}
+                                            <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col">
+                                                <div className="flex items-center gap-3 mb-6">
+                                                    <div className="h-10 w-10 rounded-full bg-[#FF0000]/20 flex items-center justify-center">
+                                                        <Youtube className="h-5 w-5 text-[#FF0000]" />
                                                     </div>
-                                                    {/* Preview */}
+                                                    <h3 className="text-2xl font-black text-white">YouTube</h3>
+                                                </div>
+
+                                                <div className="relative mb-4">
+                                                    <div className="flex items-center gap-2 p-2 bg-white/5 border border-white/12 rounded-2xl">
+                                                        <input type="text" value={ytQuery} onChange={e => { setYtQuery(e.target.value); setYtShowSearch(true) }} onKeyDown={e => e.key === "Enter" && searchYt(ytQuery)} placeholder="Search for a song..." className="flex-1 bg-transparent py-2.5 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/35 min-w-0" />
+                                                        <button onClick={() => searchYt(ytQuery)} disabled={ytSearching || !ytQuery.trim()} className="bg-[#FF0000] text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase">Search</button>
+                                                    </div>
                                                     <AnimatePresence>
-                                                        {tr.status === "ok" && tr.title && (
-                                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                                                                className="flex items-center gap-3 px-4 pb-3 border-t border-white/10">
-                                                                {tr.thumbnail && <img src={tr.thumbnail} alt="" className="h-10 w-16 rounded-lg object-cover opacity-65 shrink-0" />}
-                                                                <div className="min-w-0 flex-1">
-                                                                    <p className="text-xs font-black text-white truncate" dangerouslySetInnerHTML={{ __html: tr.title || "" }} />
-                                                                    <p className="mono text-[9px] text-white/55 uppercase truncate">{tr.channel}</p>
-                                                                </div>
-                                                                <CheckCircle2 className="h-4 w-4 text-[#FF0000] shrink-0" />
-                                                            </motion.div>
-                                                        )}
-                                                        {tr.status === "error" && (
-                                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                                                                className="px-4 pb-3 border-t border-red-500/10">
-                                                                <p className="mono text-[9px] text-red-400/70 uppercase">{tr.error || "Couldn't load video"}</p>
+                                                        {ytShowSearch && ytResults.length > 0 && (
+                                                            <motion.div className="absolute top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl max-h-48 overflow-y-auto z-50 p-2 shadow-2xl">
+                                                                {ytResults.map(v => {
+                                                                    const alreadyAdded = ytTracks.some(t => t.url.includes(v.id) && t.status === "ok");
+                                                                    return (
+                                                                        <button key={v.id} onClick={() => !alreadyAdded && addYtSearchResult(v)} className={`w-full flex items-center gap-3 p-2 border-b border-white/5 hover:bg-white/10 ${alreadyAdded ? 'opacity-30' : ''}`}>
+                                                                            <img src={v.thumbnail} className="w-10 h-10 object-cover rounded flex-shrink-0" />
+                                                                            <div className="flex-1 text-left min-w-0">
+                                                                                <p className="text-white text-xs truncate" dangerouslySetInnerHTML={{ __html: v.title }}></p>
+                                                                            </div>
+                                                                        </button>
+                                                                    )
+                                                                })}
                                                             </motion.div>
                                                         )}
                                                     </AnimatePresence>
                                                 </div>
-                                            ))}
-                                        </div>
 
-                                        {/* Valid count indicator */}
-                                        <AnimatePresence>
-                                            {hasYt && (
-                                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 mb-6">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-[#FF0000] shadow-[0_0_8px_rgba(255,0,0,0.8)]" />
-                                                    <span className="mono text-[10px] text-white/65 uppercase tracking-widest">{ytOk.length} valid track{ytOk.length !== 1 ? "s" : ""} loaded</span>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-
-                                        {/* CTAs */}
-                                        <div className="space-y-3">
-                                            {/* Main extract */}
-                                            <button onClick={() => setStage("identity")}
-                                                disabled={ytMode === "only" ? !hasYt : (selPlaylists.length === 0 && !hasYt)}
-                                                className="w-full relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_36px_rgba(255,0,0,0.28)] disabled:opacity-40 disabled:scale-100 overflow-hidden">
-                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/18 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                                <ChevronRight className="h-5 w-5 fill-white" />
-                                                {ytMode === "addon"
-                                                    ? `Next: Profile Name`
-                                                    : `Next: Profile Name`}
-                                            </button>
-
-
-                                            {/* Addon: skip YouTube */}
-                                            {ytMode === "addon" && (
-                                                <button onClick={() => setStage("identity")} disabled={selPlaylists.length === 0}
-                                                    className="w-full flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/70 hover:text-white hover:border-white/20 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all disabled:opacity-30">
-                                                    Skip YouTube & Continue <ArrowRight className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
-
-
-                                            <button onClick={() => setStage(ytMode === "addon" ? "playlist_selection" : "spotify_input")}
-                                                className="w-full mono text-[10px] text-white/45 hover:text-white transition-all text-center py-2.5 uppercase tracking-widest">
-                                                ← Back
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {/* ── IDENTITY ── */}
-                                {stage === "identity" && (
-                                    <motion.div key="id" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto text-center">
-                                        <div className="h-16 w-16 bg-[#FF0000] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-[0_10px_30px_rgba(255,0,0,0.3)]">
-                                            <User className="h-8 w-8 text-white" />
-                                        </div>
-                                        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Signal Profile</h2>
-                                        <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-10">How should your sonic fingerprint be identified?</p>
-
-                                        <div className="glass p-8 rounded-[2.5rem] border border-white/14 mb-8">
-                                            <div className="space-y-6">
-                                                <div>
-                                                    <label className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black block mb-3 text-left ml-4">Profile Name</label>
-                                                    <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)}
-                                                        placeholder="e.g. Sonic Voyager"
-                                                        className="w-full bg-white/5 border border-white/12 rounded-2xl py-4 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-lg font-black italic tracking-tight text-white placeholder:text-white/20" />
+                                                <div className="space-y-2 mt-2">
+                                                    {ytTracks.map((tr, idx) => (
+                                                        <div key={tr.id} className="flex gap-2 items-center">
+                                                            <input type="text" value={tr.url} onChange={e => setYtTracks(t => t.map((x, i) => i === idx ? { ...x, url: e.target.value, status: "idle" } : x))} onBlur={e => resolveYt(idx, e.target.value)} onKeyDown={e => e.key === "Enter" && resolveYt(idx, tr.url)} placeholder={`Song ${idx + 1}`} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono min-w-0" />
+                                                            {tr.status === "ok" && <CheckCircle2 className="h-4 w-4 text-[#FF0000] shrink-0" />}
+                                                            {tr.status === "loading" && <Loader2 className="h-4 w-4 text-white/50 animate-spin shrink-0" />}
+                                                            {tr.status === "error" && <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />}
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <div>
-                                                    <label className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black block mb-3 text-left ml-4">Email Address (Optional)</label>
-                                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                                                        onKeyDown={e => e.key === "Enter" && displayName.trim() && runAnalysis()}
-                                                        placeholder="your@email.com"
-                                                        className="w-full bg-white/5 border border-white/12 rounded-2xl py-4 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-lg font-black italic tracking-tight text-white placeholder:text-white/20" />
-                                                </div>
-                                                <p className="mono text-[9px] text-white/45 uppercase leading-relaxed px-4 text-left">
-                                                    Your email helps us reconnect you with matches and save your progress.
-                                                </p>
                                             </div>
                                         </div>
 
-
-                                        <div className="space-y-4">
-                                            <button onClick={runAnalysis} disabled={!displayName.trim()}
-                                                className="w-full relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.3)] overflow-hidden disabled:opacity-40">
-                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                                Launch DNA Extraction <ArrowRight className="h-4 w-4" />
+                                        <div className="flex justify-center">
+                                            <button onClick={fetchSourcesAndPreselect} disabled={selPlaylists.length === 0 && !hasYt} className="w-full sm:w-auto relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[13px] uppercase tracking-wider px-12 py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_35px_rgba(255,0,0,0.3)] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed">
+                                                Next: Genres Confirmation <ArrowRight className="h-4 w-4" />
                                             </button>
-                                            <button onClick={() => setStage("youtube_input")} className="w-full mono text-[10px] text-white/45 hover:text-white transition-all text-center py-2 uppercase tracking-widest">← Back</button>
+                                        </div>
+                                        <div className="flex justify-center mt-6">
+                                            <button onClick={() => setStage("welcome_name")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest">← Back</button>
                                         </div>
                                     </motion.div>
                                 )}
-
 
                                 {/* ── ANALYZING ── */}
                                 {stage === "analyzing" && (
@@ -1207,19 +1161,24 @@ export default function Home() {
                                                         ))}
                                                     </div>
                                                 </div>
-                                                <Link href={{ pathname: "/match", query: { genres: genres.join(",") } }}
+                                                <button
                                                     onClick={() => {
-                                                        fetch('/api/dna/intent', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ intent: 'find_soulmates' })
-                                                        }).catch(console.error);
+                                                        if (!email || !email.includes("@")) {
+                                                            setStage("email_capture");
+                                                        } else {
+                                                            fetch('/api/dna/intent', {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ intent: 'find_soulmates' })
+                                                            }).catch(console.error);
+                                                            window.location.href = "/soulmates?genres=" + genres.join(",");
+                                                        }
                                                     }}
-                                                    className="relative flex items-center justify-between bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
+                                                    className="relative flex items-center justify-between w-full bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
                                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                                     <span className="flex items-center gap-3 relative z-10"><Users className="h-6 w-6 fill-white" />Find Soulmates</span>
                                                     <ChevronRight className="h-7 w-7 group-hover:translate-x-2 transition-transform relative z-10" />
-                                                </Link>
+                                                </button>
                                                 <Link href="/profile"
                                                     className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/70 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
                                                     <User className="h-4 w-4" />View Full Profile
@@ -1299,6 +1258,85 @@ export default function Home() {
                                     </motion.div>
                                 )}
 
+
+                                {/* ── EMAIL CAPTURE ── */}
+                                {stage === "email_capture" && (
+                                    <motion.div key="ec" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto flex flex-col pt-12">
+                                        <div className="flex flex-col items-center text-center">
+                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+                                                Find <span className="text-[#FF0000] italic">Soulmates</span>
+                                            </h2>
+                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-12">Just one last step — we need your email to establish connections.</p>
+                                        </div>
+
+                                        <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col items-center">
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter" && email.trim() && email.includes("@")) {
+                                                        // Proceed
+                                                        fetch('/api/dna/generate', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({
+                                                                genres,
+                                                                displayName,
+                                                                email,
+                                                                audioFeatures: fetchedSources?.audioFeatures || [],
+                                                                youtubeVideos: fetchedSources?.youtubeVideos || [],
+                                                                spotifyTracks: fetchedSources?.spotifyTracks || [],
+                                                                youtubeTracks: fetchedSources?.youtubeTracks || [],
+                                                                dry_run: false
+                                                            })
+                                                        });
+                                                        fetch('/api/dna/intent', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ intent: 'find_soulmates' })
+                                                        }).catch(console.error);
+                                                        window.location.href = "/soulmates?genres=" + genres.join(",");
+                                                    }
+                                                }}
+                                                placeholder="your@email.com"
+                                                autoFocus
+                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-xl font-bold mb-6 text-white placeholder:text-white/30"
+                                            />
+                                            <button
+                                                onClick={() => {
+                                                    fetch('/api/dna/generate', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({
+                                                            genres,
+                                                            displayName,
+                                                            email,
+                                                            audioFeatures: fetchedSources?.audioFeatures || [],
+                                                            youtubeVideos: fetchedSources?.youtubeVideos || [],
+                                                            spotifyTracks: fetchedSources?.spotifyTracks || [],
+                                                            youtubeTracks: fetchedSources?.youtubeTracks || [],
+                                                            dry_run: false
+                                                        })
+                                                    });
+                                                    fetch('/api/dna/intent', {
+                                                        method: 'POST',
+                                                        headers: { 'Content-Type': 'application/json' },
+                                                        body: JSON.stringify({ intent: 'find_soulmates' })
+                                                    }).catch(console.error);
+                                                    window.location.href = "/soulmates?genres=" + genres.join(",");
+                                                }}
+                                                disabled={!email.trim() || !email.includes("@")}
+                                                className="w-full sm:w-auto px-12 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,0,0,0.2)]"
+                                            >
+                                                Find Connections <ArrowRight className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <div className="flex justify-center mt-8">
+                                            <button onClick={() => setStage("complete")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest">← Back</button>
+                                        </div>
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                         </div>
 

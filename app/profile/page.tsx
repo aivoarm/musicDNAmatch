@@ -233,7 +233,7 @@ export default function ProfilePage() {
 
                         {/* Actions */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <Link href="/match"
+                            <Link href="/soulmates"
                                 onClick={() => {
                                     fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
                                 }}

@@ -8,6 +8,7 @@ import {
     computeYouTubeVector,
     combineDNA,
     AXIS_LABELS,
+    generateInterpretation
 } from "@/lib/dna";
 
 function toUUID(str: string): string {
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
             email,
             spotifyTracks = [],
             youtubeTracks = [],
+            dry_run = false,
         } = body;
 
         // ── Identify user ──────────────────────────────
@@ -97,7 +99,20 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
         };
 
+        const interpretation = generateInterpretation(finalDNA.vector);
 
+        if (dry_run) {
+            return NextResponse.json({
+                success: true,
+                vector: finalDNA.vector,
+                confidence: finalDNA.confidence,
+                coherence_index: finalDNA.coherence_index,
+                axes: [...AXIS_LABELS],
+                narrative,
+                metadata,
+                suggested_genres: interpretation.genreMatches
+            });
+        }
 
         const { data: profile, error } = await supabase
             .from("dna_profiles")

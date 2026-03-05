@@ -26,6 +26,7 @@
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "autoprefixer": "latest",
+    "dotenv": "^17.3.1",
     "eslint": "latest",
     "eslint-config-next": "latest",
     "postcss": "latest",

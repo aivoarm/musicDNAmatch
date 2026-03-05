@@ -23,7 +23,7 @@ export default function NotFound() {
                         className="flex items-center gap-3 bg-[#FF0000] text-white font-black text-[11px] uppercase tracking-widest px-7 py-4 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_30px_rgba(255,0,0,0.25)]">
                         <Home className="h-4 w-4" />Back to Home
                     </Link>
-                    <Link href="/match"
+                    <Link href="/soulmates"
                         className="flex items-center gap-3 border border-white/14 bg-white/5 text-white/70 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest px-7 py-4 rounded-2xl transition-all">
                         Find Soulmates<ArrowRight className="h-3.5 w-3.5" />
                     </Link>

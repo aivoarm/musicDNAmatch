@@ -76,7 +76,7 @@ Talk soon!${bridge?.me?.name ? `\n${bridge.me.name}` : ""}`;
                 <div className="glass rounded-3xl p-10 text-center max-w-md">
                     <Dna className="h-12 w-12 text-[#FF0000]/40 mx-auto mb-4" />
                     <h2 className="text-xl font-black text-white mb-2 uppercase tracking-tight">{error || "Something went wrong"}</h2>
-                    <button onClick={() => router.push("/match")} className="mt-4 text-xs font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+                    <button onClick={() => router.push("/soulmates")} className="mt-4 text-xs font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">
                         ← Back to Matches
                     </button>
                 </div>

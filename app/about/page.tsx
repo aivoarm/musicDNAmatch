@@ -103,9 +103,6 @@ export default function AboutPage() {
                             <li><span className="text-white">75%-89% Similarity:</span> Harmonic Alignment (Great Collaborators)</li>
                             <li><span className="text-white">&lt;70% Similarity:</span> Sonic Divergence (Opposite Tastes)</li>
                         </ul>
-                        <p className="text-sm italic text-white/50 mt-4">
-                            Note: We use LLMs to translate these high-dimensional math outputs into human-readable narratives, explaining exactly *why* your brain prefers distorted 808s or ethereal synthwave.
-                        </p>
                     </div>
                 </section>
 
@@ -143,7 +140,7 @@ export default function AboutPage() {
                     <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
                         <Link href="/about" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">About</Link>
                         <Link href="/profile" className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><User className="h-3 w-3" />Profile</Link>
-                        <Link href="/match" onClick={() => {
+                        <Link href="/soulmates" onClick={() => {
                             fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
                         }} className="font-mono text-[10px] text-white/55 hover:text-white/60 uppercase tracking-widest transition-colors flex items-center gap-1.5"><Users className="h-3 w-3" />Find Soulmates</Link>
                         <Link href="/privacy" className="font-mono text-[10px] text-white/45 hover:text-white/70 uppercase tracking-widest transition-colors">Privacy</Link>

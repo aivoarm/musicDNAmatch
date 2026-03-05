@@ -247,7 +247,7 @@ export default function YouTubeAnalyzer() {
                                         </div>
 
                                         <div className="flex gap-4">
-                                            <Link href="/match" prefetch={false} className="flex-1 bg-[#FF0000] text-white font-black py-6 rounded-[2rem] hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,0,0,0.4)] flex items-center justify-center gap-3 text-lg uppercase tracking-widest">
+                                            <Link href="/soulmates" prefetch={false} className="flex-1 bg-[#FF0000] text-white font-black py-6 rounded-[2rem] hover:scale-[1.03] active:scale-95 transition-all shadow-[0_0_30px_rgba(255,0,0,0.4)] flex items-center justify-center gap-3 text-lg uppercase tracking-widest">
                                                 <Scan className="h-6 w-6" /> BROADCAST DNA
                                             </Link>
                                             <a href={`https://youtube.com/watch?v=${selectedVideo.id}`} target="_blank" rel="noopener noreferrer" className="p-6 rounded-[2rem] bg-white/10 hover:bg-white/20 transition-all text-white border border-white/20"><ExternalLink className="h-6 w-6" /></a>
