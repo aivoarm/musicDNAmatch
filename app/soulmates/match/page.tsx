@@ -150,6 +150,16 @@ export default function MatchPage() {
                                                             {genre}
                                                         </span>
                                                     ))}
+                                                    {match.song_match_count > 0 && (
+                                                        <span className="text-[8px] md:text-[9px] bg-[#FF0000]/10 border border-[#FF0000]/20 px-2 md:px-3 py-0.5 md:py-1 rounded-lg font-black uppercase tracking-widest text-[#FF0000]">
+                                                            {match.song_match_count} {match.song_match_count === 1 ? 'Song' : 'Songs'} Match
+                                                        </span>
+                                                    )}
+                                                    {match.artist_match_count > 0 && (
+                                                        <span className="text-[8px] md:text-[9px] bg-blue-500/10 border border-blue-500/20 px-2 md:px-3 py-0.5 md:py-1 rounded-lg font-black uppercase tracking-widest text-blue-400">
+                                                            {match.artist_match_count} {match.artist_match_count === 1 ? 'Artist' : 'Artists'} Match
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 <div className="flex flex-col sm:flex-row gap-3">

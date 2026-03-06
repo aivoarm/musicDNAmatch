@@ -34,20 +34,12 @@ export async function POST(request: Request) {
         // 2. Upsert match interest record
         const upperEmail = email.trim().toUpperCase();
 
-        // First, try to delete any existing record for this user+target pair
-        // This avoids conflicts with both the (user_id, target_id) and email unique constraints
+        // Ensure we only have one record for this specific pair
         await supabase
             .from("match_interests")
             .delete()
             .eq("user_id", userId)
             .eq("target_id", targetId);
-
-        // Also delete any stale record where this email was used for a different target
-        await supabase
-            .from("match_interests")
-            .delete()
-            .ilike("email", upperEmail)
-            .eq("user_id", userId);
 
         const { error: matchError } = await supabase
             .from("match_interests")

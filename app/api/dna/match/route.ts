@@ -43,6 +43,11 @@ export async function GET() {
             return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({ ...m, similarity: 0.7, coherence: extractCoherence(m.metadata), city: m.city || m.metadata?.city || null })));
         }
 
+        // 1.5 Prepare user's tracks/artists for overlap matching
+        const myTracks = (userProfile.metadata?.recent_tracks || []) as any[];
+        const myTrackKeys = new Set(myTracks.map(t => `${String(t.title || "").toLowerCase().trim()}||${String(t.artist || "").toLowerCase().trim()}`));
+        const myArtists = new Set(myTracks.map(t => String(t.artist || "").toLowerCase().trim()).filter(a => a && a !== "unknown"));
+
         // 2. Match
         const { data: matches, error: matchError } = await supabase.rpc('match_sonic_soulmates_v2', {
             query_embedding: userProfile.sonic_embedding,
@@ -82,20 +87,35 @@ export async function GET() {
         }
 
         // 4. Enrich existing matches
-        let enrichedMatches = filteredMatches.map((m: any) => ({
-            ...m,
-            has_signal: interestIds.has(m.user_id),
-            incoming_signal: incomingSignalIds.has(m.user_id),
-            bridge_id: bridgeMap.get(m.user_id),
-            is_mutual: bridgeMap.has(m.user_id),
-            coherence: extractCoherence(m.metadata),
-            email: m.email || m.metadata?.email || null,
-            city: m.city || m.metadata?.city || null,
-        }));
+        let enrichedMatches = filteredMatches.map((m: any) => {
+            const mTracks = (m.metadata?.recent_tracks || []) as any[];
+            const commonSongs = mTracks.filter(t => {
+                const k = `${String(t.title || "").toLowerCase().trim()}||${String(t.artist || "").toLowerCase().trim()}`;
+                return myTrackKeys.has(k);
+            });
+            const mArtists = Array.from(new Set(mTracks.map(t => String(t.artist || "").toLowerCase().trim()).filter(a => a && a !== "unknown")));
+            const commonArtistsCount = mArtists.filter(a => myArtists.has(a)).length;
 
-        // 5. Check if any incoming senders are missing from the top matches
+            return {
+                ...m,
+                has_signal: interestIds.has(m.user_id),
+                incoming_signal: incomingSignalIds.has(m.user_id),
+                bridge_id: bridgeMap.get(m.user_id),
+                is_mutual: bridgeMap.has(m.user_id),
+                coherence: extractCoherence(m.metadata),
+                email: m.email || m.metadata?.email || null,
+                city: m.city || m.metadata?.city || null,
+                song_match_count: commonSongs.length,
+                artist_match_count: commonArtistsCount,
+            };
+        });
+
+        // 5. Check if any incoming senders OR sent interests are missing from the top matches
         const existingIds = new Set(enrichedMatches.map((m: any) => m.user_id));
-        const missingIds = Array.from(incomingSignalIds).filter(sid => !existingIds.has(sid));
+        const missingIds = Array.from(new Set([
+            ...Array.from(incomingSignalIds),
+            ...Array.from(interestIds)
+        ])).filter(sid => !existingIds.has(sid));
 
         if (missingIds.length > 0) {
             const { data: missingProfiles } = await supabase
@@ -104,17 +124,29 @@ export async function GET() {
                 .in("user_id", missingIds);
 
             if (missingProfiles) {
-                const manualMatches = missingProfiles.map(p => ({
-                    ...p,
-                    similarity: 0.65, // Default for non-top matches who sent a signal
-                    has_signal: interestIds.has(p.user_id),
-                    incoming_signal: true,
-                    bridge_id: bridgeMap.get(p.user_id),
-                    is_mutual: bridgeMap.has(p.user_id),
-                    coherence: extractCoherence((p as any).metadata),
-                    email: (p as any).email || (p as any).metadata?.email || null,
-                    city: (p as any).city || (p as any).metadata?.city || null,
-                }));
+                const manualMatches = missingProfiles.map(p => {
+                    const mTracks = (p.metadata?.recent_tracks || []) as any[];
+                    const commonSongs = mTracks.filter(t => {
+                        const k = `${String(t.title || "").toLowerCase().trim()}||${String(t.artist || "").toLowerCase().trim()}`;
+                        return myTrackKeys.has(k);
+                    });
+                    const mArtists = Array.from(new Set(mTracks.map(t => String(t.artist || "").toLowerCase().trim()).filter(a => a && a !== "unknown")));
+                    const commonArtistsCount = mArtists.filter(a => myArtists.has(a)).length;
+
+                    return {
+                        ...p,
+                        similarity: 0.65, // Default for non-top matches who sent a signal
+                        has_signal: interestIds.has(p.user_id),
+                        incoming_signal: incomingSignalIds.has(p.user_id),
+                        bridge_id: bridgeMap.get(p.user_id),
+                        is_mutual: bridgeMap.has(p.user_id),
+                        coherence: extractCoherence((p as any).metadata),
+                        email: (p as any).email || (p as any).metadata?.email || null,
+                        city: (p as any).city || (p as any).metadata?.city || null,
+                        song_match_count: commonSongs.length,
+                        artist_match_count: commonArtistsCount,
+                    };
+                });
                 enrichedMatches = [...enrichedMatches, ...manualMatches];
             }
         }

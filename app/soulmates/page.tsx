@@ -243,23 +243,7 @@ export default function SoulmatesPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Match feed — tighter cards */}
                     <div className="lg:col-span-2 space-y-2.5">
-                        {!email && (
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="glass rounded-xl p-4 border border-[#FF0000]/30 bg-[#FF0000]/5 relative overflow-hidden mb-1"
-                            >
-                                <div className="relative z-10 flex items-center justify-between gap-4">
-                                    <div className="flex-1 min-w-0">
-                                        <h4 className="text-xs font-black text-white italic uppercase tracking-tighter mb-0.5">Anonymous Signal</h4>
-                                        <p className="text-white/60 text-[9px] font-bold leading-relaxed">Secure your profile to connect permanently.</p>
-                                    </div>
-                                    <Link href="/profile" className="inline-flex items-center gap-1.5 text-[#FF0000] text-[8px] font-black uppercase tracking-widest hover:translate-x-1 transition-transform shrink-0">
-                                        Secure <ArrowRight className="h-2.5 w-2.5" />
-                                    </Link>
-                                </div>
-                            </motion.div>
-                        )}
+
                         {loading ? (
                             <div className="glass rounded-2xl p-12 flex flex-col items-center justify-center">
                                 <Activity className="h-8 w-8 text-[#FF0000] animate-spin mb-3" />
@@ -328,6 +312,16 @@ export default function SoulmatesPage() {
                                                     {(match.metadata?.top_genres || []).slice(0, 2).map((g: string, i: number) => (
                                                         <span key={g + i} className="text-[7px] bg-white/8 border border-white/15 text-white/60 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{g}</span>
                                                     ))}
+                                                    {match.song_match_count > 0 && (
+                                                        <span className="text-[7px] font-black bg-[#FF0000]/10 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0">
+                                                            {match.song_match_count} {match.song_match_count === 1 ? 'Song' : 'Songs'} Match
+                                                        </span>
+                                                    )}
+                                                    {match.artist_match_count > 0 && (
+                                                        <span className="text-[7px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest shrink-0">
+                                                            {match.artist_match_count} {match.artist_match_count === 1 ? 'Artist' : 'Artists'} Match
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 
