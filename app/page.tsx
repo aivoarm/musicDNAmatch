@@ -6,7 +6,7 @@ import {
     Waves, ArrowRight, Brain, ChevronRight, Youtube,
     Music2, HelpCircle, Plus, ExternalLink, CheckCircle2,
     Scan, Users, Play, User, Check, X,
-    AlertCircle, Loader2, Search
+    AlertCircle, Loader2, Search, Activity, MessageSquarePlus
 } from "lucide-react";
 import Link from "next/link";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
@@ -261,8 +261,13 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
 
     // On mount: show greeting, then after a beat show the name prompt
     useEffect(() => {
+        if (existing) {
+            setStep("cta");
+            setVisibleMessages(5);
+            return;
+        }
         revealWithDelay(900, () => setVisibleMessages(2));
-    }, []);
+    }, [existing]);
 
     const handleNameSubmit = () => {
         const name = nameInput.trim();
@@ -497,18 +502,29 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                         ))}
                                     </div>
 
-                                    <button
-                                        onClick={onBegin}
-                                        className="relative w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.4)] overflow-hidden"
-                                    >
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
-                                        <Play className="h-4 w-4 fill-white" />
-                                        Start My Journey, {firstName}
-                                    </button>
+                                    {existing && !checking ? (
+                                        <button
+                                            onClick={onResume}
+                                            className="relative w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.4)] overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
+                                            <Activity className="h-4 w-4" />
+                                            See My Matches, {firstName}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={onBegin}
+                                            className="relative w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_40px_rgba(255,0,0,0.4)] overflow-hidden"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
+                                            <Play className="h-4 w-4 fill-white" />
+                                            Start My Journey, {firstName}
+                                        </button>
+                                    )}
 
                                     {existing && !checking && (
-                                        <button onClick={onResume} className="flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/50 hover:text-white hover:border-white/20 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all">
-                                            <CheckCircle2 className="h-4 w-4 text-[#FF0000]" />Resume Previous Signal
+                                        <button onClick={onBegin} className="flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/50 hover:text-white hover:border-white/20 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all">
+                                            <Play className="h-3 w-3" />Start New Analysis
                                         </button>
                                     )}
 
@@ -586,6 +602,9 @@ export default function Home() {
                     const ids: string[] = d.dna.scanned_playlist_ids || [];
                     if (d.dna.scanned_playlist_id && !ids.includes(d.dna.scanned_playlist_id)) ids.push(d.dna.scanned_playlist_id);
                     setScannedIds(ids);
+
+                    // If returning, skip typing intro and go straight to CTA/Welcome
+                    // (But only if not starting a fresh session from a link)
                 }
             } catch { } finally { setChecking(false); }
         })();
@@ -637,6 +656,12 @@ export default function Home() {
             if (prev.length >= 5) return prev;
             return [...prev, pl];
         });
+    };
+
+    const handleResumeExisting = () => {
+        if (!clash?.user_id) return;
+        document.cookie = `guest_id=${clash.user_id};max-age=31536000;path=/`;
+        window.location.href = "/soulmates";
     };
 
     const handleFinalSubmit = async (alreadyConfirmed = false) => {
@@ -1418,16 +1443,22 @@ export default function Home() {
                                                     Overwrite that DNA profile with your new analysis?
                                                 </p>
 
-                                                <div className="flex flex-col sm:flex-row gap-4">
+                                                <div className="flex flex-col gap-3">
                                                     <button
                                                         onClick={() => handleFinalSubmit(true)}
-                                                        className="flex-[2] bg-[#FF0000] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
+                                                        className="w-full bg-[#FF0000] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
                                                     >
                                                         Yes, Overwrite
                                                     </button>
                                                     <button
+                                                        onClick={handleResumeExisting}
+                                                        className="w-full bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
+                                                    >
+                                                        Resume Existing Signal
+                                                    </button>
+                                                    <button
                                                         onClick={() => { setClash(null); setEmail(""); }}
-                                                        className="flex-1 bg-white/5 border border-white/10 text-white/50 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"
+                                                        className="w-full bg-white/5 border border-white/10 text-white/50 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"
                                                     >
                                                         Cancel
                                                     </button>
