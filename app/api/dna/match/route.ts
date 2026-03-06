@@ -1,14 +1,6 @@
-import { supabase } from "@/lib/supabase";
+import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
-
-function toUUID(str: string): string {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (uuidRegex.test(str)) return str;
-    const hash = createHash('sha256').update(str).digest('hex');
-    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-4${hash.slice(13, 16)}-a${hash.slice(17, 20)}-${hash.slice(20, 32)}`;
-}
 
 export async function GET() {
     const cookieStore = await cookies();
@@ -36,7 +28,7 @@ export async function GET() {
         }
 
         // 2. Match
-        const { data: matches, error: matchError } = await supabase.rpc('match_sonic_soulmates', {
+        const { data: matches, error: matchError } = await supabase.rpc('match_sonic_soulmates_v2', {
             query_embedding: userProfile.sonic_embedding,
             match_threshold: 0.01,
             match_count: 10,

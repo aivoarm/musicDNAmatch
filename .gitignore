@@ -76,3 +76,7 @@ test_yt_v2.mjs
 test_dna.mjs
 test_dna2.mjs
 test_playlist.mjs
+
+# Playwright
+playwright-report/
+test-results/
