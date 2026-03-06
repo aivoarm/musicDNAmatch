@@ -107,7 +107,7 @@ function Ticker() {
         <div className="overflow-hidden border-y border-white/10 py-3 bg-black/40">
             <motion.div className="flex gap-12 whitespace-nowrap" animate={{ x: ["0%", "-50%"] }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }}>
                 {[...TICKER, ...TICKER].map((s, i) => (
-                    <span key={i} className="mono text-[10px] text-white/50 uppercase tracking-[0.3em] flex items-center gap-4">
+                    <span key={i} className="mono text-[10px] text-white/80 uppercase tracking-[0.3em] flex items-center gap-4">
                         <span className="text-[#FF0000]">◆</span>{s}
                     </span>
                 ))}
@@ -124,10 +124,10 @@ function Stepper({ step }: { step: number }) {
             {STEP_LABELS.map((l, i) => (
                 <div key={l} className="flex items-center gap-1">
                     <div className={`flex items-center gap-2 px-4 py-2 rounded-full mono text-[10px] uppercase tracking-widest font-black transition-all duration-300
-                        ${i < step ? "text-[#FF0000]/50" : i === step ? "bg-[#FF0000]/15 text-[#FF0000] border border-[#FF0000]/30" : "text-white/45"}`}>
+                        ${i < step ? "text-[#FF0000]/70" : i === step ? "bg-[#FF0000]/20 text-[#FF0000] border border-[#FF0000]/40" : "text-white/75"}`}>
                         {i < step ? <Check className="h-3 w-3" /> : <span>{i + 1}</span>}{l}
                     </div>
-                    {i < STEP_LABELS.length - 1 && <div className="w-5 h-px bg-white/10" />}
+                    {i < STEP_LABELS.length - 1 && <div className="w-5 h-px bg-white/20" />}
                 </div>
             ))}
         </div>
@@ -139,12 +139,12 @@ function DnaBar({ label, value, red = true }: { label: string; value: number; re
     return (
         <div className="group/f">
             <div className="flex justify-between items-center mb-2.5">
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 group-hover/f:text-white transition-colors">{label}</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/80 group-hover/f:text-white transition-colors">{label}</span>
                 <span className="mono text-sm text-[#FF0000] font-black">{value.toFixed(3)}</span>
             </div>
-            <div className="h-3.5 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/15 group-hover/f:border-[#FF0000]/25 transition-all">
+            <div className="h-3.5 w-full bg-white/10 rounded-full overflow-hidden p-0.5 border border-white/25 group-hover/f:border-[#FF0000]/40 transition-all">
                 <motion.div initial={{ width: 0 }} animate={{ width: `${value * 100}%` }} transition={{ duration: 1.1, ease: "easeOut" }}
-                    className={`h-full rounded-full ${red ? "bg-[#FF0000] shadow-[0_0_16px_rgba(255,0,0,0.6)]" : "bg-white/50"}`} />
+                    className={`h-full rounded-full ${red ? "bg-[#FF0000] shadow-[0_0_16px_rgba(255,0,0,0.6)]" : "bg-white"}`} />
             </div>
         </div>
     );
@@ -195,10 +195,10 @@ function SystemBubble({ children, delay = 0 }: { children: React.ReactNode; dela
             transition={{ duration: 0.4, delay, ease: "easeOut" }}
             className="flex items-end gap-2.5 max-w-[85%] md:max-w-[70%]"
         >
-            <div className="h-8 w-8 rounded-full bg-[#FF0000]/20 border border-[#FF0000]/30 flex items-center justify-center shrink-0 mb-0.5">
+            <div className="h-8 w-8 rounded-full bg-[#FF0000]/25 border border-[#FF0000]/40 flex items-center justify-center shrink-0 mb-0.5">
                 <Waves className="h-3.5 w-3.5 text-[#FF0000]" />
             </div>
-            <div className="bg-white/6 border border-white/10 rounded-2xl rounded-bl-sm px-5 py-3.5 text-white/85 text-sm leading-relaxed font-medium">
+            <div className="bg-white/10 border border-white/20 rounded-2xl rounded-bl-sm px-5 py-3.5 text-white text-sm leading-relaxed font-bold">
                 {children}
             </div>
         </motion.div>
@@ -229,11 +229,11 @@ function StoryCard({ name, color, genres, delay = 0 }: { name: string; color: st
             transition={{ delay, duration: 0.4 }}
             className={`flex-1 min-w-[140px] rounded-2xl border p-4 ${color}`}
         >
-            <div className="mono text-[9px] uppercase tracking-widest opacity-60 mb-1">Listener</div>
+            <div className="mono text-[9px] uppercase tracking-widest opacity-80 mb-1">Listener</div>
             <div className="font-black text-lg italic mb-3">{name}</div>
             <div className="flex flex-wrap gap-1.5">
                 {genres.map(g => (
-                    <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/10 border border-white/10">{g}</span>
+                    <span key={g} className="text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full bg-white/10 border border-white/20 text-white">{g}</span>
                 ))}
             </div>
         </motion.div>
@@ -426,7 +426,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.5 }}
-                                        className="text-sm text-white/60 leading-relaxed font-medium italic"
+                                        className="text-sm text-white/80 leading-relaxed font-bold italic"
                                     >
                                         Complete strangers. Different cities. Jack was into heavy Techno and dark Industrial. Jane loved ethereal Dream Pop and soft Ambient textures.
                                     </motion.p>
@@ -440,8 +440,8 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                             <SystemBubble delay={0}>
                                 <p className="mb-3">We ran their music through our <span className="text-white font-black">12-dimensional DNA engine</span>.</p>
                                 {/* Match visualization */}
-                                <div className="mt-3 bg-black/30 rounded-xl p-4 border border-white/8">
-                                    <div className="mono text-[9px] text-white/40 uppercase tracking-widest mb-3">Sonic overlap detected</div>
+                                <div className="mt-3 bg-black/50 rounded-xl p-4 border border-white/20">
+                                    <div className="mono text-[9px] text-white/80 uppercase tracking-widest mb-3">Sonic overlap detected</div>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 h-2 rounded-full bg-blue-500/30 overflow-hidden">
                                             <motion.div
@@ -489,14 +489,14 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                     className="ml-10 flex flex-col gap-3"
                                 >
                                     {/* How it works — compact */}
-                                    <div className="bg-white/4 border border-white/8 rounded-2xl p-4 space-y-3">
+                                    <div className="bg-white/8 border border-white/20 rounded-2xl p-4 space-y-3">
                                         <div className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black">How it works</div>
                                         {[
                                             ["🎵", "Connect Spotify or YouTube"],
                                             ["🧬", "Generate your 12D Musical DNA"],
                                             ["🔍", "Match with sonic soulmates worldwide"],
                                         ].map(([icon, text]) => (
-                                            <div key={text} className="flex items-center gap-3 text-sm text-white/70 font-medium">
+                                            <div key={text} className="flex items-center gap-3 text-sm text-white/90 font-bold">
                                                 <span className="text-base">{icon}</span>{text}
                                             </div>
                                         ))}
@@ -523,13 +523,13 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                     )}
 
                                     {existing && !checking && (
-                                        <button onClick={onBegin} className="flex items-center justify-center gap-2 border border-white/10 bg-white/3 text-white/50 hover:text-white hover:border-white/20 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all">
+                                        <button onClick={onBegin} className="flex items-center justify-center gap-2 border border-white/20 bg-white/5 text-white/80 hover:text-white hover:border-white/40 font-black text-xs uppercase tracking-widest py-4 rounded-2xl transition-all">
                                             <Play className="h-3 w-3" />Start New Analysis
                                         </button>
                                     )}
 
-                                    <p className="text-center mono text-[9px] text-white/20 uppercase tracking-widest">
-                                        © 2026 Arman Ayva · <a href="https://www.armanayva.com" target="_blank" className="hover:text-white/40 transition-colors">armanayva.com</a>
+                                    <p className="text-center mono text-[9px] text-white/50 uppercase tracking-widest">
+                                        © 2026 Arman Ayva · <a href="https://www.armanayva.com" target="_blank" className="hover:text-white/80 transition-colors">armanayva.com</a>
                                     </p>
                                 </motion.div>
                             </motion.div>
@@ -603,8 +603,10 @@ export default function Home() {
                     if (d.dna.scanned_playlist_id && !ids.includes(d.dna.scanned_playlist_id)) ids.push(d.dna.scanned_playlist_id);
                     setScannedIds(ids);
 
-                    // If returning, skip typing intro and go straight to CTA/Welcome
-                    // (But only if not starting a fresh session from a link)
+                    // If returning, skip typing intro and go straight to Soulmates
+                    if (!window.location.search.includes("restart")) {
+                        window.location.href = "/soulmates";
+                    }
                 }
             } catch { } finally { setChecking(false); }
         })();
@@ -997,7 +999,7 @@ export default function Home() {
                                                             const on = genres.includes(g);
                                                             return (
                                                                 <button key={g} onClick={() => setGenres(p => p.includes(g) ? p.filter(x => x !== g) : [...p, g])}
-                                                                    className={`rounded-full border font-black uppercase text-[10px] py-2.5 px-5 tracking-widest transition-all duration-150 ${on ? "bg-[#FF0000] text-white border-[#FF0000] shadow-[0_0_18px_rgba(255,0,0,0.35)]" : "bg-white/5 border-white/10 text-white/50 hover:border-[#FF0000]/40 hover:text-white/80"}`}>
+                                                                    className={`rounded-full border font-black uppercase text-[10px] py-2.5 px-5 tracking-widest transition-all duration-150 ${on ? "bg-[#FF0000] text-white border-[#FF0000] shadow-[0_0_18px_rgba(255,0,0,0.35)]" : "bg-white/10 border-white/20 text-white/80 hover:border-[#FF0000]/60 hover:text-white"}`}>
                                                                     {g}
                                                                 </button>
                                                             );
@@ -1029,7 +1031,7 @@ export default function Home() {
                                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full shimmer pointer-events-none" />
                                                             Confirm & Continue <ArrowRight className="h-4 w-4" />
                                                         </button>
-                                                        <button onClick={() => setStage("intro")} className="w-full mono text-[10px] text-white/55 hover:text-white transition-all text-center py-2 uppercase tracking-widest">← Home</button>
+                                                        <button onClick={() => setStage("intro")} className="w-full mono text-[10px] text-white/80 hover:text-white transition-all text-center py-2 uppercase tracking-widest">← Home</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1058,8 +1060,8 @@ export default function Home() {
                                                     <h3 className="text-2xl font-black text-white">Spotify</h3>
                                                 </div>
 
-                                                <div className="flex flex-col gap-2 p-2 bg-white/5 border border-white/12 rounded-2xl focus-within:border-[#1DB954]/40 transition-all mb-4">
-                                                    <input type="text" value={spotifyUrl} onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }} onKeyDown={e => e.key === "Enter" && scanSpotify(0)} placeholder="Paste your Profile OR any Playlist URL..." className="bg-transparent py-3 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/35 w-full" />
+                                                <div className="flex flex-col gap-2 p-2 bg-white/10 border border-white/25 rounded-2xl focus-within:border-[#1DB954]/60 transition-all mb-4">
+                                                    <input type="text" value={spotifyUrl} onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }} onKeyDown={e => e.key === "Enter" && scanSpotify(0)} placeholder="Paste your Profile OR any Playlist URL..." className="bg-transparent py-3 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/60 w-full" />
                                                     <button onClick={() => scanSpotify(0)} disabled={scanning || !spotifyUrl.trim()} className="bg-[#1DB954] text-white font-black px-6 py-3 rounded-xl hover:bg-[#1ed760] transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 shrink-0">
                                                         {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />} Scan
                                                     </button>
@@ -1222,10 +1224,10 @@ export default function Home() {
                                                 { l: "Generating narrative", d: progress >= 100 },
                                             ].map(({ l, d, skip }) => skip ? null : (
                                                 <div key={l} className={`flex items-center gap-3 transition-all duration-500 ${d ? "opacity-100" : "opacity-40"}`}>
-                                                    <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${d ? "border-[#FF0000] bg-[#FF0000]/15" : "border-white/15"}`}>
+                                                    <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${d ? "border-[#FF0000] bg-[#FF0000]/25" : "border-white/30"}`}>
                                                         {d && <Check className="h-2.5 w-2.5 text-[#FF0000]" />}
                                                     </div>
-                                                    <span className="mono text-[9px] text-white/50 uppercase tracking-widest">{l}</span>
+                                                    <span className="mono text-[9px] text-white/80 uppercase tracking-widest">{l}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -1258,21 +1260,21 @@ export default function Home() {
                                                         <span className="mono text-[10px] text-[#FF0000] uppercase tracking-widest font-black flex items-center gap-2"><Brain className="h-4 w-4" />Neural Match</span>
                                                         <span className="mono text-[9px] text-white/50">12,492 nodes</span>
                                                     </div>
-                                                    <div className="flex items-end justify-between border-b border-white/14 pb-5 mb-5">
+                                                    <div className="flex items-end justify-between border-b border-white/25 pb-5 mb-5">
                                                         <h4 className="text-xl font-black text-white italic truncate pr-4">{dna.display_name}</h4>
                                                         <div className="text-right shrink-0">
                                                             <p className="mono text-3xl font-black text-[#FF0000]">{((dna.coherence_index ?? 0.8) * 100).toFixed(1)}%</p>
-                                                            <p className="mono text-[9px] text-white/60 uppercase tracking-widest">Coherence</p>
+                                                            <p className="mono text-[9px] text-white/80 uppercase tracking-widest">Coherence</p>
                                                         </div>
                                                     </div>
 
                                                     {/* Evolution Feedback */}
                                                     <div className="space-y-6 mb-7">
                                                         <div>
-                                                            <p className="mono text-[9px] text-white/40 uppercase tracking-[0.2em] mb-3">Seed Identity — Your Selection</p>
+                                                            <p className="mono text-[9px] text-white/60 uppercase tracking-[0.2em] mb-3">Seed Identity — Your Selection</p>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {(dna.top_genres || []).map((g: string, i: number) => (
-                                                                    <span key={g + i} className="bg-white/5 border border-white/10 text-white/60 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{g}</span>
+                                                                    <span key={g + i} className="bg-white/15 border border-white/25 text-white px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest">{g}</span>
                                                                 ))}
                                                             </div>
                                                         </div>
@@ -1330,9 +1332,9 @@ export default function Home() {
 
                                         {/* Narrative */}
                                         {dna.narrative && (
-                                            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/14">
+                                            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/25">
                                                 <p className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.4em] mb-5 font-black flex items-center gap-2"><Brain className="h-3.5 w-3.5" />Your Sound Profile</p>
-                                                <p className="text-white/70 leading-relaxed text-sm font-medium">{dna.narrative}</p>
+                                                <p className="text-white font-medium leading-relaxed text-sm">{dna.narrative}</p>
                                             </div>
                                         )}
 
@@ -1409,7 +1411,7 @@ export default function Home() {
                                                     <Search className="h-10 w-10 text-[#FF0000]" />
                                                 </div>
                                                 <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4">Secure your Signal</h2>
-                                                <p className="text-white/50 mono text-[9px] uppercase tracking-[0.4em] mb-12">
+                                                <p className="text-white/80 mono text-[9px] uppercase tracking-[0.4em] mb-12">
                                                     Link your DNA to find soulmates in the network.
                                                 </p>
 
@@ -1421,7 +1423,7 @@ export default function Home() {
                                                         onKeyDown={e => e.key === "Enter" && handleFinalSubmit()}
                                                         placeholder="your@email.com"
                                                         autoFocus
-                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 px-8 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-2xl font-bold text-white placeholder:text-white/20"
+                                                        className="w-full bg-white/10 border border-white/25 rounded-2xl py-6 px-8 focus:outline-none focus:border-[#FF0000]/60 transition-all text-center text-2xl font-bold text-white placeholder:text-white/40"
                                                     />
                                                     <button
                                                         onClick={() => handleFinalSubmit()}
@@ -1438,7 +1440,7 @@ export default function Home() {
                                                     <AlertCircle className="h-10 w-10 text-[#FF0000]" />
                                                 </div>
                                                 <h3 className="text-3xl font-black text-white italic mb-3">Found your match!</h3>
-                                                <p className="text-white/60 text-sm mb-10 leading-relaxed font-medium">
+                                                <p className="text-white/80 text-sm mb-10 leading-relaxed font-bold">
                                                     The email <span className="font-bold text-[#FF0000]">{email}</span> is already tied to <span className="text-white font-bold">{clash.display_name}</span>.<br /><br />
                                                     Overwrite that DNA profile with your new analysis?
                                                 </p>
@@ -1467,7 +1469,7 @@ export default function Home() {
                                         )}
 
                                         <div className="flex justify-center mt-12">
-                                            <button onClick={() => { setClash(null); setStage("complete") }} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-[0.3em]">← Restore View</button>
+                                            <button onClick={() => { setClash(null); setStage("complete") }} className="mono text-[10px] text-white/80 hover:text-white transition-all uppercase tracking-[0.3em]">← Restore View</button>
                                         </div>
                                     </motion.div>
                                 )}

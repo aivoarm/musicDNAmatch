@@ -61,12 +61,15 @@ export async function GET() {
             metadata: meta,
         };
 
-        return NextResponse.json({
+        const response = NextResponse.json({
             found: true,
             profileId: profile.id,
             userId,
             dna: dnaObject
         });
+
+        response.cookies.set("has_dna", "true", { maxAge: 60 * 60 * 24 * 365, path: "/" });
+        return response;
 
     } catch (error) {
         console.error("Profile Fetch Error:", error);

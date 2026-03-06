@@ -139,6 +139,16 @@ export async function POST(req: Request) {
             path: "/",
         });
 
+        response.cookies.set("has_dna", "true", {
+            maxAge: 60 * 60 * 24 * 365,
+            path: "/",
+        });
+
+        response.cookies.set("profile_id", profile.id, {
+            maxAge: 60 * 60 * 24 * 365,
+            path: "/",
+        });
+
         return response;
 
     } catch (error: any) {

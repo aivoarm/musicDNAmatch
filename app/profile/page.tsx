@@ -19,10 +19,10 @@ function AxisBar({ label, value, idx }: { label: string; value: number; idx: num
     return (
         <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.04 }}>
             <div className="flex items-center justify-between mb-1.5">
-                <span className="mono text-[9px] uppercase tracking-[0.3em] text-white/70 font-black">{label.replace(/_/g, " ")}</span>
-                <span className="mono text-[10px] text-white/50 font-black">{pct.toFixed(0)}%</span>
+                <span className="mono text-[9px] uppercase tracking-[0.4em] text-white/95 font-black">{label.replace(/_/g, " ")}</span>
+                <span className="mono text-[10px] text-white/80 font-black">{pct.toFixed(0)}%</span>
             </div>
-            <div className="h-2.5 bg-white/6 rounded-full overflow-hidden">
+            <div className="h-2.5 bg-white/12 rounded-full overflow-hidden border border-white/10">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${pct}%` }}
@@ -63,7 +63,7 @@ function RadarChart({ vector }: { vector: number[] }) {
             {gridLevels.map(level => {
                 const pts = Array.from({ length: n }, (_, i) => getPoint(i, level));
                 const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
-                return <path key={level} d={d} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />;
+                return <path key={level} d={d} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />;
             })}
             {/* Axis lines */}
             {Array.from({ length: n }, (_, i) => {
@@ -82,7 +82,7 @@ function RadarChart({ vector }: { vector: number[] }) {
                 const short = label.split(" ").map(w => w.charAt(0).toUpperCase()).join("");
                 return (
                     <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central"
-                        className="fill-white/30 font-black" style={{ fontSize: "7px", letterSpacing: "0.1em" }}>
+                        className="fill-white/80 font-black" style={{ fontSize: "8px", letterSpacing: "0.1em" }}>
                         {short}
                     </text>
                 );
@@ -137,9 +137,9 @@ export default function ProfilePage() {
                     </div>
                 ) : !profile ? (
                     <div className="glass rounded-[3rem] p-20 text-center">
-                        <Brain className="h-16 w-16 text-white/10 mx-auto mb-6" />
+                        <Brain className="h-16 w-16 text-white/20 mx-auto mb-6" />
                         <h2 className="text-3xl font-black text-white italic mb-3">No DNA Found</h2>
-                        <p className="text-white/70 mb-8 max-w-md mx-auto">You haven't generated your Musical DNA yet. Start the discovery process to build your unique sonic fingerprint.</p>
+                        <p className="text-white/90 mb-8 max-w-md mx-auto">You haven't generated your Musical DNA yet. Start the discovery process to build your unique sonic fingerprint.</p>
                         <Link href="/" className="inline-flex items-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all">
                             <Play className="h-4 w-4 fill-white" />Start DNA Discovery
                         </Link>
@@ -159,10 +159,10 @@ export default function ProfilePage() {
                                 <span className="mono text-[9px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-2 block">Digital Identity</span>
                                 <h1 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter mb-2">{profile.display_name}</h1>
 
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/50 mono text-[9px] uppercase tracking-widest">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/85 mono text-[9px] uppercase tracking-widest">
                                     <span className="flex items-center gap-1.5"><Activity className="h-3 w-3 text-[#FF0000]" /> Signal Active</span>
                                     <span className="flex items-center gap-1.5"><Waves className="h-3 w-3" /> 12 Dimensions</span>
-                                    <span className="flex items-center gap-1.5 text-white/30">Established {new Date(profile.created_at).toLocaleDateString()}</span>
+                                    <span className="flex items-center gap-1.5 text-white/60">Established {new Date(profile.created_at).toLocaleDateString()}</span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-center gap-1 glass px-6 py-4 rounded-3xl border border-[#FF0000]/25">
@@ -173,22 +173,22 @@ export default function ProfilePage() {
 
                         {/* Neural Feedback Summary */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div className="glass rounded-[2rem] p-7 border border-white/10">
-                                <p className="mono text-[9px] text-white/40 uppercase tracking-[0.2em] mb-4">Seed Identity — Your Selection</p>
+                            <div className="glass rounded-[2rem] p-7 border border-white/20">
+                                <p className="mono text-[9px] text-white/70 uppercase tracking-[0.2em] mb-4">Seed Identity — Your Selection</p>
                                 <div className="flex flex-wrap gap-2">
                                     {(profile.top_genres || []).map((g: string, i: number) => (
-                                        <span key={g + i} className="bg-white/5 border border-white/10 text-white/60 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest">{g}</span>
+                                        <span key={g + i} className="bg-white/10 border border-white/25 text-white px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest">{g}</span>
                                     ))}
                                 </div>
                             </div>
-                            <div className="glass rounded-[2rem] p-7 border border-[#FF0000]/15 bg-[#FF0000]/2">
-                                <p className="mono text-[9px] text-[#FF0000]/60 uppercase tracking-[0.2em] mb-4">Neural Highlights — Extracted Dimensions</p>
+                            <div className="glass rounded-[2rem] p-7 border border-[#FF0000]/30 bg-[#FF0000]/5">
+                                <p className="mono text-[9px] text-[#FF0000] uppercase tracking-[0.2em] mb-4">Neural Highlights — Extracted Dimensions</p>
                                 <div className="flex flex-wrap gap-2">
                                     {profile.axes?.map((label: string, i: number) => ({ label, value: profile.vector?.[i] || 0 }))
                                         .sort((a: any, b: any) => b.value - a.value)
                                         .slice(0, 3)
                                         .map((axis: any) => (
-                                            <span key={axis.label} className="bg-[#FF0000]/10 border border-[#FF0000]/20 text-[#FF0000] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,0,0.1)]">
+                                            <span key={axis.label} className="bg-[#FF0000]/15 border border-[#FF0000]/40 text-[#FF0000] px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(255,0,0,0.2)]">
                                                 {axis.label.replace(/_/g, " ")}
                                             </span>
                                         ))}
@@ -202,19 +202,19 @@ export default function ProfilePage() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
                             {/* Radar Chart */}
-                            <div className="lg:col-span-5 glass rounded-[2.5rem] p-8 border border-white/14">
-                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-6 text-center">12-Axis Radar</p>
+                            <div className="lg:col-span-12 glass rounded-[2.5rem] p-8 border border-white/20">
+                                <p className="mono text-[10px] text-white/80 uppercase tracking-[0.4em] mb-6 text-center">12-Axis Radar</p>
                                 <RadarChart vector={profile.vector || Array(12).fill(0.5)} />
                                 <div className="mt-6 flex flex-wrap justify-center gap-2">
                                     {(profile.top_genres || []).slice(0, 6).map((g: string, i: number) => (
-                                        <span key={g + i} className={`rounded-full font-black uppercase tracking-widest ${i < 2 ? "bg-[#FF0000] text-white text-[10px] py-1.5 px-4" : "bg-white/8 border border-white/10 text-white/50 text-[9px] py-1 px-3"}`}>{g}</span>
+                                        <span key={g + i} className={`rounded-full font-black uppercase tracking-widest ${i < 2 ? "bg-[#FF0000] text-white text-[10px] py-1.5 px-4" : "bg-white/12 border border-white/25 text-white/85 text-[9px] py-1 px-3"}`}>{g}</span>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Axis Breakdown */}
-                            <div className="lg:col-span-7 glass rounded-[2.5rem] p-8 border border-white/14">
-                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-6">Axis Breakdown — 12 Dimensions</p>
+                            <div className="lg:col-span-12 glass rounded-[2.5rem] p-8 border border-white/20">
+                                <p className="mono text-[10px] text-white/80 uppercase tracking-[0.4em] mb-6">Axis Breakdown — 12 Dimensions</p>
                                 <div className="space-y-4 max-h-[480px] overflow-y-auto sb pr-2">
                                     {AXIS_LABELS.map((axis, i) => (
                                         <AxisBar key={axis} label={axis} value={profile.vector?.[i] ?? 0} idx={i} />
@@ -225,9 +225,9 @@ export default function ProfilePage() {
 
                         {/* Narrative */}
                         {profile.narrative && (
-                            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/14">
+                            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/25">
                                 <p className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.4em] mb-5 font-black flex items-center gap-2"><Brain className="h-3.5 w-3.5" />Your Sound Profile</p>
-                                <p className="text-white/70 leading-relaxed text-sm font-medium">{profile.narrative}</p>
+                                <p className="text-white leading-relaxed text-sm font-bold">{profile.narrative}</p>
                             </div>
                         )}
 
@@ -241,11 +241,11 @@ export default function ProfilePage() {
                                 <Users className="h-4 w-4" />Find Soulmates<ArrowRight className="h-3.5 w-3.5" />
                             </Link>
                             <Link href="/"
-                                className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/60 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
+                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
                                 <RefreshCw className="h-4 w-4" />Regenerate DNA
                             </Link>
                             <button onClick={handleCopy}
-                                className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/60 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
+                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
                                 {copied ? <><Check className="h-4 w-4 text-green-500" />Copied!</> : <><Share2 className="h-4 w-4" />Share Profile</>}
                             </button>
                         </div>
@@ -277,7 +277,7 @@ export default function ProfilePage() {
                                         <h3 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-6 opacity-60">That combination strongly aligns with:</h3>
                                         <div className="flex flex-wrap gap-2.5">
                                             {generateInterpretation(profile.vector || []).genreMatches.map((g, i) => (
-                                                <span key={i} className="bg-white/5 border border-white/10 text-white/90 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] shadow-lg">
+                                                <span key={i} className="bg-white/10 border border-white/25 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] shadow-lg">
                                                     {g}
                                                 </span>
                                             ))}
@@ -294,15 +294,15 @@ export default function ProfilePage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {profile.recent_tracks.map((tr: any, i: number) => (
                                         <a key={(tr.id || i) + i} href={tr.url || "#"} target="_blank" rel="noopener noreferrer"
-                                            className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/4 border border-white/10 hover:bg-white/7 hover:border-[#FF0000]/25 transition-all group">
-                                            <div className="h-10 w-10 rounded-xl overflow-hidden bg-white/8 shrink-0">
-                                                {tr.thumbnail ? <img src={tr.thumbnail} alt="" className="h-full w-full object-cover grayscale opacity-55 group-hover:grayscale-0 group-hover:opacity-100 transition-all" /> : <User className="h-5 w-5 opacity-30 m-auto mt-2.5" />}
+                                            className="flex items-center gap-3 p-3.5 rounded-2xl bg-white/10 border border-white/25 hover:bg-white/15 hover:border-[#FF0000]/50 transition-all group">
+                                            <div className="h-10 w-10 rounded-xl overflow-hidden bg-white/15 shrink-0">
+                                                {tr.thumbnail ? <img src={tr.thumbnail} alt="" className="h-full w-full object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 transition-all" /> : <User className="h-5 w-5 opacity-40 m-auto mt-2.5" />}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-xs font-black truncate text-white/70 group-hover:text-white transition-colors">{tr.title || "Unknown"}</p>
-                                                <p className="mono text-[9px] text-white/55 truncate">{tr.artist || tr.channel || ""}</p>
+                                                <p className="text-xs font-black truncate text-white/95 group-hover:text-white transition-colors">{tr.title || "Unknown"}</p>
+                                                <p className="mono text-[9px] text-white/85 truncate">{tr.artist || tr.channel || ""}</p>
                                             </div>
-                                            <ExternalLink className="h-3 w-3 text-white/10 group-hover:text-[#FF0000] transition-all shrink-0" />
+                                            <ExternalLink className="h-3 w-3 text-white/40 group-hover:text-[#FF0000] transition-all shrink-0" />
                                         </a>
                                     ))}
                                 </div>

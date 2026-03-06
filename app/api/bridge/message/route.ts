@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import crypto from 'node:crypto';
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
         const { data: message, error } = await supabase
             .from("bridge_messages")
             .insert({
+                id: crypto.randomUUID(),
                 bridge_id: bridgeId,
                 sender_id: userId,
                 content: content
