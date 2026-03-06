@@ -169,7 +169,7 @@ export default function ProfilePage() {
         try {
             const res = await fetch("/api/dna/profile/delete", { method: "POST" });
             if (res.ok) {
-                router.replace("/");
+                window.location.href = "/";
             }
         } catch (err) {
             console.error(err);

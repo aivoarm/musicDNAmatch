@@ -66,7 +66,7 @@ export default function SoulmatesPage() {
                     const md = await matchRes.json();
                     setMatches(Array.isArray(md) ? md : []);
                 } else if (!foundDna) {
-                    router.replace("/");
+                    window.location.href = "/";
                 }
             } catch { }
             finally { setLoading(false); }
@@ -228,9 +228,9 @@ export default function SoulmatesPage() {
                                     {matches.length === 0 ? "No soulmates found yet." : "No matches in this filter."}
                                 </p>
                                 {matches.length === 0 && (
-                                    <Link href="/" className="inline-flex items-center gap-2 bg-[#FF0000] text-white font-black text-[9px] uppercase tracking-widest px-5 py-2.5 rounded-lg">
+                                    <button onClick={() => window.location.href = "/"} className="inline-flex items-center justify-center gap-2 bg-[#FF0000] text-white font-black text-[9px] uppercase tracking-widest px-5 py-3 rounded-xl hover:scale-105 transition-transform">
                                         Start DNA Discovery
-                                    </Link>
+                                    </button>
                                 )}
                             </div>
                         ) : (
