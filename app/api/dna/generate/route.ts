@@ -44,6 +44,7 @@ export async function POST(req: Request) {
             email,
             spotifyTracks = [],
             youtubeTracks = [],
+            artistGenres = [],
             dry_run = false,
         } = body;
 
@@ -57,7 +58,8 @@ export async function POST(req: Request) {
 
         // ── Compute DNA ────────────────────────────────
         const genreDNA = computeGenreVector(genres);
-        const spotifyDNA = audioFeatures.length > 0 ? computeSpotifyVector(audioFeatures) : null;
+        const hasSpots = audioFeatures.length > 0 || artistGenres.length > 0;
+        const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres) : null;
         const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
         const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA);
 

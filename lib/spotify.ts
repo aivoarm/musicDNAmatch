@@ -11,6 +11,7 @@ export interface SpotifyTrack {
     id: string;
     title: string;
     artist: string;
+    artistId?: string;
     thumbnail: string;
     url: string;
 }
@@ -69,6 +70,7 @@ export class SpotifyPublicFetcher {
                         id: item.track.id,
                         title: item.track.name,
                         artist: item.track.artists[0]?.name || "Unknown Artist",
+                        artistId: item.track.artists[0]?.id || "",
                         thumbnail: item.track.album?.images[0]?.url || "",
                         url: item.track.external_urls?.spotify || ""
                     }));

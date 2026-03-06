@@ -45,13 +45,13 @@ export function generateInterpretation(vector: number[]) {
         .slice(0, 5)
         .map(axis => AXIS_DESCRIPTIONS[axis.label] || axis.label.replace(/_/g, " "));
 
-    // Get top 5 matching genres based on cosine similarity
+    // Get top 5 matching genres based on euclidean distance (lower is better)
     const genreMatches = Object.entries(GENRE_VECTORS)
         .map(([name, genreVec]) => ({
             name: name.charAt(0).toUpperCase() + name.slice(1),
-            score: cosineSimilarity(vector, genreVec)
+            score: euclideanDistance(vector, genreVec)
         }))
-        .sort((a, b) => b.score - a.score)
+        .sort((a, b) => a.score - b.score)
         .slice(0, 5)
         .map(g => g.name);
 
@@ -225,10 +225,10 @@ export function computeGenreVector(selectedGenres: string[]): DNAVector {
 
 
 /**
- * Compute DNA vector from Spotify audio features.
+ * Compute DNA vector from Spotify audio features and explicit Artist Genres.
  */
-export function computeSpotifyVector(featuresList: SpotifyAudioFeatures[]): DNAVector {
-    if (featuresList.length === 0) {
+export function computeSpotifyVector(featuresList: SpotifyAudioFeatures[], artistGenres: string[] = []): DNAVector {
+    if (featuresList.length === 0 && artistGenres.length === 0) {
         return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "spotify", { track_count: 0 });
     }
 
@@ -252,15 +252,58 @@ export function computeSpotifyVector(featuresList: SpotifyAudioFeatures[]): DNAV
 
         for (let axis = 0; axis < 12; axis++) {
             const mappings = SPOTIFY_AXIS_MAP[axis];
-            const val = mappings.reduce((sum, [key, weight]) => sum + (norm[key] ?? 0.5) * weight, 0);
+            const rawVal = mappings.reduce((sum, [key, weight]) => sum + (norm[key] ?? 0.5) * weight, 0);
+
+            // Normalize against the GENRE_VECTORS baseline expectations.
+            // Raw audio features often drop to 0.0 (like acousticness), but our genre vectors bottom out ~0.3.
+            // This squashes the 0-1 range into a safer ~0.3-0.95 range.
+            const val = 0.3 + (rawVal * 0.65);
+
             axisValues[axis].push(val);
         }
     }
 
-    const vector = axisValues.map(vals => vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0.5);
-    const confidence = axisValues.map(vals => Math.min(1.0, vals.length / 10));
+    // Blend explicit Artist Genres if available
+    if (artistGenres && artistGenres.length > 0) {
+        const normalisedGenres = artistGenres.map(g => {
+            const s = g.toLowerCase().replace(/[^a-z0-9]/g, "");
+            if (s === "rb") return "rnb";
+            if (s === "indierock") return "indie";
+            if (s === "dreampop") return "indie";
+            if (s === "hiphop") return "hiphop";
+            if (s === "synthpop") return "synthpop";
+            if (s === "phenk" || s === "phonk") return "phonk";
+            if (s === "technopop") return "techno";
+            if (s === "folkrock") return "rock";
+            if (s === "kpop") return "kpop";
+            if (s === "jpop") return "pop";
+            if (s === "acidjazz") return "jazz";
+            if (s === "deephouse") return "house";
+            if (s === "futurebass") return "electronic";
+            if (s === "nudisco") return "disco";
+            return s;
+        });
 
-    return makeDNA(vector, confidence, "spotify", { track_count: featuresList.length });
+        const activeVectors = normalisedGenres
+            .map(g => GENRE_VECTORS[g])
+            .filter(Boolean);
+
+        // Weigh each explicit genre heavily compared to raw audio averages
+        for (const genreVec of activeVectors) {
+            for (let axis = 0; axis < 12; axis++) {
+                // Weight explicit textual labels heavily (e.g. push 10 copies into the average)
+                for (let w = 0; w < 10; w++) {
+                    axisValues[axis].push(genreVec[axis]);
+                }
+            }
+        }
+    }
+
+    const vector = axisValues.map(vals => vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0.5);
+    // Trust the data more if we actually have textual labels 
+    const confidence = axisValues.map(vals => Math.min(1.0, (vals.length / 10) + (artistGenres.length > 0 ? 0.3 : 0)));
+
+    return makeDNA(vector, confidence, "spotify", { track_count: Math.max(featuresList.length, artistGenres.length) });
 }
 
 /**
@@ -292,18 +335,33 @@ export function combineDNA(
     youtubeDNA: DNAVector | null,
 ): DNAVector {
     const vg = genreDNA.vector;
-    const vs = spotifyDNA?.vector ?? genreDNA.vector;
-    const vy = youtubeDNA?.vector ?? genreDNA.vector;
+    const vs = spotifyDNA?.vector;
+    const vy = youtubeDNA?.vector;
 
     const cg = genreDNA.confidence;
-    const cs = spotifyDNA?.confidence ?? Array(12).fill(0.3);
-    const cy = youtubeDNA?.confidence ?? Array(12).fill(0.2);
+    const cs = spotifyDNA?.confidence;
+    const cy = youtubeDNA?.confidence;
+
+    const hasGenre = (genreDNA.metadata.genres || []).length > 0;
+    const hasSpot = !!spotifyDNA && (spotifyDNA.metadata.track_count || 0) > 0;
+    const hasYt = !!youtubeDNA && (youtubeDNA.metadata.track_count || 0) > 0;
+
+    let wg = 0.5, ws = 0.25, wy = 0.25;
+
+    if (hasGenre && hasSpot && hasYt) { wg = 0.5; ws = 0.25; wy = 0.25; }
+    else if (hasGenre && hasSpot && !hasYt) { wg = 0.5; ws = 0.5; wy = 0; }
+    else if (hasGenre && !hasSpot && hasYt) { wg = 0.5; ws = 0; wy = 0.5; }
+    else if (hasGenre && !hasSpot && !hasYt) { wg = 1.0; ws = 0; wy = 0; }
+    else if (!hasGenre && hasSpot && hasYt) { wg = 0; ws = 0.5; wy = 0.5; }
+    else if (!hasGenre && hasSpot && !hasYt) { wg = 0; ws = 1.0; wy = 0; }
+    else if (!hasGenre && !hasSpot && hasYt) { wg = 0; ws = 0; wy = 1.0; }
+    else { wg = 0.5; ws = 0.25; wy = 0.25; } // fallback
 
     const vector = Array(12).fill(0).map((_, i) =>
-        0.50 * vg[i] + 0.25 * vs[i] + 0.25 * vy[i]
+        wg * vg[i] + ws * (vs ? vs[i] : vg[i]) + wy * (vy ? vy[i] : vg[i])
     );
     const confidence = Array(12).fill(0).map((_, i) =>
-        Math.min(1.0, 0.50 * cg[i] + 0.25 * cs[i] + 0.25 * cy[i])
+        Math.min(1.0, wg * cg[i] + ws * (cs ? cs[i] : 0) + wy * (cy ? cy[i] : 0))
     );
 
     return makeDNA(vector, confidence, "combined", {
@@ -359,6 +417,14 @@ function cosineSimilarity(a: number[], b: number[]): number {
     }
     const denom = Math.sqrt(normA) * Math.sqrt(normB) + 1e-9;
     return Math.max(0, Math.min(1, dot / denom));
+}
+
+function euclideanDistance(a: number[], b: number[]): number {
+    let sum = 0;
+    for (let i = 0; i < a.length; i++) {
+        sum += Math.pow(a[i] - b[i], 2);
+    }
+    return Math.sqrt(sum);
 }
 
 function round4(n: number): number {

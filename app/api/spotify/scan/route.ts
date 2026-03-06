@@ -64,7 +64,7 @@ export async function POST(req: Request) {
             for (const pid of ids) {
                 const data = await fetcher.getUserPublicData(resolvedSpotifyId || "none", pid);
                 if ("tracks" in data && data.tracks) {
-                    allTracks.push(...data.tracks.slice(0, 10)); // max 10 per playlist
+                    allTracks.push(...data.tracks.slice(0, 20)); // max 20 per playlist
                 }
             }
 
@@ -74,14 +74,19 @@ export async function POST(req: Request) {
                 if (!t.id || seen.has(t.id)) return false;
                 seen.add(t.id);
                 return true;
-            }).slice(0, 50); // max 50 total
+            }).slice(0, 100); // max 100 total
 
             // Fetch audio features for all tracks
             const audioFeatures = await fetchAudioFeatures(uniqueTracks.map(t => t.id), clientId, clientSecret);
 
+            // Collect Artist textual genres if artistIds are present
+            const artistIdsToFetch = Array.from(new Set(uniqueTracks.map(t => t.artistId).filter(Boolean))) as string[];
+            const artistGenres = await fetchArtistGenres(artistIdsToFetch.slice(0, 50), clientId, clientSecret);
+
             return NextResponse.json({
                 tracks: uniqueTracks,
                 audioFeatures,
+                artistGenres,
                 count: uniqueTracks.length,
             });
         }
@@ -141,4 +146,45 @@ async function fetchAudioFeatures(trackIds: string[], clientId: string, clientSe
     }
 
     return features;
+}
+
+/**
+ * Fetches textual Genre tags from Spotify Artists to directly map them.
+ */
+async function fetchArtistGenres(artistIds: string[], clientId: string, clientSecret: string) {
+    if (artistIds.length === 0) return [];
+
+    const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+    const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+            Authorization: `Basic ${authStr}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: "grant_type=client_credentials",
+    });
+
+    if (!tokenRes.ok) return [];
+    const { access_token } = await tokenRes.json();
+
+    const allGenres = new Set<string>();
+    for (let i = 0; i < artistIds.length; i += 50) {
+        const batch = artistIds.slice(i, i + 50);
+        const res = await fetch(
+            `https://api.spotify.com/v1/artists?ids=${batch.join(",")}`,
+            { headers: { Authorization: `Bearer ${access_token}` } }
+        );
+        if (res.ok) {
+            const data = await res.json();
+            for (const artist of data.artists || []) {
+                if (artist && artist.genres) {
+                    for (const genre of artist.genres) {
+                        allGenres.add(genre);
+                    }
+                }
+            }
+        }
+    }
+
+    return Array.from(allGenres);
 }

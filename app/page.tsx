@@ -702,6 +702,7 @@ export default function Home() {
         setStage("analyzing"); setProgress(0);
 
         let audioFeatures: any[] = [];
+        let artistGenres: string[] = [];
         let spotifyTracks: any[] = [];
         let youtubeVideos: any[] = [];
         const sid = extractId(spotifyUrl);
@@ -720,6 +721,7 @@ export default function Home() {
                 const d = await r.json();
                 spotifyTracks = d.tracks || [];
                 audioFeatures = d.audioFeatures || [];
+                artistGenres = d.artistGenres || [];
             } catch { }
         }
         setProgress(60);
@@ -739,7 +741,7 @@ export default function Home() {
         setProgress(90);
 
         const ytFormattedTracks = ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail, url: t.url }));
-        setFetchedSources({ audioFeatures, spotifyTracks, youtubeVideos, youtubeTracks: ytFormattedTracks });
+        setFetchedSources({ audioFeatures, artistGenres, spotifyTracks, youtubeVideos, youtubeTracks: ytFormattedTracks });
 
         // Step 3: Fast dry_run DNA to get suggested genres based on the signals
         try {
@@ -753,6 +755,7 @@ export default function Home() {
                     youtubeVideos,
                     spotifyTracks,
                     youtubeTracks: ytFormattedTracks,
+                    artistGenres,
                     dry_run: true
                 })
             });
@@ -788,6 +791,7 @@ export default function Home() {
 
         let audioFeatures = fetchedSources?.audioFeatures || [];
         let spotifyTracks = fetchedSources?.spotifyTracks || [];
+        let artistGenres = fetchedSources?.artistGenres || [];
         let youtubeVideos = fetchedSources?.youtubeVideos || [];
         let youtubeTracks = fetchedSources?.youtubeTracks || [];
         setProgress(50);
@@ -804,6 +808,7 @@ export default function Home() {
                     youtubeVideos,
                     spotifyTracks,
                     youtubeTracks,
+                    artistGenres,
                     dry_run: false
                 })
             });
