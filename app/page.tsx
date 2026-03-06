@@ -565,6 +565,8 @@ export default function Home() {
 
     const [dna, setDna] = useState<any>(null);
     const [fetchedSources, setFetchedSources] = useState<any>(null);
+    const [clash, setClash] = useState<any>(null);
+    const [checkingEmail, setCheckingEmail] = useState(false);
 
     // ── Init ──────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -635,6 +637,61 @@ export default function Home() {
             if (prev.length >= 5) return prev;
             return [...prev, pl];
         });
+    };
+
+    const handleFinalSubmit = async (alreadyConfirmed = false) => {
+        if (!email.trim() || !email.includes("@")) return;
+
+        if (!alreadyConfirmed) {
+            setCheckingEmail(true);
+            try {
+                const res = await fetch("/api/dna/profile/check-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+                const d = await res.json();
+                if (d.exists) {
+                    setClash(d.profile);
+                    setCheckingEmail(false);
+                    return;
+                }
+            } catch (e) {
+                console.error("Clash check failed", e);
+            }
+            setCheckingEmail(false);
+        }
+
+        // Adopting old ID if confirmed
+        if (clash?.user_id) {
+            document.cookie = `guest_id=${clash.user_id};max-age=31536000;path=/`;
+        }
+
+        const payload = {
+            genres,
+            displayName,
+            email,
+            audioFeatures: fetchedSources?.audioFeatures || [],
+            youtubeVideos: fetchedSources?.youtubeVideos || [],
+            artistGenres: fetchedSources?.artistGenres || [],
+            spotifyTracks: fetchedSources?.spotifyTracks || [],
+            youtubeTracks: fetchedSources?.youtubeTracks || [],
+            dry_run: false
+        };
+
+        await fetch('/api/dna/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        await fetch('/api/dna/intent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ intent: 'find_soulmates' })
+        }).catch(console.error);
+
+        window.location.href = "/soulmates?genres=" + genres.join(",");
     };
 
     // ── YouTube ───────────────────────────────────────────────────────────
@@ -1318,79 +1375,68 @@ export default function Home() {
 
                                 {/* ── EMAIL CAPTURE ── */}
                                 {stage === "email_capture" && (
-                                    <motion.div key="ec" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-xl mx-auto flex flex-col pt-12">
-                                        <div className="flex flex-col items-center text-center">
-                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
-                                                Find <span className="text-[#FF0000] italic">Soulmates</span>
-                                            </h2>
-                                            <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-12">Just one last step — we need your email to establish connections.</p>
-                                        </div>
+                                    <motion.div key="ec" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                                        className="text-center max-w-lg mx-auto pb-20">
 
-                                        <div className="glass p-8 rounded-[2rem] border border-white/14 flex flex-col items-center">
-                                            <input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" && email.trim() && email.includes("@")) {
-                                                        // Proceed
-                                                        fetch('/api/dna/generate', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({
-                                                                genres,
-                                                                displayName,
-                                                                email,
-                                                                audioFeatures: fetchedSources?.audioFeatures || [],
-                                                                youtubeVideos: fetchedSources?.youtubeVideos || [],
-                                                                spotifyTracks: fetchedSources?.spotifyTracks || [],
-                                                                youtubeTracks: fetchedSources?.youtubeTracks || [],
-                                                                dry_run: false
-                                                            })
-                                                        });
-                                                        fetch('/api/dna/intent', {
-                                                            method: 'POST',
-                                                            headers: { 'Content-Type': 'application/json' },
-                                                            body: JSON.stringify({ intent: 'find_soulmates' })
-                                                        }).catch(console.error);
-                                                        window.location.href = "/soulmates?genres=" + genres.join(",");
-                                                    }
-                                                }}
-                                                placeholder="your@email.com"
-                                                autoFocus
-                                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 px-6 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-xl font-bold mb-6 text-white placeholder:text-white/30"
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    fetch('/api/dna/generate', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({
-                                                            genres,
-                                                            displayName,
-                                                            email,
-                                                            audioFeatures: fetchedSources?.audioFeatures || [],
-                                                            youtubeVideos: fetchedSources?.youtubeVideos || [],
-                                                            spotifyTracks: fetchedSources?.spotifyTracks || [],
-                                                            youtubeTracks: fetchedSources?.youtubeTracks || [],
-                                                            dry_run: false
-                                                        })
-                                                    });
-                                                    fetch('/api/dna/intent', {
-                                                        method: 'POST',
-                                                        headers: { 'Content-Type': 'application/json' },
-                                                        body: JSON.stringify({ intent: 'find_soulmates' })
-                                                    }).catch(console.error);
-                                                    window.location.href = "/soulmates?genres=" + genres.join(",");
-                                                }}
-                                                disabled={!email.trim() || !email.includes("@")}
-                                                className="w-full sm:w-auto px-12 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-5 rounded-xl font-black text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,0,0,0.2)]"
-                                            >
-                                                Find Connections <ArrowRight className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                        <div className="flex justify-center mt-8">
-                                            <button onClick={() => setStage("complete")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest">← Back</button>
+                                        {!clash ? (
+                                            <>
+                                                <div className="h-20 w-20 rounded-[2rem] bg-[#FF0000]/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(255,0,0,0.1)]">
+                                                    <Search className="h-10 w-10 text-[#FF0000]" />
+                                                </div>
+                                                <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4">Secure your Signal</h2>
+                                                <p className="text-white/50 mono text-[9px] uppercase tracking-[0.4em] mb-12">
+                                                    Link your DNA to find soulmates in the network.
+                                                </p>
+
+                                                <div className="flex flex-col gap-4">
+                                                    <input
+                                                        type="email"
+                                                        value={email}
+                                                        onChange={e => setEmail(e.target.value)}
+                                                        onKeyDown={e => e.key === "Enter" && handleFinalSubmit()}
+                                                        placeholder="your@email.com"
+                                                        autoFocus
+                                                        className="w-full bg-white/5 border border-white/10 rounded-2xl py-6 px-8 focus:outline-none focus:border-[#FF0000]/40 transition-all text-center text-2xl font-bold text-white placeholder:text-white/20"
+                                                    />
+                                                    <button
+                                                        onClick={() => handleFinalSubmit()}
+                                                        disabled={checkingEmail || !email.trim() || !email.includes("@")}
+                                                        className="w-full sm:w-auto px-16 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-6 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_40px_rgba(255,0,0,0.3)] mt-2"
+                                                    >
+                                                        {checkingEmail ? <Loader2 className="h-5 w-5 animate-spin" /> : "Find Connections"} <ArrowRight className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass p-10 rounded-[3rem] border border-[#FF0000]/30 bg-[#FF0000]/5 backdrop-blur-3xl shadow-[0_0_120px_rgba(255,0,0,0.2)]">
+                                                <div className="h-20 w-20 rounded-full bg-[#FF0000]/20 flex items-center justify-center mx-auto mb-8">
+                                                    <AlertCircle className="h-10 w-10 text-[#FF0000]" />
+                                                </div>
+                                                <h3 className="text-3xl font-black text-white italic mb-3">Found your match!</h3>
+                                                <p className="text-white/60 text-sm mb-10 leading-relaxed font-medium">
+                                                    The email <span className="font-bold text-[#FF0000]">{email}</span> is already tied to <span className="text-white font-bold">{clash.display_name}</span>.<br /><br />
+                                                    Overwrite that DNA profile with your new analysis?
+                                                </p>
+
+                                                <div className="flex flex-col sm:flex-row gap-4">
+                                                    <button
+                                                        onClick={() => handleFinalSubmit(true)}
+                                                        className="flex-[2] bg-[#FF0000] text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
+                                                    >
+                                                        Yes, Overwrite
+                                                    </button>
+                                                    <button
+                                                        onClick={() => { setClash(null); setEmail(""); }}
+                                                        className="flex-1 bg-white/5 border border-white/10 text-white/50 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        )}
+
+                                        <div className="flex justify-center mt-12">
+                                            <button onClick={() => { setClash(null); setStage("complete") }} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-[0.3em]">← Restore View</button>
                                         </div>
                                     </motion.div>
                                 )}
