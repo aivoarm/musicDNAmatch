@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-type MatchMode = "all" | "convergent" | "resonant" | "divergent";
+type MatchMode = "all" | "convergent" | "resonant" | "divergent" | "sent";
 
 function computeDisplaySimilarity(sim: number): number {
     if (sim >= 0.9999) return 1.0;
@@ -121,7 +121,8 @@ export default function SoulmatesPage() {
 
     const filtered = matches.filter(m => {
         // Match mode filter
-        if (filter !== "all" && classifyMatch(m.similarity) !== filter) return false;
+        if (filter === "sent" && !m.has_signal) return false;
+        if (filter !== "all" && filter !== "sent" && classifyMatch(m.similarity) !== filter) return false;
         // City filter
         if (cityFilter !== "all") {
             const matchCity = (m.city || m.metadata?.city || "").trim().toLowerCase();
@@ -167,13 +168,15 @@ export default function SoulmatesPage() {
                 <div className="flex flex-col sm:flex-row gap-2 mb-4">
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-1">
                         <Filter className="h-3 w-3 text-white/60 shrink-0" />
-                        {(["all", "convergent", "resonant", "divergent"] as MatchMode[]).map(mode => (
+                        {(["all", "convergent", "resonant", "divergent", "sent"] as MatchMode[]).map(mode => (
                             <button key={mode} onClick={() => setFilter(mode)}
                                 className={`mono text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full border transition-all shrink-0
                                     ${filter === mode
                                         ? "bg-[#FF0000] border-[#FF0000] text-white"
                                         : "bg-white/8 border-white/20 text-white/70 hover:text-white hover:border-white/40"}`}>
-                                {mode === "all" ? `All (${matches.length})` : `${mode} (${matches.filter(m => classifyMatch(m.similarity) === mode).length})`}
+                                {mode === "all" ? `All (${matches.length})` :
+                                    mode === "sent" ? `Sent (${matches.filter(m => m.has_signal).length})` :
+                                        `${mode} (${matches.filter(m => classifyMatch(m.similarity) === mode).length})`}
                             </button>
                         ))}
                     </div>
@@ -239,6 +242,7 @@ export default function SoulmatesPage() {
                                 const mc = MODE_COLORS[mode];
                                 const coherencePct = ((match.coherence ?? 0.5) * 100).toFixed(0);
                                 const matchCity = match.city || match.metadata?.city;
+                                const isAnonymous = (match.metadata?.display_name || match.display_name || "Anonymous Signal") === "Anonymous Signal";
                                 return (
                                     <motion.div key={match.id || idx}
                                         initial={{ opacity: 0, y: 8 }}
@@ -315,6 +319,11 @@ export default function SoulmatesPage() {
                                                     <button onClick={() => setSelectedMatch(match)}
                                                         className="flex items-center gap-1.5 bg-[#FF0000] text-white font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all animate-pulse">
                                                         <Activity className="h-3 w-3" />Respond
+                                                    </button>
+                                                ) : isAnonymous ? (
+                                                    <button disabled
+                                                        className="flex items-center gap-1.5 bg-white/5 text-white/30 cursor-not-allowed font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest transition-all">
+                                                        <Activity className="h-3 w-3" />Anon
                                                     </button>
                                                 ) : (
                                                     <button onClick={() => !match.has_signal && setSelectedMatch(match)}

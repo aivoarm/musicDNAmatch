@@ -748,10 +748,14 @@ export default function Home() {
                     if (d.dna.scanned_playlist_id && !ids.includes(d.dna.scanned_playlist_id)) ids.push(d.dna.scanned_playlist_id);
                     setScannedIds(ids);
 
-                    // If returning, skip typing intro and go straight to Soulmates
-                    if (!window.location.search.includes("restart")) {
+                    // Route based on query params
+                    if (window.location.search.includes("scan=true")) {
+                        setStage("sources");
+                    } else if (!window.location.search.includes("restart")) {
                         window.location.href = "/soulmates";
                     }
+                } else if (window.location.search.includes("scan=true")) {
+                    setStage("sources");
                 }
             } catch { } finally { setChecking(false); }
         })();
@@ -765,7 +769,12 @@ export default function Home() {
         setAutoScanned(true); scanSpotify(0);
     }, [stage, spotifyUrl]);
 
-
+    // Scroll to top on stage transition (handles AnimatePresence delays)
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        const timer = setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 350);
+        return () => clearTimeout(timer);
+    }, [stage]);
 
     // ── Spotify ───────────────────────────────────────────────────────────
     const extractId = (raw: string) => {
@@ -1284,6 +1293,12 @@ export default function Home() {
                                                                     </button>
                                                                 )
                                                             })}
+                                                            {plTotal > playlists.length && (
+                                                                <button onClick={() => scanSpotify(plOffset + 6)} disabled={loadingMore} className="w-full p-3 text-[#1DB954] font-black text-[10px] uppercase tracking-widest border border-[#1DB954]/20 rounded-xl hover:bg-[#1DB954]/10 transition-colors mt-2 disabled:opacity-50 flex items-center justify-center gap-2 block bg-white/5">
+                                                                    {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+                                                                    {loadingMore ? "Fetching..." : "Load More Playlists"}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 )}

@@ -162,14 +162,18 @@ export default function ProfilePage() {
         }
     };
 
-    const handleDelete = async () => {
-        if (!confirm("ARE YOU SURE? This will permanently delete your DNA profile, matches, and all sonic data. This action CANNOT be undone.")) return;
+    const handleDelete = async (regenerate: boolean = false) => {
+        const msg = regenerate
+            ? "ARE YOU SURE? This will permanently delete your current DNA profile and matches, allowing you to start a fresh scan. This CANNOT be undone."
+            : "ARE YOU SURE? This will permanently delete your DNA profile, matches, and all sonic data. This action CANNOT be undone.";
+
+        if (!confirm(msg)) return;
 
         setDeleting(true);
         try {
             const res = await fetch("/api/dna/profile/delete", { method: "POST" });
             if (res.ok) {
-                window.location.href = "/";
+                window.location.href = regenerate ? "/?scan=true" : "/";
             }
         } catch (err) {
             console.error(err);
@@ -211,7 +215,7 @@ export default function ProfilePage() {
                                 <div className="absolute top-0 right-0 p-8 opacity-5"><Mail className="h-24 w-24 text-[#FF0000]" /></div>
                                 <div className="relative z-10">
                                     <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Secure Your <span className="text-[#FF0000]">Sonic Legacy</span></h3>
-                                    <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email and city to save your profile permanently and connect with your matches.</p>
+                                    <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email to save your profile permanently.</p>
 
                                     <form onSubmit={handleEmailSubmit} className="space-y-3">
                                         <div className="flex flex-col sm:flex-row gap-3">
@@ -221,18 +225,8 @@ export default function ProfilePage() {
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="ENTER YOUR EMAIL"
                                                 required
-                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
                                             />
-                                            <div className="relative flex-1">
-                                                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
-                                                <input
-                                                    type="text"
-                                                    value={city}
-                                                    onChange={(e) => setCity(e.target.value)}
-                                                    placeholder="YOUR CITY"
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
-                                                />
-                                            </div>
                                         </div>
                                         <button
                                             disabled={saving}
@@ -258,7 +252,10 @@ export default function ProfilePage() {
                                 <span className="mono text-[9px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-2 block">Digital Identity</span>
                                 <h1 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter mb-2">{profile.display_name}</h1>
 
-                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/85 mono text-[9px] uppercase tracking-widest">
+                                <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/85 mono text-[9px] uppercase tracking-widest mt-3">
+                                    {(profile.city || profile.metadata?.city) && (
+                                        <span className="flex items-center gap-1.5 text-[#FF0000] font-black"><MapPin className="h-3 w-3" /> {(profile.city || profile.metadata?.city).toUpperCase()}</span>
+                                    )}
                                     <span className="flex items-center gap-1.5"><Activity className="h-3 w-3 text-[#FF0000]" /> Signal Active</span>
                                     <span className="flex items-center gap-1.5"><Waves className="h-3 w-3" /> 12 Dimensions</span>
                                     <span className="flex items-center gap-1.5 text-white/60">Established {new Date(profile.created_at).toLocaleDateString()}</span>
@@ -339,13 +336,14 @@ export default function ProfilePage() {
                                 className="relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_36px_rgba(255,0,0,0.28)] overflow-hidden">
                                 <Users className="h-4 w-4" />Find Soulmates<ArrowRight className="h-3.5 w-3.5" />
                             </Link>
-                            <Link href="/"
-                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
-                                <RefreshCw className="h-4 w-4" />Regenerate DNA
-                            </Link>
+                            <button onClick={() => handleDelete(true)}
+                                disabled={deleting}
+                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50">
+                                <RefreshCw className="h-4 w-4" />{deleting ? "Resetting..." : "Regenerate DNA"}
+                            </button>
                             <ShareDNACard profile={profile} />
                             <button
-                                onClick={handleDelete}
+                                onClick={() => handleDelete(false)}
                                 disabled={deleting}
                                 className="flex items-center justify-center gap-3 border border-red-500/30 bg-red-500/5 text-red-500/80 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50"
                             >
