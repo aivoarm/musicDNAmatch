@@ -14,7 +14,7 @@ export async function searchYouTube(query: string, maxResults = 5): Promise<YouT
         return [];
     }
 
-    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=${maxResults}&key=${API_KEY}`;
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&videoCategoryId=10&maxResults=${maxResults}&key=${API_KEY}`;
 
     try {
         const res = await fetch(url);
@@ -33,11 +33,8 @@ export async function searchYouTube(query: string, maxResults = 5): Promise<YouT
             publishedAt: item.snippet.publishedAt,
         })).filter((v: any) => !!v.id);
 
-        // De-duplicate
-        const unique = Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
-
-        // Filter strictly for music category
-        return await filterMusicVideos(unique);
+        // De-duplicate and return directly (already filtered by API)
+        return Array.from(new Map<string, YouTubeVideo>(rawResults.map((v: any) => [v.id, v])).values());
     } catch (err) {
         console.error("Failed to search YouTube:", err);
         return [];

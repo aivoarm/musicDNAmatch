@@ -1061,19 +1061,27 @@ export default function Home() {
                                                         <button onClick={() => searchYt(ytQuery)} disabled={ytSearching || !ytQuery.trim()} className="bg-[#FF0000] text-white px-4 py-2.5 rounded-xl font-black text-[10px] uppercase">Search</button>
                                                     </div>
                                                     <AnimatePresence>
-                                                        {ytShowSearch && ytResults.length > 0 && (
-                                                            <motion.div className="absolute top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl max-h-48 overflow-y-auto z-50 p-2 shadow-2xl">
-                                                                {ytResults.map(v => {
-                                                                    const alreadyAdded = ytTracks.some(t => t.url.includes(v.id) && t.status === "ok");
-                                                                    return (
-                                                                        <button key={v.id} onClick={() => !alreadyAdded && addYtSearchResult(v)} className={`w-full flex items-center gap-3 p-2 border-b border-white/5 hover:bg-white/10 ${alreadyAdded ? 'opacity-30' : ''}`}>
-                                                                            <img src={v.thumbnail} className="w-10 h-10 object-cover rounded flex-shrink-0" />
-                                                                            <div className="flex-1 text-left min-w-0">
-                                                                                <p className="text-white text-xs truncate" dangerouslySetInnerHTML={{ __html: v.title }}></p>
-                                                                            </div>
-                                                                        </button>
-                                                                    )
-                                                                })}
+                                                        {ytShowSearch && (ytSearching || ytResults.length > 0) && (
+                                                            <motion.div className="absolute top-full left-0 right-0 mt-2 bg-[#111] border border-white/10 rounded-xl max-h-64 overflow-y-auto z-50 p-2 shadow-2xl backdrop-blur-xl">
+                                                                {ytSearching ? (
+                                                                    <div className="flex flex-col items-center justify-center py-10 gap-3">
+                                                                        <Loader2 className="h-6 w-6 text-[#FF0000] animate-spin" />
+                                                                        <span className="mono text-[9px] text-white/40 uppercase tracking-widest">Searching Pulse</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    ytResults.map(v => {
+                                                                        const alreadyAdded = ytTracks.some(t => t.url.includes(v.id) && t.status === "ok");
+                                                                        return (
+                                                                            <button key={v.id} onClick={() => !alreadyAdded && addYtSearchResult(v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border-b border-white/5 hover:bg-white/5 transition-colors ${alreadyAdded ? 'opacity-30' : ''}`}>
+                                                                                <img src={v.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                                                <div className="flex-1 text-left min-w-0">
+                                                                                    <p className="text-white text-[11px] font-bold truncate mb-1" dangerouslySetInnerHTML={{ __html: v.title }}></p>
+                                                                                    <p className="text-white/40 mono text-[9px] truncate">{v.channelTitle}</p>
+                                                                                </div>
+                                                                            </button>
+                                                                        )
+                                                                    })
+                                                                )}
                                                             </motion.div>
                                                         )}
                                                     </AnimatePresence>
