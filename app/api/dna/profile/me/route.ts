@@ -53,6 +53,7 @@ export async function GET() {
             recent_tracks: meta.recent_tracks || [],
             youtube_tracks: meta.youtube_tracks || [],
             narrative: meta.narrative || "",
+            city: meta.city || null,
             source_signals: meta.source_signals || {},
             schema_version: meta.schema_version ?? 2,
             updated_at: meta.updated_at || profile.created_at,

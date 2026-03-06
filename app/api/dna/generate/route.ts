@@ -39,6 +39,7 @@ export async function POST(req: Request) {
             youtubeTracks = [],
             artistGenres = [],
             dry_run = false,
+            city,
         } = body;
 
         // ── Identify user ──────────────────────────────
@@ -76,7 +77,8 @@ export async function POST(req: Request) {
         // ── Save to Supabase ───────────────────────────
         const metadata = {
             display_name: finalDisplayName,
-            email,
+            email: (email && typeof email === 'string' && email.trim() !== "") ? email.trim().toLowerCase() : null,
+            city: (city && typeof city === 'string' && city.trim() !== "") ? city.trim() : null,
             top_genres: genres,
             recent_tracks: [
                 ...spotifyTracks.slice(0, 15),
@@ -132,6 +134,7 @@ export async function POST(req: Request) {
             axes: [...AXIS_LABELS],
             narrative,
             metadata,
+            created_at: profile.created_at,
         });
 
         response.cookies.set("guest_id", rawUserId, {

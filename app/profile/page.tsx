@@ -5,12 +5,13 @@ import { motion } from "framer-motion";
 import {
     Waves, Users, ArrowRight, Brain, User, CheckCircle2,
     ChevronRight, Activity, ExternalLink, Play, RefreshCw,
-    Share2, Copy, Check
+    Mail, X, MapPin
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
+import ShareDNACard from "@/components/ShareDNACard";
 
 
 function AxisBar({ label, value, idx }: { label: string; value: number; idx: number }) {
@@ -94,7 +95,10 @@ function RadarChart({ vector }: { vector: number[] }) {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<any>(null);
-    const [copied, setCopied] = useState(false);
+    const [email, setEmail] = useState("");
+    const [city, setCity] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -102,19 +106,79 @@ export default function ProfilePage() {
             try {
                 const r = await fetch("/api/dna/profile/me");
                 const d = await r.json();
-                if (d.found) setProfile(d.dna);
+                if (d.found) {
+                    setProfile(d.dna);
+                    if (d.dna.email) setEmail(d.dna.email);
+                    if (d.dna.city) setCity(d.dna.city);
+                } else {
+                    router.replace("/");
+                }
             } catch { }
             finally { setLoading(false); }
         })();
-    }, []);
+    }, [router]);
 
-    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+    const handleEmailSubmit = async (e: React.FormEvent, forceOverwrite = false) => {
+        e?.preventDefault?.();
+        if (!email || !email.includes("@")) return;
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setSaving(true);
+        try {
+            const res = await fetch("/api/dna/profile/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    displayName: profile.display_name,
+                    email: email,
+                    city: city,
+                    genres: profile.top_genres,
+                    bio: profile.narrative,
+                    broadcasting: true,
+                    forceOverwrite,
+                })
+            });
+            const data = await res.json();
+
+            if (data.clash) {
+                // Another profile already uses this email — ask user to confirm
+                const existingName = data.clash.display_name || "another user";
+                const confirmed = confirm(
+                    `The email "${email}" is already linked to "${existingName}".\n\nDo you want to overwrite that profile and claim this email for your current DNA?`
+                );
+                if (confirmed) {
+                    // Re-submit with forceOverwrite
+                    await handleEmailSubmit(null as any, true);
+                }
+                return;
+            }
+
+            if (data.success) {
+                setProfile({ ...profile, email: email, city: city });
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setSaving(false);
+        }
     };
+
+    const handleDelete = async () => {
+        if (!confirm("ARE YOU SURE? This will permanently delete your DNA profile, matches, and all sonic data. This action CANNOT be undone.")) return;
+
+        setDeleting(true);
+        try {
+            const res = await fetch("/api/dna/profile/delete", { method: "POST" });
+            if (res.ok) {
+                router.replace("/");
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setDeleting(false);
+        }
+    };
+
+
 
     return (
         <div className="relative min-h-screen bg-[#080808] overflow-x-hidden">
@@ -135,17 +199,52 @@ export default function ProfilePage() {
                         <Activity className="h-12 w-12 text-[#FF0000] animate-spin mb-4" />
                         <p className="mono text-[10px] text-white/60 uppercase tracking-widest">Loading your Musical DNA…</p>
                     </div>
-                ) : !profile ? (
-                    <div className="glass rounded-[3rem] p-20 text-center">
-                        <Brain className="h-16 w-16 text-white/20 mx-auto mb-6" />
-                        <h2 className="text-3xl font-black text-white italic mb-3">No DNA Found</h2>
-                        <p className="text-white/90 mb-8 max-w-md mx-auto">You haven't generated your Musical DNA yet. Start the discovery process to build your unique sonic fingerprint.</p>
-                        <Link href="/" className="inline-flex items-center gap-3 bg-[#FF0000] text-white font-black text-sm uppercase tracking-widest px-8 py-4 rounded-2xl hover:bg-red-500 transition-all">
-                            <Play className="h-4 w-4 fill-white" />Start DNA Discovery
-                        </Link>
-                    </div>
-                ) : (
+                ) : !profile ? null : (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                        {/* Secure DNA Prompt - Only if no email */}
+                        {!profile.email && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="glass rounded-[2rem] p-8 border border-[#FF0000]/30 bg-gradient-to-r from-[#FF0000]/10 to-transparent relative overflow-hidden"
+                            >
+                                <div className="absolute top-0 right-0 p-8 opacity-5"><Mail className="h-24 w-24 text-[#FF0000]" /></div>
+                                <div className="relative z-10">
+                                    <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Secure Your <span className="text-[#FF0000]">Sonic Legacy</span></h3>
+                                    <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email and city to save your profile permanently and connect with your matches.</p>
+
+                                    <form onSubmit={handleEmailSubmit} className="space-y-3">
+                                        <div className="flex flex-col sm:flex-row gap-3">
+                                            <input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="ENTER YOUR EMAIL"
+                                                required
+                                                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                            />
+                                            <div className="relative flex-1">
+                                                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+                                                <input
+                                                    type="text"
+                                                    value={city}
+                                                    onChange={(e) => setCity(e.target.value)}
+                                                    placeholder="YOUR CITY"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button
+                                            disabled={saving}
+                                            className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                        >
+                                            {saving ? "SECURE SIGNAL..." : "SECURE DNA"}
+                                        </button>
+                                    </form>
+                                </div>
+                            </motion.div>
+                        )}
+
                         {/* Identity Banner */}
                         <div className="flex flex-col md:flex-row items-center gap-6 p-8 glass rounded-[3rem] border border-white/12 bg-gradient-to-br from-white/[0.03] to-transparent">
                             <div className="h-24 w-24 rounded-full border-2 border-[#FF0000]/40 overflow-hidden bg-white/5 flex items-center justify-center shadow-[0_0_30px_rgba(255,0,0,0.15)] shrink-0">
@@ -232,7 +331,7 @@ export default function ProfilePage() {
                         )}
 
                         {/* Actions */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <Link href="/soulmates"
                                 onClick={() => {
                                     fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
@@ -244,9 +343,13 @@ export default function ProfilePage() {
                                 className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
                                 <RefreshCw className="h-4 w-4" />Regenerate DNA
                             </Link>
-                            <button onClick={handleCopy}
-                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
-                                {copied ? <><Check className="h-4 w-4 text-green-500" />Copied!</> : <><Share2 className="h-4 w-4" />Share Profile</>}
+                            <ShareDNACard profile={profile} />
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="flex items-center justify-center gap-3 border border-red-500/30 bg-red-500/5 text-red-500/80 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50"
+                            >
+                                <X className="h-4 w-4" />{deleting ? "Deleting..." : "Delete Profile"}
                             </button>
                         </div>
 
@@ -290,7 +393,9 @@ export default function ProfilePage() {
                         {/* Tracks */}
                         {profile.recent_tracks?.length > 0 && (
                             <div className="glass rounded-[2.5rem] p-7 border border-white/12">
-                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-5">Source Signals — {profile.recent_tracks.length} tracks</p>
+                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-5">
+                                    Source Signals (<a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-colors">Spotify</a> / <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors">YouTube</a>) — {profile.recent_tracks.length} tracks
+                                </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {profile.recent_tracks.map((tr: any, i: number) => (
                                         <a key={(tr.id || i) + i} href={tr.url || "#"} target="_blank" rel="noopener noreferrer"

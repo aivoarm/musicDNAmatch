@@ -26,16 +26,33 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // Prevent users from expressing interest in themselves
+        if (userId === targetId) {
+            return NextResponse.json({ error: "You cannot express interest in yourself." }, { status: 400 });
+        }
+
         // 2. Upsert match interest record
+        // First, try to delete any existing record for this user+target pair
+        // This avoids conflicts with both the (user_id, target_id) and email unique constraints
+        await supabase
+            .from("match_interests")
+            .delete()
+            .eq("user_id", userId)
+            .eq("target_id", targetId);
+
+        // Also delete any stale record where this email was used for a different target
+        await supabase
+            .from("match_interests")
+            .delete()
+            .eq("email", email)
+            .eq("user_id", userId);
+
         const { error: matchError } = await supabase
             .from("match_interests")
-            .upsert({
-                id: crypto.randomUUID(),
+            .insert({
                 user_id: userId,
                 target_id: targetId,
                 email: email
-            }, {
-                onConflict: 'user_id,target_id'
             });
 
         if (matchError) throw matchError;

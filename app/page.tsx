@@ -6,14 +6,15 @@ import {
     Waves, ArrowRight, Brain, ChevronRight, Youtube,
     Music2, HelpCircle, Plus, ExternalLink, CheckCircle2,
     Scan, Users, Play, User, Check, X,
-    AlertCircle, Loader2, Search, Activity, MessageSquarePlus
+    AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail
 } from "lucide-react";
 import Link from "next/link";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
+import ShareDNACard from "@/components/ShareDNACard";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "intro" | "welcome_name" | "welcome_story" | "sources" | "genre_selection" | "analyzing" | "complete" | "email_capture";
+type Stage = "landing" | "intro" | "welcome_name" | "welcome_story" | "sources" | "genre_selection" | "analyzing" | "complete" | "email_capture";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -154,13 +155,15 @@ function DnaBar({ label, value, red = true }: { label: string; value: number; re
 // CONVERSATIONAL ONBOARDING
 // ═══════════════════════════════════════════════════════════════════════════
 
-type ChatStep = "greeting" | "name_input" | "story_jack" | "story_jane" | "story_match" | "story_result" | "cta";
+type ChatStep = "greeting" | "name_input" | "city_input" | "story_jack" | "story_jane" | "story_match" | "story_result" | "cta";
 
 interface ConversationalOnboardingProps {
     existing: any;
     checking: boolean;
     displayName: string;
     setDisplayName: (n: string) => void;
+    city: string;
+    setCity: (c: string) => void;
     onResume: () => void;
     onBegin: () => void;
 }
@@ -240,13 +243,90 @@ function StoryCard({ name, color, genres, delay = 0 }: { name: string; color: st
     );
 }
 
-function ConversationalOnboarding({ existing, checking, displayName, setDisplayName, onResume, onBegin }: ConversationalOnboardingProps) {
+// Landing Page Component (The "First Page")
+function Landing({ onStart, onArtist }: { onStart: () => void, onArtist: () => void }) {
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative min-h-screen flex flex-col items-center justify-center p-6 text-center select-none">
+            {/* Visual Focal Point */}
+            <div className="absolute inset-x-0 top-0 h-[70vh] pointer-events-none opacity-40 overflow-hidden">
+                <DNAHelix />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#080808]/50 to-[#080808]" />
+            </div>
+
+            <div className="relative z-10 max-w-4xl w-full">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mb-12"
+                >
+                    <img src="/icon.png" alt="MusicDNA Logo" className="h-24 w-24 mx-auto mb-8 drop-shadow-[0_0_20px_rgba(255,0,0,0.5)]" />
+                    <span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-6 block drop-shadow-sm">Signal Discovery Protocol</span>
+                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter italic mb-8 leading-[0.85] text-white">
+                        MUSIC<span className="text-[#FF0000]">DNA</span><br />
+                        MATCH
+                    </h1>
+                    <p className="text-white/90 text-xl md:text-2xl font-bold tracking-tight max-w-2xl mx-auto italic leading-tight mb-4">
+                        Discover your 12-dimensional musical fingerprint and find your sonic soulmates.
+                    </p>
+                    <p className="mono text-[10px] text-white/50 uppercase tracking-[0.3em] font-medium">
+                        Analyzed at the speed of sound via Neural Scanning.
+                    </p>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="flex flex-col sm:flex-row gap-5 justify-center items-center"
+                >
+                    <button
+                        onClick={onStart}
+                        className="group relative bg-white text-black font-black py-6 px-12 rounded-[2rem] text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-4 shadow-2xl overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-[#FF0000]/10 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
+                        <span className="relative z-10 flex items-center gap-3">
+                            <Play className="h-4 w-4 fill-black" /> Join the Signal
+                        </span>
+                        <ChevronRight className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    </button>
+
+                    <button
+                        onClick={onArtist}
+                        className="group border border-white/20 bg-white/5 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40 font-black py-6 px-12 rounded-[2rem] text-sm uppercase tracking-widest transition-all flex items-center gap-3"
+                    >
+                        <Music2 className="h-4 w-4" /> For Artists
+                    </button>
+                </motion.div>
+
+                {/* Ticker at the bottom of Landing */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.6 }}
+                    className="fixed bottom-0 left-0 right-0 py-8"
+                >
+                    <Ticker />
+                </motion.div>
+            </div>
+
+            {/* Ambient Background */}
+            <div className="fixed inset-0 -z-10 bg-[#080808]">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[1000px] w-[1000px] blur-[220px] rounded-full bg-[#FF0000]/5" />
+            </div>
+        </motion.div>
+    );
+}
+
+function ConversationalOnboarding({ existing, checking, displayName, setDisplayName, city, setCity, onResume, onBegin }: ConversationalOnboardingProps) {
     const [step, setStep] = useState<ChatStep>("greeting");
     const [nameInput, setNameInput] = useState(displayName || "");
+    const [cityInput, setCityInput] = useState(city || "");
     const [typing, setTyping] = useState(false);
     const [visibleMessages, setVisibleMessages] = useState(1);
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const cityInputRef = useRef<HTMLInputElement>(null);
 
     // Auto-scroll to bottom whenever messages change
     useEffect(() => {
@@ -274,6 +354,19 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
         if (!name) return;
         setDisplayName(name);
         document.cookie = `display_name=${encodeURIComponent(name)};max-age=31536000;path=/`;
+        // Go to city input step
+        setStep("city_input");
+        setVisibleMessages(0);
+        revealWithDelay(600, () => {
+            setVisibleMessages(1);
+            setTimeout(() => cityInputRef.current?.focus(), 200);
+        });
+    };
+
+    const handleCitySubmit = () => {
+        const c = cityInput.trim();
+        if (!c) return;
+        setCity(c);
         setStep("story_jack");
         setVisibleMessages(0);
         // Cascade story messages
@@ -296,6 +389,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
     };
 
     const firstName = (nameInput.trim() || displayName || "").split(" ")[0] || "you";
+    const cityName = cityInput.trim() || city || "";
 
     return (
         <motion.div
@@ -382,15 +476,62 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                     </div>
                 )}
 
-                {/* ── STORY step ── */}
-                {(step === "story_jack" || step === "story_jane" || step === "story_match" || step === "story_result" || step === "cta") && (
+                {/* ── CITY INPUT step ── */}
+                {step === "city_input" && (
                     <div className="flex flex-col gap-4 flex-1">
                         {/* User replied with name */}
                         <UserBubble delay={0}>{firstName}</UserBubble>
 
+                        {typing && <TypingIndicator />}
+
+                        {visibleMessages >= 1 && !typing && (
+                            <SystemBubble delay={0}>
+                                Nice, <span className="text-white font-black">{firstName}</span>! And where are you from? 🌍
+                            </SystemBubble>
+                        )}
+
+                        {visibleMessages >= 1 && !typing && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="flex gap-2.5 items-center justify-end"
+                            >
+                                <input
+                                    ref={cityInputRef}
+                                    autoFocus
+                                    type="text"
+                                    value={cityInput}
+                                    onChange={e => setCityInput(e.target.value)}
+                                    onKeyDown={e => e.key === "Enter" && cityInput.trim() && handleCitySubmit()}
+                                    placeholder="Your city…"
+                                    className="flex-1 bg-white/5 border border-white/12 rounded-2xl px-5 py-4 text-white font-bold text-base focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                />
+                                <button
+                                    onClick={handleCitySubmit}
+                                    disabled={!cityInput.trim()}
+                                    className="bg-[#FF0000] text-white font-black px-6 py-4 rounded-2xl hover:bg-red-500 active:scale-95 transition-all disabled:opacity-25 flex items-center gap-2 text-sm uppercase tracking-wide shadow-[0_0_24px_rgba(255,0,0,0.3)]"
+                                >
+                                    <ArrowRight className="h-4 w-4" />
+                                </button>
+                            </motion.div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── STORY step ── */}
+                {(step === "story_jack" || step === "story_jane" || step === "story_match" || step === "story_result" || step === "cta") && (
+                    <div className="flex flex-col gap-4 flex-1">
+                        {/* User replied with name and city */}
+                        <UserBubble delay={0}>{firstName}</UserBubble>
+
+                        {cityName && <UserBubble delay={0.1}>{cityName}</UserBubble>}
+
                         {visibleMessages >= 1 && (
                             <SystemBubble delay={0}>
-                                Nice to meet you, <span className="text-white font-black">{firstName}</span> 🎵
+                                {cityName
+                                    ? <>Hey <span className="text-white font-black">{firstName}</span> from <span className="text-white font-black">{cityName}</span> 🎵 Let me tell you a story.</>
+                                    : <>Nice to meet you, <span className="text-white font-black">{firstName}</span> 🎵</>}
                             </SystemBubble>
                         )}
 
@@ -547,7 +688,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Home() {
-    const [stage, setStage] = useState<Stage>("intro");
+    const [stage, setStage] = useState<Stage>("landing");
     const [genres, setGenres] = useState<string[]>([]);
     const [existing, setExisting] = useState<any>(null);
     const [checking, setChecking] = useState(true);
@@ -577,6 +718,7 @@ export default function Home() {
     // Analysis
     const [displayName, setDisplayName] = useState("");
     const [email, setEmail] = useState("");
+    const [city, setCity] = useState("");
     const [progress, setProgress] = useState(0);
 
     const [dna, setDna] = useState<any>(null);
@@ -597,6 +739,9 @@ export default function Home() {
                     }
                     if (d.dna.metadata && d.dna.metadata.email) {
                         setEmail(d.dna.metadata.email);
+                    }
+                    if (d.dna.city) {
+                        setCity(d.dna.city);
                     }
                     if (d.dna.top_genres) setGenres(d.dna.top_genres);
                     const ids: string[] = d.dna.scanned_playlist_ids || [];
@@ -698,6 +843,7 @@ export default function Home() {
             genres,
             displayName,
             email,
+            city,
             audioFeatures: fetchedSources?.audioFeatures || [],
             youtubeVideos: fetchedSources?.youtubeVideos || [],
             artistGenres: fetchedSources?.artistGenres || [],
@@ -887,7 +1033,7 @@ export default function Home() {
                 body: JSON.stringify({
                     genres,
                     displayName,
-                    email,
+                    email: email?.trim() || null,
                     audioFeatures,
                     youtubeVideos,
                     spotifyTracks,
@@ -906,6 +1052,7 @@ export default function Home() {
                     coherence_index: d.coherence_index,
                     axes: d.axes,
                     narrative: d.narrative,
+                    created_at: d.created_at,
                     ...d.metadata,
                 });
             }
@@ -960,6 +1107,16 @@ export default function Home() {
             <AnimatePresence mode="wait">
 
                 {/* ═══════════════════════════════════════════════════════ */}
+                {/* LANDING PAGE                                            */}
+                {/* ═══════════════════════════════════════════════════════ */}
+                {stage === "landing" && (
+                    <Landing
+                        onStart={() => setStage("intro")}
+                        onArtist={() => window.location.href = "/artists"}
+                    />
+                )}
+
+                {/* ═══════════════════════════════════════════════════════ */}
                 {/* CONVERSATIONAL ONBOARDING                               */}
                 {/* ═══════════════════════════════════════════════════════ */}
                 {(stage === "intro" || stage === "welcome_name" || stage === "welcome_story") && (
@@ -968,6 +1125,8 @@ export default function Home() {
                         checking={checking}
                         displayName={displayName}
                         setDisplayName={setDisplayName}
+                        city={city}
+                        setCity={setCity}
                         onResume={() => { setDna(existing); setStage("complete"); }}
                         onBegin={() => setStage("sources")}
                     />
@@ -976,7 +1135,7 @@ export default function Home() {
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* INNER STAGES                                            */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && (
+                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && stage !== "landing" && (
                     <motion.div key="inner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen">
 
 
@@ -1057,7 +1216,7 @@ export default function Home() {
                                                     <div className="h-10 w-10 rounded-full bg-[#1DB954]/20 flex items-center justify-center">
                                                         <Music2 className="h-5 w-5 text-[#1DB954]" />
                                                     </div>
-                                                    <h3 className="text-2xl font-black text-white">Spotify</h3>
+                                                    <a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-white hover:text-[#1DB954] transition-colors">Spotify</a>
                                                 </div>
 
                                                 <div className="flex flex-col gap-2 p-2 bg-white/10 border border-white/25 rounded-2xl focus-within:border-[#1DB954]/60 transition-all mb-4">
@@ -1136,7 +1295,7 @@ export default function Home() {
                                                     <div className="h-10 w-10 rounded-full bg-[#FF0000]/20 flex items-center justify-center">
                                                         <Youtube className="h-5 w-5 text-[#FF0000]" />
                                                     </div>
-                                                    <h3 className="text-2xl font-black text-white">YouTube</h3>
+                                                    <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-2xl font-black text-white hover:text-[#FF0000] transition-colors">YouTube</a>
                                                 </div>
 
                                                 <div className="relative mb-4">
@@ -1210,20 +1369,20 @@ export default function Home() {
                                         </div>
                                         <h2 className="text-3xl font-black text-white italic mb-3">Mapping your DNA</h2>
                                         <p className="text-white/65 font-medium max-w-xs mx-auto leading-relaxed text-sm mb-10">
-                                            {selPlaylists.length > 0 && `${selPlaylists.length} playlist${selPlaylists.length !== 1 ? "s" : ""}`}
+                                            {selPlaylists.length > 0 && <a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-all underline decoration-[#1DB954]/30 underline-offset-4">{selPlaylists.length} playlist{selPlaylists.length !== 1 ? "s" : ""}</a>}
                                             {selPlaylists.length > 0 && ytOk.length > 0 && " + "}
-                                            {ytOk.length > 0 && `${ytOk.length} YouTube track${ytOk.length !== 1 ? "s" : ""}`}
+                                            {ytOk.length > 0 && <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-all underline decoration-[#FF0000]/30 underline-offset-4">{ytOk.length} YouTube track{ytOk.length !== 1 ? "s" : ""}</a>}
                                             {" "}across 12 sonic dimensions
                                         </p>
                                         <div className="space-y-3 text-left max-w-[260px] mx-auto">
                                             {[
                                                 { l: "Genre vector computed", d: progress > 10 },
-                                                { l: "Spotify features extracted", d: progress > 40, skip: selPlaylists.length === 0 },
-                                                { l: "YouTube signals processed", d: progress > 65, skip: ytOk.length === 0 },
+                                                { l: <><a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-colors">Spotify</a> features extracted</>, d: progress > 40, skip: selPlaylists.length === 0 },
+                                                { l: <><a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors">YouTube</a> signals processed</>, d: progress > 65, skip: ytOk.length === 0 },
                                                 { l: "Combining signals", d: progress > 80 },
                                                 { l: "Generating narrative", d: progress >= 100 },
                                             ].map(({ l, d, skip }) => skip ? null : (
-                                                <div key={l} className={`flex items-center gap-3 transition-all duration-500 ${d ? "opacity-100" : "opacity-40"}`}>
+                                                <div key={typeof l === 'string' ? l : 'source-' + d} className={`flex items-center gap-3 transition-all duration-500 ${d ? "opacity-100" : "opacity-40"}`}>
                                                     <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${d ? "border-[#FF0000] bg-[#FF0000]/25" : "border-white/30"}`}>
                                                         {d && <Check className="h-2.5 w-2.5 text-[#FF0000]" />}
                                                     </div>
@@ -1239,17 +1398,36 @@ export default function Home() {
                                     <motion.div key="co" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 w-full pb-16">
                                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
                                             {/* Vector map */}
-                                            <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/10">
-                                                <p className="mono text-[10px] text-white/60 uppercase tracking-widest mb-7">Structural Map Vector — 12 Dimensions</p>
-                                                <div className="space-y-4 max-h-[420px] overflow-y-auto sb pr-2">
-                                                    {(dna.axes || ["spectral_energy", "harmonic_depth", "rhythmic_drive", "melodic_warmth", "structural_complexity", "sonic_texture", "tempo_variance", "tonal_brightness", "dynamic_range", "genre_fusion", "experimental_index", "emotional_density"]).map((axis: string, i: number) => (
-                                                        <DnaBar key={axis} label={axis.replace(/_/g, " ")} value={dna.vector?.[i] ?? 0} red={i % 2 === 0} />
-                                                    ))}
-                                                </div>
-                                                <div className="mt-9 flex flex-col items-center pt-7 border-t border-white/10">
-                                                    <CheckCircle2 className="h-14 w-14 text-[#FF0000] mb-3 drop-shadow-lg" />
-                                                    <span className="text-lg font-black tracking-[0.3em] uppercase text-white italic">Sync Verified</span>
-                                                    <span className="mono text-[9px] text-white/55 uppercase tracking-widest mt-1.5">{dna.display_name}</span>
+                                            <div className="space-y-4">
+                                                {!email && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className="glass rounded-[2rem] p-6 border border-[#FF0000]/30 bg-[#FF0000]/5 relative overflow-hidden mb-2"
+                                                    >
+                                                        <div className="absolute top-0 right-0 p-4 opacity-5"><Mail className="h-16 w-16 text-[#FF0000]" /></div>
+                                                        <div className="relative z-10">
+                                                            <h4 className="text-sm font-black text-white italic uppercase tracking-tighter mb-1">Anonymous Signal Detected</h4>
+                                                            <p className="text-white/60 text-[10px] font-bold leading-relaxed mb-4">You are viewing a temporary profile. Secure this DNA with your email to prevent data loss and connect with matches.</p>
+                                                            <Link href="/profile" className="inline-flex items-center gap-2 text-[#FF0000] text-[9px] font-black uppercase tracking-widest hover:translate-x-1 transition-transform">
+                                                                Secure DNA Now <ArrowRight className="h-3 w-3" />
+                                                            </Link>
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+
+                                                <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/10">
+                                                    <p className="mono text-[10px] text-white/60 uppercase tracking-widest mb-7">Structural Map Vector — 12 Dimensions</p>
+                                                    <div className="space-y-4 max-h-[420px] overflow-y-auto sb pr-2">
+                                                        {(dna.axes || ["spectral_energy", "harmonic_depth", "rhythmic_drive", "melodic_warmth", "structural_complexity", "sonic_texture", "tempo_variance", "tonal_brightness", "dynamic_range", "genre_fusion", "experimental_index", "emotional_density"]).map((axis: string, i: number) => (
+                                                            <DnaBar key={axis} label={axis.replace(/_/g, " ")} value={dna.vector?.[i] ?? 0} red={i % 2 === 0} />
+                                                        ))}
+                                                    </div>
+                                                    <div className="mt-9 flex flex-col items-center pt-7 border-t border-white/10">
+                                                        <CheckCircle2 className="h-14 w-14 text-[#FF0000] mb-3 drop-shadow-lg" />
+                                                        <span className="text-lg font-black tracking-[0.3em] uppercase text-white italic">Sync Verified</span>
+                                                        <span className="mono text-[9px] text-white/55 uppercase tracking-widest mt-1.5">{dna.display_name}</span>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1304,16 +1482,12 @@ export default function Home() {
                                                 </div>
                                                 <button
                                                     onClick={() => {
-                                                        if (!email || !email.includes("@")) {
-                                                            setStage("email_capture");
-                                                        } else {
-                                                            fetch('/api/dna/intent', {
-                                                                method: 'POST',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ intent: 'find_soulmates' })
-                                                            }).catch(console.error);
-                                                            window.location.href = "/soulmates?genres=" + genres.join(",");
-                                                        }
+                                                        fetch('/api/dna/intent', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ intent: 'find_soulmates' })
+                                                        }).catch(console.error);
+                                                        window.location.href = "/soulmates?genres=" + genres.join(",");
                                                     }}
                                                     className="relative flex items-center justify-between w-full bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
                                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
@@ -1324,6 +1498,7 @@ export default function Home() {
                                                     className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/70 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
                                                     <User className="h-4 w-4" />View Full Profile
                                                 </Link>
+                                                <ShareDNACard profile={dna} />
                                                 <button onClick={() => { setStage("intro"); setSelPlaylists([]); setYtTracks(emptyYt()); }} className="w-full mono text-[10px] text-white/45 hover:text-[#FF0000] transition-all uppercase tracking-widest py-2 text-center">↺ Start new scan</button>
 
                                             </div>
@@ -1378,7 +1553,9 @@ export default function Home() {
                                         {/* Captured tracks */}
                                         {dna.recent_tracks?.length > 0 && (
                                             <div className="glass rounded-[2.5rem] p-7 border border-white/12">
-                                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-5">Captured Signals — {dna.recent_tracks.length} tracks</p>
+                                                <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em] mb-5">
+                                                    Captured Signals (<a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-colors">Spotify</a> / <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors">YouTube</a>) — {dna.recent_tracks.length} tracks
+                                                </p>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                                     {dna.recent_tracks.map((tr: any, i: number) => (
                                                         <a key={tr.id + i} href={tr.url || "#"} target="_blank" rel="noopener noreferrer"

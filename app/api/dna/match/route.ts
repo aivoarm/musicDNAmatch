@@ -1,6 +1,22 @@
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { calculateCoherence } from "@/lib/dna";
+
+function extractCoherence(meta: any): number {
+    const confidence = meta?.confidence || [];
+    // Use vector from metadata if available, else default
+    const vector = meta?.vector || meta?.sonic_embedding || [];
+    if (vector.length === 12) {
+        return calculateCoherence(vector, confidence);
+    }
+    // Fallback: estimate from confidence array average
+    if (confidence.length > 0) {
+        const avg = confidence.reduce((s: number, v: number) => s + v, 0) / confidence.length;
+        return Math.min(1, avg);
+    }
+    return 0.5;
+}
 
 export async function GET() {
     const cookieStore = await cookies();
@@ -9,7 +25,7 @@ export async function GET() {
     try {
         if (!guestId) {
             const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75 })));
+            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75, coherence: extractCoherence(m.metadata), city: m.metadata?.city || null })));
         }
 
         const userId = toUUID(guestId);
@@ -24,7 +40,7 @@ export async function GET() {
 
         if (profileError || !userProfile) {
             const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").neq("user_id", userId).limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.7 })));
+            return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({ ...m, similarity: 0.7, coherence: extractCoherence(m.metadata), city: m.metadata?.city || null })));
         }
 
         // 2. Match
@@ -56,7 +72,9 @@ export async function GET() {
             has_signal: interestIds.has(m.user_id),
             incoming_signal: incomingSignalIds.has(m.user_id),
             bridge_id: bridgeMap.get(m.user_id),
-            is_mutual: bridgeMap.has(m.user_id)
+            is_mutual: bridgeMap.has(m.user_id),
+            coherence: extractCoherence(m.metadata),
+            city: m.metadata?.city || null,
         }));
 
         // 5. Check if any incoming senders are missing from the top matches
@@ -76,7 +94,9 @@ export async function GET() {
                     has_signal: interestIds.has(p.user_id),
                     incoming_signal: true,
                     bridge_id: bridgeMap.get(p.user_id),
-                    is_mutual: bridgeMap.has(p.user_id)
+                    is_mutual: bridgeMap.has(p.user_id),
+                    coherence: extractCoherence((p as any).metadata),
+                    city: (p as any).metadata?.city || null,
                 }));
                 enrichedMatches = [...enrichedMatches, ...manualMatches];
             }
@@ -88,6 +108,9 @@ export async function GET() {
             if (!a.incoming_signal && b.incoming_signal) return 1;
             return (b.similarity ?? 0) - (a.similarity ?? 0);
         });
+
+        // 6.5 Filter out the current user from appearing in their own soulmates
+        enrichedMatches = enrichedMatches.filter((m: any) => m.user_id !== userId);
 
 
         return NextResponse.json(enrichedMatches);

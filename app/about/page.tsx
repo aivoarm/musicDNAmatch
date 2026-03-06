@@ -21,7 +21,7 @@ export default function AboutPage() {
                 <h1 className="text-5xl sm:text-7xl font-black tracking-tighter mb-6 relative z-10">
                     The <span className="text-[#FF0000] italic">Science</span> of Sound.
                 </h1>
-                <p className="text-xl sm:text-2xl text-white/70 font-medium leading-relaxed max-w-2xl relative z-10">
+                <p className="text-xl sm:text-2xl text-white/85 font-semibold leading-relaxed max-w-2xl relative z-10">
                     We believe that the music we listen to isn't just a preference—it's a direct reflection of how our brains process emotion, rhythm, and life itself.
                 </p>
 
@@ -29,9 +29,9 @@ export default function AboutPage() {
                 <div className="absolute top-1/2 left-0 -translate-y-1/2 w-64 h-64 bg-[#FF0000]/20 blur-[120px] rounded-full -z-0 pointer-events-none" />
             </header>
 
-            <div className="space-y-16 leading-relaxed text-white/70 relative z-10">
+            <div className="space-y-16 leading-relaxed text-white/85 relative z-10">
                 {/* Vision Section */}
-                <section className="glass rounded-[2rem] p-8 sm:p-12 border-white/5 relative overflow-hidden group">
+                <section className="glass rounded-[2rem] p-8 sm:p-12 border border-white/10 bg-black/40 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
                         <Users className="h-40 w-40" />
                     </div>
@@ -62,20 +62,20 @@ export default function AboutPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                         {/* Box 1 */}
-                        <div className="glass p-6 rounded-2xl border border-white/5 bg-white/2">
-                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <BarChart className="h-4 w-4" /> Feature Extraction
+                        <div className="glass p-8 rounded-3xl border border-white/20 bg-black/60 shadow-2xl">
+                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <BarChart className="h-5 w-5" /> Feature Extraction
                             </h3>
-                            <p className="text-sm">
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
                                 Each track is broken down into numerical values representing its mood, pacing, and instrumentation. We aggregate these features to find the mean frequencies and distributions of your listening habits.
                             </p>
                         </div>
                         {/* Box 2 */}
-                        <div className="glass p-6 rounded-2xl border border-white/5 bg-white/2">
-                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2">
-                                <Network className="h-4 w-4" /> Semantic Genre Analysis
+                        <div className="glass p-8 rounded-3xl border border-white/20 bg-black/60 shadow-2xl">
+                            <h3 className="text-[#FF0000] text-xs font-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <Network className="h-5 w-5" /> Semantic Genre Analysis
                             </h3>
-                            <p className="text-sm">
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
                                 We utilize natural language processing (NLP) to cluster the countless specific sub-genres associated with your tracks into broader, comparable categories across our global pool.
                             </p>
                         </div>
@@ -87,7 +87,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Algorithm Section */}
-                <section className="glass rounded-[2rem] p-8 sm:p-12 border-white/5 bg-gradient-to-br from-[#FF0000]/10 to-transparent relative overflow-hidden">
+                <section className="glass rounded-[2rem] p-8 sm:p-12 border border-white/10 bg-gradient-to-br from-[#FF0000]/15 to-black/40 relative overflow-hidden">
                     <h2 className="text-2xl sm:text-3xl font-black text-white mb-6 flex items-center gap-3 tracking-tight">
                         <Code2 className="h-6 w-6 text-[#FF0000]" /> 3. Euclidean Distance Matching
                     </h2>
@@ -113,22 +113,22 @@ export default function AboutPage() {
                     </h2>
 
                     <div className="space-y-6">
-                        <div className="glass p-6 rounded-2xl border border-white/5">
-                            <h3 className="text-lg font-black text-white mb-2">What is the "Coherence" percentage?</h3>
-                            <p className="text-sm text-white/70 leading-relaxed">
+                        <div className="glass p-8 rounded-[2rem] border border-white/20 bg-black/60 shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-3">What is the "Coherence" percentage?</h3>
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
                                 Coherence is a mathematical measurement of how consistent or "focused" your musical taste is across our 12 DNA dimensions. We calculate the Weighted Variance of your track data. <br /><br />
                                 A <strong>High Coherence</strong> (e.g., 85%+) means you have a highly specialized sound profile with sharp preferences (you strongly love specific traits and strongly dislike others). A <strong>Low Coherence</strong> means your tastes are eclectic and spread out across many different styles.
                             </p>
                         </div>
-                        <div className="glass p-6 rounded-2xl border border-white/5">
-                            <h3 className="text-lg font-black text-white mb-2">How exactly does matching work?</h3>
-                            <p className="text-sm text-white/70 leading-relaxed">
+                        <div className="glass p-8 rounded-[2rem] border border-white/20 bg-black/60 shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-3">How exactly does matching work?</h3>
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
                                 Every profile in our database is assigned a 12-dimensional array. When you click "Find Soulmates", our engine runs a Cosine Similarity Search inside the database using pgvector. It compares your 12 points against everyone else's 12 points to find the profiles geographically closest to you in that mathematical multi-dimensional space.
                             </p>
                         </div>
-                        <div className="glass p-6 rounded-2xl border border-white/5">
-                            <h3 className="text-lg font-black text-white mb-2">What are the 12 Dimensions?</h3>
-                            <p className="text-sm text-white/70 leading-relaxed">
+                        <div className="glass p-8 rounded-[2rem] border border-white/20 bg-black/60 shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-3">What are the 12 Dimensions?</h3>
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
                                 We don't just use "Rock" or "Pop" to match you. We use 12 distinct auditory axes ranging from <strong>Spectral Energy</strong> (intense soundscapes) and <strong>Rhythmic Drive</strong> (groove-forward music) to <strong>Melodic Warmth</strong> and <strong>Experimental Index</strong>. These dimensions capture exactly <em>why</em> you like the music you do.
                             </p>
                         </div>

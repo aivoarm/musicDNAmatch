@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import CookieConsent from "@/components/CookieConsent";
 
 
 const syne = Syne({
@@ -64,6 +65,7 @@ export default function RootLayout({
             <body className="bg-[#080808] text-white antialiased min-h-screen">
                 <Navbar />
                 {children}
+                <CookieConsent />
             </body>
 
         </html>
