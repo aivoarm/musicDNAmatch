@@ -760,8 +760,15 @@ export default function Home() {
                 // Add suggested ones if they exist in GENRES list
                 const preselected: string[] = [];
                 for (const sg of d.suggested_genres) {
-                    const match = GENRES.find(g => g.toLowerCase() === sg.toLowerCase());
-                    if (match) preselected.push(match);
+                    const match = GENRES.find(g => {
+                        const s1 = g.toLowerCase().replace(/[^a-z0-9]/g, "");
+                        const s2 = sg.toLowerCase().replace(/[^a-z0-9]/g, "");
+                        if (s1 === s2) return true;
+                        if (s2 === "indie" && s1 === "indierock") return true;
+                        if (s2 === "rnb" && s1 === "rb") return true; // to catch any odd maps
+                        return false;
+                    });
+                    if (match && !preselected.includes(match)) preselected.push(match);
                 }
                 if (preselected.length > 0) {
                     setGenres(preselected);
