@@ -75,7 +75,7 @@ export default function ShareDNACard({ profile, siteUrl }: ShareDNACardProps) {
     const [copied, setCopied] = useState(false);
     const [showCard, setShowCard] = useState(false);
 
-    const shareUrl = siteUrl || "https://musicdnamatch.com/profile";
+    const shareUrl = siteUrl || "https://www.dna.armanayva.com";
 
     const captureCard = useCallback(async () => {
         if (!cardRef.current) return null;
@@ -412,7 +412,7 @@ export default function ShareDNACard({ profile, siteUrl }: ShareDNACardProps) {
                                 textTransform: "uppercase",
                                 marginTop: 2,
                             }}>
-                                musicdnamatch.com
+                                www.dna.armanayva.com
                             </div>
                         </div>
                         <div style={{
