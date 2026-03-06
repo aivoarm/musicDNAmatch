@@ -2,6 +2,7 @@ import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
+import { isEmailDomainValid } from "@/lib/server/dns-check";
 
 export async function POST(req: Request) {
     try {
@@ -20,12 +21,20 @@ export async function POST(req: Request) {
             ? email.trim().toLowerCase()
             : null;
 
+        // DNS MX record check for email validity
+        if (cleanEmail) {
+            const isValid = await isEmailDomainValid(cleanEmail);
+            if (!isValid) {
+                return NextResponse.json({ error: "Email domain is not valid" }, { status: 400 });
+            }
+        }
+
         // Check if another profile already has this email
         if (cleanEmail && !forceOverwrite) {
             const { data: clashProfiles } = await supabase
                 .from("dna_profiles")
-                .select("user_id, metadata, created_at")
-                .filter("metadata->>email", "eq", cleanEmail)
+                .select("user_id, metadata, email, city, created_at")
+                .ilike("email", cleanEmail)
                 .neq("user_id", userId)
                 .limit(1);
 
@@ -36,8 +45,8 @@ export async function POST(req: Request) {
                     clash: {
                         user_id: clash.user_id,
                         display_name: clash.metadata?.display_name || "Anonymous Signal",
-                        email: clash.metadata?.email,
-                        city: clash.metadata?.city || null,
+                        email: clash.email,
+                        city: clash.city,
                         created_at: clash.created_at,
                     }
                 });
@@ -49,32 +58,48 @@ export async function POST(req: Request) {
             await supabase
                 .from("dna_profiles")
                 .delete()
-                .filter("metadata->>email", "eq", cleanEmail)
+                .ilike("email", cleanEmail)
                 .neq("user_id", userId);
         }
 
-        // Fetch existing metadata to preserve fields not being updated
+        // Fetch existing columns to preserve fields not being updated
         const { data: existing } = await supabase
             .from("dna_profiles")
-            .select("metadata")
+            .select("metadata, email, city")
             .eq("user_id", userId)
             .single();
 
         const existingMeta = existing?.metadata || {};
 
         // Update profile in dna_profiles
+        const uppercasedEmail = (email && typeof email === 'string' && email.trim() !== "")
+            ? email.trim().toUpperCase()
+            : existing?.email;
+        const uppercasedCity = (city && typeof city === 'string' && city.trim() !== "")
+            ? city.trim().toUpperCase()
+            : existing?.city;
+
+        // If name is "Anonymous Signal" but we have an email, derive name from email
+        let finalDisplayName = displayName || existingMeta.display_name;
+        if ((!finalDisplayName || finalDisplayName === "Anonymous Signal") && uppercasedEmail) {
+            finalDisplayName = uppercasedEmail.split("@")[0].toUpperCase();
+        }
+
+        // Prepare new metadata by removing email and city
+        const { email: _, city: __, ...newMetadata } = {
+            ...existingMeta,
+            display_name: finalDisplayName,
+            top_genres: genres,
+            narrative: bio,
+        };
+
         const { error } = await supabase
             .from("dna_profiles")
             .update({
-                metadata: {
-                    ...existingMeta,
-                    display_name: displayName,
-                    email: cleanEmail,
-                    top_genres: genres,
-                    narrative: bio,
-                    city: (city && typeof city === 'string' && city.trim() !== "") ? city.trim() : (existingMeta.city || null),
-                },
-                broadcasting: broadcasting
+                email: uppercasedEmail,
+                city: uppercasedCity,
+                metadata: newMetadata,
+                broadcasting: broadcasting && !!uppercasedEmail
             })
             .eq("user_id", userId);
 

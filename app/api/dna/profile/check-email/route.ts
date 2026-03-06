@@ -9,11 +9,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid email" }, { status: 400 });
         }
 
-        // Search for existing profile with this email in metadata
+        // Search for existing profile with this email
         const { data, error } = await supabase
             .from("dna_profiles")
-            .select("id, user_id, metadata, created_at")
-            .eq("metadata->>email", email.trim().toLowerCase())
+            .select("id, user_id, metadata, email, created_at")
+            .ilike("email", email.trim())
             .maybeSingle();
 
         if (error) throw error;

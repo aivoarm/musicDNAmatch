@@ -10,6 +10,7 @@ import {
     AXIS_LABELS,
     generateInterpretation
 } from "@/lib/dna";
+import { isEmailDomainValid } from "@/lib/server/dns-check";
 
 /**
  * POST /api/dna/generate
@@ -42,10 +43,23 @@ export async function POST(req: Request) {
             city,
         } = body;
 
+        // ── Validate email domain via DNS MX check (only on actual save, not dry_run) ─────
+        if (email && typeof email === 'string' && email.trim() !== "" && !dry_run) {
+            const isValid = await isEmailDomainValid(email.trim());
+            if (!isValid) {
+                return NextResponse.json({ error: 'Email domain is not valid' }, { status: 400 });
+            }
+        }
+
         // ── Identify user ──────────────────────────────
         const cookieStore = await cookies();
         let rawUserId = cookieStore.get("guest_id")?.value || randomUUID();
-        let finalDisplayName = displayName || "Anonymous Signal";
+        let finalDisplayName = displayName;
+        if ((!finalDisplayName || finalDisplayName === "Anonymous Signal") && email && typeof email === "string" && email.includes("@")) {
+            finalDisplayName = email.split("@")[0].toUpperCase();
+        } else if (!finalDisplayName) {
+            finalDisplayName = "Anonymous Signal";
+        }
 
         const userId = toUUID(rawUserId);
 
@@ -111,13 +125,25 @@ export async function POST(req: Request) {
             });
         }
 
+        const uppercasedEmail = (email && typeof email === 'string' && email.trim() !== "") ? email.trim().toUpperCase() : null;
+        const uppercasedCity = (city && typeof city === 'string' && city.trim() !== "") ? city.trim().toUpperCase() : null;
+
+        // Strip email and city from metadata for the new schema
+        const { email: _, city: __, ...cleanMetadata } = {
+            ...metadata,
+            email: uppercasedEmail,
+            city: uppercasedCity
+        };
+
         const { data: profile, error } = await supabase
             .from("dna_profiles")
             .upsert({
                 user_id: userId,
                 sonic_embedding: finalDNA.vector,
-                metadata,
-                broadcasting: true,
+                metadata: cleanMetadata,
+                email: uppercasedEmail,
+                city: uppercasedCity,
+                broadcasting: !!uppercasedEmail,
             }, { onConflict: "user_id" })
             .select()
             .single();
@@ -130,7 +156,7 @@ export async function POST(req: Request) {
         supabase.from("dna_profiles")
             .delete()
             .lt("created_at", twentyFourHoursAgo)
-            .is("metadata->email", null) // Profile hasn't been secured with an email
+            .is("email", null) // Profile hasn't been secured with an email
             .then(({ error }) => { if (error) console.error("Cleanup error:", error); });
 
         const response = NextResponse.json({

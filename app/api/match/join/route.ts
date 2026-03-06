@@ -32,6 +32,8 @@ export async function POST(request: Request) {
         }
 
         // 2. Upsert match interest record
+        const upperEmail = email.trim().toUpperCase();
+
         // First, try to delete any existing record for this user+target pair
         // This avoids conflicts with both the (user_id, target_id) and email unique constraints
         await supabase
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
         await supabase
             .from("match_interests")
             .delete()
-            .eq("email", email)
+            .ilike("email", upperEmail)
             .eq("user_id", userId);
 
         const { error: matchError } = await supabase
@@ -52,7 +54,7 @@ export async function POST(request: Request) {
             .insert({
                 user_id: userId,
                 target_id: targetId,
-                email: email
+                email: upperEmail
             });
 
         if (matchError) throw matchError;
@@ -77,7 +79,7 @@ export async function POST(request: Request) {
                     common_ground_data: {
                         status: "mutual",
                         revealed_emails: {
-                            [userId]: email,
+                            [userId]: upperEmail,
                             [targetId]: reciprocalMatch.email
                         }
                     }

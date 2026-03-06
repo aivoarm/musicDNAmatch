@@ -23,7 +23,7 @@ export async function GET() {
     try {
         const { data: profile } = await supabase
             .from("dna_profiles")
-            .select("metadata")
+            .select("metadata, email")
             .eq("user_id", userId)
             .single();
 
@@ -32,11 +32,17 @@ export async function GET() {
         }
 
         const meta = profile.metadata || {};
+        const finalEmail = profile.email || meta.email || null;
+        let finalDisplayName = meta.display_name || "Anonymous Signal";
+
+        if (finalDisplayName === "Anonymous Signal" && finalEmail) {
+            finalDisplayName = finalEmail.split('@')[0].toUpperCase();
+        }
 
         return NextResponse.json({
             id: userId,
-            display_name: meta.display_name || "Anonymous Signal",
-            email: meta.email || null,
+            display_name: finalDisplayName,
+            email: finalEmail,
         });
     } catch (err) {
         console.error("Auth Me Error:", err);

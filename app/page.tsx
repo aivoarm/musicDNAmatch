@@ -367,6 +367,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
         const c = cityInput.trim();
         if (!c) return;
         setCity(c);
+        document.cookie = `city=${encodeURIComponent(c)};max-age=31536000;path=/`;
         setStep("story_jack");
         setVisibleMessages(0);
         // Cascade story messages
@@ -761,6 +762,10 @@ export default function Home() {
         })();
         const saved = document.cookie.split("; ").find(r => r.startsWith("last_spotify_url="))?.split("=")[1];
         if (saved) setSpotifyUrl(decodeURIComponent(saved));
+        const savedName = document.cookie.split("; ").find(r => r.startsWith("display_name="))?.split("=")[1];
+        if (savedName) setDisplayName(decodeURIComponent(savedName));
+        const savedCity = document.cookie.split("; ").find(r => r.startsWith("city="))?.split("=")[1];
+        if (savedCity) setCity(decodeURIComponent(savedCity));
     }, []);
 
     // Auto-scan when entering spotify_input with a saved URL
@@ -861,11 +866,17 @@ export default function Home() {
             dry_run: false
         };
 
-        await fetch('/api/dna/generate', {
+        const genRes = await fetch('/api/dna/generate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
+
+        if (!genRes.ok) {
+            const errData = await genRes.json();
+            alert(errData.error || "Failed to secure your signal");
+            return;
+        }
 
         await fetch('/api/dna/intent', {
             method: 'POST',
@@ -990,6 +1001,7 @@ export default function Home() {
                     genres: [],
                     displayName,
                     email,
+                    city,
                     audioFeatures,
                     youtubeVideos,
                     spotifyTracks,
@@ -1043,6 +1055,7 @@ export default function Home() {
                     genres,
                     displayName,
                     email: email?.trim() || null,
+                    city: city?.trim() || null,
                     audioFeatures,
                     youtubeVideos,
                     spotifyTracks,

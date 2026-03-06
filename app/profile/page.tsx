@@ -154,9 +154,12 @@ export default function ProfilePage() {
 
             if (data.success) {
                 setProfile({ ...profile, email: email, city: city });
+            } else if (data.error) {
+                alert(data.error);
             }
         } catch (err) {
             console.error(err);
+            alert("An error occurred while saving profile");
         } finally {
             setSaving(false);
         }

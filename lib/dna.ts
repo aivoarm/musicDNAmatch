@@ -142,6 +142,19 @@ const YT_CATEGORY_GENRE: Record<string, string> = {
     "27": "classical", "28": "jazz",
 };
 
+// YouTube Title/Tag → Genre Keywords
+const YT_GENRE_KEYWORDS: Record<string, string[]> = {
+    "rock": ["rock", "queen", "nirvana", "sting", "police", "led zeppelin", "pink floyd", "arctic monkeys", "radiohead", "guitar", "live aide"],
+    "metal": ["metal", "metallica", "slayer", "megadeth", "iron maiden", "hardcore", "heavy"],
+    "hiphop": ["hiphop", "rap", "trap", "drill", "eminem", "drake", "kendrick", "beats"],
+    "electronic": ["electronic", "techno", "house", "edm", "synth", "mix", "remix", "dj"],
+    "jazz": ["jazz", "miles davis", "coltrane", "sax", "trumpet", "smooth"],
+    "rnb": ["rnb", "soul", "motown", "blues", "frank ocean", "sZA"],
+    "classical": ["classical", "bach", "beethoven", "mozart", "orchestra", "piano", "violin"],
+    "pop": ["pop", "taylor swift", "bieber", "top hits", "chart", "billboard"],
+    "ambient": ["ambient", "drone", "meditation", "sleep", "calm", "lofi"],
+};
+
 // ── Types ───────────────────────────────────────────
 export interface DNAVector {
     vector: number[];
@@ -309,15 +322,34 @@ export function computeSpotifyVector(featuresList: SpotifyAudioFeatures[], artis
 /**
  * Compute DNA vector from YouTube video metadata.
  */
-export function computeYouTubeVector(videos: { categoryId?: string; title?: string }[]): DNAVector {
+export function computeYouTubeVector(videos: { categoryId?: string; title?: string; tags?: string[] }[]): DNAVector {
     if (videos.length === 0) {
         return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "youtube", { track_count: 0 });
     }
 
-    const genreVecs = videos.map(v => {
-        const genre = YT_CATEGORY_GENRE[v.categoryId || "10"] || "pop";
-        return GENRE_VECTORS[genre] || GENRE_VECTORS["pop"];
-    });
+    const genreVecs: number[][] = [];
+
+    for (const v of videos) {
+        const title = (v.title || "").toLowerCase();
+        const tags = (v.tags || []).map(t => t.toLowerCase());
+
+        // Find best genre match via title/tags keywords
+        let detectedGenre: string | null = null;
+        for (const [genre, keywords] of Object.entries(YT_GENRE_KEYWORDS)) {
+            if (keywords.some(k => title.includes(k) || tags.some(t => t.includes(k)))) {
+                detectedGenre = genre;
+                break;
+            }
+        }
+
+        // Fallback to category mapping
+        if (!detectedGenre) {
+            detectedGenre = YT_CATEGORY_GENRE[v.categoryId || "10"] || "pop";
+        }
+
+        const vec = GENRE_VECTORS[detectedGenre] || GENRE_VECTORS["pop"];
+        genreVecs.push(vec);
+    }
 
     const vector = Array(12).fill(0).map((_, i) =>
         genreVecs.reduce((sum, v) => sum + v[i], 0) / genreVecs.length

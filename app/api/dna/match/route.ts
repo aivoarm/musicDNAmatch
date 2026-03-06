@@ -24,8 +24,8 @@ export async function GET() {
 
     try {
         if (!guestId) {
-            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75, coherence: extractCoherence(m.metadata), city: m.metadata?.city || null })));
+            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*, email, city").limit(10);
+            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75, coherence: extractCoherence(m.metadata), city: m.city || m.metadata?.city || null })));
         }
 
         const userId = toUUID(guestId);
@@ -39,8 +39,8 @@ export async function GET() {
             .single();
 
         if (profileError || !userProfile) {
-            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*").neq("user_id", userId).limit(10);
-            return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({ ...m, similarity: 0.7, coherence: extractCoherence(m.metadata), city: m.metadata?.city || null })));
+            const { data: publicProfiles } = await supabase.from("dna_profiles").select("*, email, city").neq("user_id", userId).limit(10);
+            return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({ ...m, similarity: 0.7, coherence: extractCoherence(m.metadata), city: m.city || m.metadata?.city || null })));
         }
 
         // 2. Match
@@ -89,7 +89,8 @@ export async function GET() {
             bridge_id: bridgeMap.get(m.user_id),
             is_mutual: bridgeMap.has(m.user_id),
             coherence: extractCoherence(m.metadata),
-            city: m.metadata?.city || null,
+            email: m.email || m.metadata?.email || null,
+            city: m.city || m.metadata?.city || null,
         }));
 
         // 5. Check if any incoming senders are missing from the top matches
@@ -99,7 +100,7 @@ export async function GET() {
         if (missingIds.length > 0) {
             const { data: missingProfiles } = await supabase
                 .from("dna_profiles")
-                .select("*")
+                .select("*, email, city")
                 .in("user_id", missingIds);
 
             if (missingProfiles) {
@@ -111,7 +112,8 @@ export async function GET() {
                     bridge_id: bridgeMap.get(p.user_id),
                     is_mutual: bridgeMap.has(p.user_id),
                     coherence: extractCoherence((p as any).metadata),
-                    city: (p as any).metadata?.city || null,
+                    email: (p as any).email || (p as any).metadata?.email || null,
+                    city: (p as any).city || (p as any).metadata?.city || null,
                 }));
                 enrichedMatches = [...enrichedMatches, ...manualMatches];
             }

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Waves, Users, ArrowLeft, ArrowRight, Brain, Mail, CheckCircle2,
     Activity, X, ChevronRight, Share2, MessageSquarePlus,
-    Scan, Filter, User, RotateCcw, MapPin
+    Scan, Filter, User, RotateCcw, MapPin, Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,6 +42,8 @@ export default function SoulmatesPage() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [userDna, setUserDna] = useState<any>(null);
+    const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+    const [tempCity, setTempCity] = useState("");
     const router = useRouter();
 
     useEffect(() => {
@@ -59,6 +61,8 @@ export default function SoulmatesPage() {
                         foundDna = true;
                         setUserDna(pd.dna);
                         if (pd.dna.email) setEmail(pd.dna.email);
+                        else setShowEmailPrompt(true);
+                        if (pd.dna.city) setTempCity(pd.dna.city);
                     }
                 }
 
@@ -131,11 +135,48 @@ export default function SoulmatesPage() {
         return true;
     });
 
+    const handleSecureDna = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const r = await fetch("/api/dna/profile/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email.trim(), city: tempCity.trim() }),
+            });
+            if (r.ok) {
+                setShowEmailPrompt(false);
+                // Refresh profile data
+                const profileRes = await fetch("/api/dna/profile/me");
+                const pd = await profileRes.json();
+                if (pd.found) setUserDna(pd.dna);
+            } else {
+                const d = await r.json();
+                alert(d.error || "Failed to secure DNA");
+            }
+        } catch {
+            alert("Network error. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const handleRestart = () => {
         if (!confirm("This will clear your current DNA profile. Continue?")) return;
         document.cookie = "guest_id=; Max-Age=0; path=/;";
         window.location.href = "/?restart=true";
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-[#080808] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 text-[#FF0000] animate-spin" />
+                    <span className="mono text-[10px] text-white/40 uppercase tracking-[0.3em]">Mapping Soulmates...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative min-h-screen bg-[#080808] overflow-x-hidden">
@@ -460,6 +501,57 @@ export default function SoulmatesPage() {
                                     </form>
                                 </>
                             )}
+                        </motion.div>
+                    </div>
+                )}
+                {/* DNA Security Modal - Mandatory */}
+                {showEmailPrompt && (
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-6">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-black/90 backdrop-blur-md" />
+                        <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }}
+                            className="glass w-full max-w-md rounded-3xl p-8 md:p-10 relative z-10 border border-[#FF0000]/30 shadow-[0_0_100px_rgba(255,0,0,0.15)]">
+
+                            <div className="h-16 w-16 rounded-2xl bg-[#FF0000]/10 flex items-center justify-center mb-8 mx-auto border border-[#FF0000]/20">
+                                <Waves className="h-8 w-8 text-[#FF0000]" />
+                            </div>
+
+                            <div className="text-center mb-8">
+                                <h2 className="text-2xl font-black text-white italic tracking-tighter uppercase mb-2">Secure your DNA</h2>
+                                <p className="text-white/60 text-xs font-bold leading-relaxed px-4">
+                                    To connect with your soulmates and prevent data loss, we need to link your profile to your details.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleSecureDna} className="space-y-6">
+                                <div>
+                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-2 ml-1">Your Email</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                                        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                                            placeholder="you@email.com"
+                                            className="w-full bg-white/5 border border-white/15 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[#FF0000]/60 transition-all font-bold text-sm text-white placeholder:text-white/20" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-2 ml-1">Your City (Confirm)</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+                                        <input type="text" required value={tempCity} onChange={e => setTempCity(e.target.value)}
+                                            placeholder="e.g. NEW YORK"
+                                            className="w-full bg-white/5 border border-white/15 rounded-xl py-4 pl-12 pr-4 focus:outline-none focus:border-[#FF0000]/60 transition-all font-bold text-sm text-white placeholder:text-white/20 uppercase" />
+                                    </div>
+                                </div>
+
+                                <button type="submit" disabled={submitting || !email.includes("@") || !tempCity.trim()}
+                                    className="w-full bg-[#FF0000] text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:bg-red-500 transition-all text-xs uppercase tracking-widest disabled:opacity-30 shadow-[0_20px_40px_rgba(255,0,0,0.2)] hover:scale-[1.02] active:scale-95">
+                                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Access Soulmates <ChevronRight className="h-4 w-4" /></>}
+                                </button>
+
+                                <p className="text-[9px] text-white/30 text-center mono uppercase tracking-widest mt-4">
+                                    Privacy Secured • Encrypted Network
+                                </p>
+                            </form>
                         </motion.div>
                     </div>
                 )}

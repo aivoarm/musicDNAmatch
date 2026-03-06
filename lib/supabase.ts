@@ -24,6 +24,8 @@ export function toUUID(str: string): string {
  *   user_id: string,
  *   sonic_embedding: number[], -- length: 12
  *   broadcasting: boolean,
+ *   email: string,
+ *   city: string,
  *   metadata: any,
  *   created_at: string
  * }

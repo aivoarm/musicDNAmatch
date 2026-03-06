@@ -17,7 +17,7 @@ export async function GET() {
 
         const { data: profile, error } = await supabase
             .from("dna_profiles")
-            .select("id, sonic_embedding, metadata, created_at")
+            .select("id, sonic_embedding, metadata, email, city, created_at")
             .eq("user_id", userId)
             .single();
 
@@ -48,12 +48,13 @@ export async function GET() {
             vector,
             confidence: meta.confidence || Array(12).fill(1.0),
             coherence_index: calculateCoherence(vector, meta.confidence || []),
-            display_name: meta.display_name || "Anonymous Signal",
+            display_name: (meta.display_name && meta.display_name !== "Anonymous Signal") ? meta.display_name : (profile.email ? profile.email.split('@')[0].toUpperCase() : "Anonymous Signal"),
             top_genres: meta.top_genres || [],
             recent_tracks: meta.recent_tracks || [],
             youtube_tracks: meta.youtube_tracks || [],
             narrative: meta.narrative || "",
-            city: meta.city || null,
+            email: profile.email || meta.email || null,
+            city: profile.city || meta.city || null,
             source_signals: meta.source_signals || {},
             schema_version: meta.schema_version ?? 2,
             updated_at: meta.updated_at || profile.created_at,
