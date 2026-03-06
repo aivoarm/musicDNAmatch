@@ -62,12 +62,16 @@ export default function SoulmatesPage() {
     const handleInterest = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedMatch) return;
+
+        const targetId = selectedMatch.user_id;
+        console.log("Expressing interest in:", targetId, "with email:", email);
+
         setSubmitting(true);
         try {
             const r = await fetch("/api/match/join", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ targetId: selectedMatch.user_id, email }),
+                body: JSON.stringify({ targetId, email }),
             });
             const d = await r.json();
             if (r.ok) {
@@ -85,8 +89,14 @@ export default function SoulmatesPage() {
                     ));
                 }
                 setTimeout(() => { setSuccess(false); setSelectedMatch(null); setEmail(""); }, 3000);
+            } else {
+                console.error("Interest registration failed", d);
+                alert(d.error || "Failed to register interest");
             }
-        } catch { }
+        } catch (err) {
+            console.error("Interest Error:", err);
+            alert("Network error. Please try again.");
+        }
         finally { setSubmitting(false); }
     };
 
@@ -190,7 +200,7 @@ export default function SoulmatesPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center gap-2 mb-1.5">
                                                     <h3 className="text-xl md:text-2xl font-black text-white italic tracking-tighter truncate">
-                                                        {match.metadata?.display_name || "Anonymous Signal"}
+                                                        {match.metadata?.display_name || match.display_name || "Anonymous Signal"}
                                                     </h3>
                                                     {match.is_mutual && (
                                                         <span className="text-[8px] font-black bg-green-500/15 text-green-400 px-2 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest shrink-0">Mutual</span>
@@ -324,11 +334,11 @@ export default function SoulmatesPage() {
                                 <>
                                     <div className="flex items-center gap-4 mb-6">
                                         <div className="h-12 w-12 rounded-xl bg-white/8 flex items-center justify-center text-white/60 font-black text-lg">
-                                            {(selectedMatch.metadata?.display_name || "?")[0]}
+                                            {(selectedMatch.metadata?.display_name || selectedMatch.display_name || "?")[0]}
                                         </div>
-                                        <div>
-                                            <h2 className="text-lg font-black text-white italic">Express Interest</h2>
-                                            <p className="mono text-[9px] text-white/60 uppercase tracking-widest">Target: {selectedMatch.metadata?.display_name}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <h2 className="text-lg font-black text-white italic truncate">Express Interest</h2>
+                                            <p className="mono text-[9px] text-white/60 uppercase tracking-widest truncate">Target: {String(selectedMatch.metadata?.display_name || selectedMatch.display_name || "Anonymous").trim() || "Anonymous"}</p>
                                         </div>
                                     </div>
                                     <form onSubmit={handleInterest} className="space-y-5">
@@ -346,7 +356,7 @@ export default function SoulmatesPage() {
                                         </p>
                                         <button type="submit" disabled={submitting}
                                             className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-sm uppercase tracking-widest disabled:opacity-50">
-                                            {submitting ? <Activity className="h-4 w-4 animate-spin" /> : <>Express Interest <ChevronRight className="h-4 w-4" /></>}
+                                            {submitting ? <Activity className="h-4 w-4 animate-spin" /> : <>Send Sonic Signal <ChevronRight className="h-4 w-4" /></>}
                                         </button>
                                     </form>
                                 </>
