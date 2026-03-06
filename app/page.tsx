@@ -262,7 +262,7 @@ function Landing({ onStart, onArtist }: { onStart: () => void, onArtist: () => v
                 >
                     <img src="/icon.png" alt="MusicDNA Logo" className="h-24 w-24 mx-auto mb-8 drop-shadow-[0_0_20px_rgba(255,0,0,0.5)]" />
                     <span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-6 block drop-shadow-sm">Signal Discovery Protocol</span>
-                    <h1 className="text-[15vw] sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter italic mb-8 leading-[0.85] text-white">
+                    <h1 className="text-[12vw] sm:text-7xl md:text-8xl lg:text-[8rem] font-black uppercase tracking-tighter italic mb-8 leading-[0.85] text-white">
                         MUSIC<span className="text-[#FF0000]">DNA</span><br />
                         MATCH
                     </h1>
