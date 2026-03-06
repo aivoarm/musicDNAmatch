@@ -66,3 +66,13 @@ coverage/
 # Misc
 .cache/
 *.tgz
+
+# Local Artifacts & Test Scripts
+codebase_documentation.md.resolved
+inspect_schema.ts
+test_db.ts
+test_yt.mjs
+test_yt_v2.mjs
+test_dna.mjs
+test_dna2.mjs
+test_playlist.mjs
