@@ -24,6 +24,35 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Admin credentials missing on server" }, { status: 500 });
     }
 
+    let resolvedSpotifyId = spotify_user_id;
+
+    if (spotify_user_id && spotify_user_id.startsWith("playlist:")) {
+        const pId = spotify_user_id.replace("playlist:", "");
+        try {
+            const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+            const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+                method: "POST",
+                headers: {
+                    Authorization: `Basic ${authStr}`,
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: "grant_type=client_credentials",
+            });
+            if (tokenRes.ok) {
+                const { access_token } = await tokenRes.json();
+                const plRes = await fetch(`https://api.spotify.com/v1/playlists/${pId}`, {
+                    headers: { Authorization: `Bearer ${access_token}` }
+                });
+                if (plRes.ok) {
+                    const plData = await plRes.json();
+                    if (plData.owner?.id) resolvedSpotifyId = plData.owner.id;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to parse playlist owner ID", e);
+        }
+    }
+
     try {
         const fetcher = new SpotifyPublicFetcher(clientId, clientSecret);
 
@@ -33,7 +62,7 @@ export async function POST(req: Request) {
             const allTracks: any[] = [];
 
             for (const pid of ids) {
-                const data = await fetcher.getUserPublicData(spotify_user_id || "none", pid);
+                const data = await fetcher.getUserPublicData(resolvedSpotifyId || "none", pid);
                 if ("tracks" in data && data.tracks) {
                     allTracks.push(...data.tracks.slice(0, 10)); // max 10 per playlist
                 }
@@ -58,14 +87,14 @@ export async function POST(req: Request) {
         }
 
         // ── Legacy single playlist / user listing mode ──
-        const data = await fetcher.getUserPublicData(spotify_user_id, playlist_id, limit, offset);
+        const data = await fetcher.getUserPublicData(resolvedSpotifyId, playlist_id, limit, offset);
 
         if ("error" in data) {
             return NextResponse.json({ error: data.error }, { status: 400 });
         }
 
         return NextResponse.json({
-            spotify_user_id,
+            spotify_user_id: resolvedSpotifyId,
             ...data,
             count: (data.playlists?.length || data.tracks?.length || 0)
         });

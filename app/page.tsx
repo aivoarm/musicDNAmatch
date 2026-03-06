@@ -603,6 +603,7 @@ export default function Home() {
     const extractId = (raw: string) => {
         let s = raw.trim();
         if (s.includes("spotify.com/user/")) s = s.split("spotify.com/user/")[1].split("?")[0].split("/")[0];
+        else if (s.includes("spotify.com/playlist/")) s = "playlist:" + s.split("spotify.com/playlist/")[1].split("?")[0].split("/")[0];
         else if (s.startsWith("@")) s = s.slice(1);
         return s;
     };
@@ -971,12 +972,48 @@ export default function Home() {
                                                 </div>
 
                                                 <div className="flex flex-col gap-2 p-2 bg-white/5 border border-white/12 rounded-2xl focus-within:border-[#1DB954]/40 transition-all mb-4">
-                                                    <input type="text" value={spotifyUrl} onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }} onKeyDown={e => e.key === "Enter" && scanSpotify(0)} placeholder="Profile URL (open.spotify.com/user...)" className="bg-transparent py-3 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/35 w-full" />
-                                                    <button onClick={() => scanSpotify(0)} disabled={scanning || !spotifyUrl.trim()} className="bg-[#1DB954] text-white font-black px-6 py-3 rounded-xl hover:bg-[#1ed760] transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40">
+                                                    <input type="text" value={spotifyUrl} onChange={e => { setSpotifyUrl(e.target.value); setScanErr(null); }} onKeyDown={e => e.key === "Enter" && scanSpotify(0)} placeholder="Paste your Profile OR any Playlist URL..." className="bg-transparent py-3 px-4 focus:outline-none mono text-xs text-white placeholder:text-white/35 w-full" />
+                                                    <button onClick={() => scanSpotify(0)} disabled={scanning || !spotifyUrl.trim()} className="bg-[#1DB954] text-white font-black px-6 py-3 rounded-xl hover:bg-[#1ed760] transition-all text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-40 shrink-0">
                                                         {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Scan className="h-4 w-4" />} Scan
                                                     </button>
                                                 </div>
                                                 {scanErr && <p className="mono text-[10px] text-red-400 mb-4">{scanErr}</p>}
+
+                                                <details className="mb-6 bg-white/4 border border-white/10 rounded-xl p-4 text-sm text-white/70 open:bg-white/5 transition-colors group">
+                                                    <summary className="cursor-pointer font-bold select-none text-white/60 group-open:text-white flex items-center justify-between text-xs uppercase tracking-widest mono">
+                                                        <span className="flex items-center gap-2"><HelpCircle className="h-4 w-4 text-[#1DB954]" /> Where is my Spotify URL?</span>
+                                                        <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
+                                                    </summary>
+                                                    <div className="mt-5 space-y-5 text-sm font-medium leading-relaxed pb-1">
+                                                        <div className="bg-black/20 p-4 rounded-lg border border-white/5">
+                                                            <span className="text-white font-black block mb-2 uppercase text-xs tracking-wider">🖥️ Desktop (Web/App)</span>
+                                                            <span className="text-white/50 block mb-3 text-xs">The easiest path — just right-click your profile:</span>
+                                                            <ol className="list-decimal pl-5 space-y-1 text-white/80">
+                                                                <li>Go to Spotify and sign in</li>
+                                                                <li>Click your profile name (top-right corner)</li>
+                                                                <li>Click <span className="text-white font-bold">"..."</span> → <span className="text-white font-bold">Share</span> → <span className="text-[#1DB954] font-bold">Copy link to profile</span></li>
+                                                                <li className="text-white/40 mt-2 list-none text-xs italic bg-white/5 p-2 rounded -ml-5">URL looks like: open.spotify.com/user/31abc123xyz</li>
+                                                            </ol>
+                                                        </div>
+                                                        <div className="bg-black/20 p-4 rounded-lg border border-white/5">
+                                                            <span className="text-white font-black block mb-2 uppercase text-xs tracking-wider">📱 Mobile (iPhone/Android)</span>
+                                                            <span className="text-[#FF0000]/80 block mb-3 text-xs font-bold bg-[#FF0000]/10 p-2 rounded">Important: You can't copy the profile URL from within the Home screen directly — you have to go through Your Library.</span>
+                                                            <ol className="list-decimal pl-5 space-y-1 text-white/80">
+                                                                <li>Open Spotify → tap <span className="text-white font-bold">Your Library</span> (bottom)</li>
+                                                                <li>Tap your profile picture/icon at the top</li>
+                                                                <li>Tap the <span className="text-white font-bold">"⋯"</span> (three dots) menu</li>
+                                                                <li>Tap <span className="text-white font-bold">Share</span> → <span className="text-[#1DB954] font-bold">Copy link</span></li>
+                                                            </ol>
+                                                            <span className="text-white/50 block mt-4 mb-2 text-xs">Alternatively:</span>
+                                                            <ol className="list-decimal pl-5 space-y-1 text-white/80 opacity-75">
+                                                                <li>Open Spotify app → tap <span className="text-white font-bold">Home</span></li>
+                                                                <li>Tap your profile picture (top-left)</li>
+                                                                <li>Tap <span className="text-white font-bold">"View Profile"</span></li>
+                                                                <li>Tap <span className="text-white font-bold">"⋯"</span> → <span className="text-white font-bold">Share</span> → <span className="text-[#1DB954] font-bold">Copy link</span></li>
+                                                            </ol>
+                                                        </div>
+                                                    </div>
+                                                </details>
 
                                                 {playlists.length > 0 && (
                                                     <div className="flex-1 min-h-[250px] flex flex-col mt-2">
