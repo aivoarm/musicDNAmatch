@@ -121,14 +121,14 @@ function Ticker() {
 const STEP_LABELS = ["Sources", "Genres", "Analyse"];
 function Stepper({ step }: { step: number }) {
     return (
-        <div className="flex items-center gap-1 mb-10">
+        <div className="flex items-center justify-center lg:justify-start gap-1 mb-8 md:mb-10 w-full">
             {STEP_LABELS.map((l, i) => (
                 <div key={l} className="flex items-center gap-1">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-full mono text-[10px] uppercase tracking-widest font-black transition-all duration-300
+                    <div className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full mono text-[9px] md:text-[10px] uppercase tracking-widest font-black transition-all duration-300
                         ${i < step ? "text-[#FF0000]/70" : i === step ? "bg-[#FF0000]/20 text-[#FF0000] border border-[#FF0000]/40" : "text-white/75"}`}>
                         {i < step ? <Check className="h-3 w-3" /> : <span>{i + 1}</span>}{l}
                     </div>
-                    {i < STEP_LABELS.length - 1 && <div className="w-5 h-px bg-white/20" />}
+                    {i < STEP_LABELS.length - 1 && <div className="w-3 md:w-5 h-px bg-white/20" />}
                 </div>
             ))}
         </div>
@@ -262,7 +262,7 @@ function Landing({ onStart, onArtist }: { onStart: () => void, onArtist: () => v
                 >
                     <img src="/icon.png" alt="MusicDNA Logo" className="h-24 w-24 mx-auto mb-8 drop-shadow-[0_0_20px_rgba(255,0,0,0.5)]" />
                     <span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-6 block drop-shadow-sm">Signal Discovery Protocol</span>
-                    <h1 className="text-6xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter italic mb-8 leading-[0.85] text-white">
+                    <h1 className="text-[15vw] sm:text-7xl md:text-8xl lg:text-9xl font-black uppercase tracking-tighter italic mb-8 leading-[0.85] text-white">
                         MUSIC<span className="text-[#FF0000]">DNA</span><br />
                         MATCH
                     </h1>
@@ -282,10 +282,10 @@ function Landing({ onStart, onArtist }: { onStart: () => void, onArtist: () => v
                 >
                     <button
                         onClick={onStart}
-                        className="group relative bg-white text-black font-black py-6 px-12 rounded-[2rem] text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-4 shadow-2xl overflow-hidden"
+                        className="w-full sm:w-auto overflow-hidden group relative bg-white text-black font-black py-6 px-12 rounded-[2rem] text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-2xl"
                     >
                         <div className="absolute inset-0 bg-[#FF0000]/10 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
-                        <span className="relative z-10 flex items-center gap-3">
+                        <span className="relative z-10 flex items-center justify-center gap-3">
                             <Play className="h-4 w-4 fill-black" /> Join the Signal
                         </span>
                         <ChevronRight className="h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" />
@@ -293,7 +293,7 @@ function Landing({ onStart, onArtist }: { onStart: () => void, onArtist: () => v
 
                     <button
                         onClick={onArtist}
-                        className="group border border-white/20 bg-white/5 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40 font-black py-6 px-12 rounded-[2rem] text-sm uppercase tracking-widest transition-all flex items-center gap-3"
+                        className="w-full sm:w-auto group border border-white/20 bg-white/5 backdrop-blur-md text-white/80 hover:text-white hover:border-white/40 font-black py-6 px-12 rounded-[2rem] text-sm flex justify-center uppercase tracking-widest transition-all items-center gap-3"
                     >
                         <Music2 className="h-4 w-4" /> For Artists
                     </button>
@@ -1139,7 +1139,7 @@ export default function Home() {
                     <motion.div key="inner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen">
 
 
-                        <div className="max-w-5xl mx-auto px-4 md:px-8 pt-24 pb-40 w-full">
+                        <div className="max-w-5xl mx-auto px-4 md:px-8 pt-[5rem] lg:pt-28 pb-40 w-full">
                             <AnimatePresence mode="wait">
 
                                 {/* ── GENRE SELECTION ── */}
@@ -1202,8 +1202,8 @@ export default function Home() {
                                 {stage === "sources" && (
                                     <motion.div key="srcs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-4xl mx-auto">
                                         <Stepper step={0} />
-                                        <div className="text-center mb-10">
-                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-4">
+                                        <div className="text-center mb-6 md:mb-10">
+                                            <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter mb-2 md:mb-4">
                                                 Music <span className="text-[#1DB954]">Spotify</span> & <span className="text-[#FF0000]">YouTube</span>
                                             </h2>
                                             <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Provide your musical footprint from either or both sources.</p>
@@ -1495,8 +1495,10 @@ export default function Home() {
                                                     <ChevronRight className="h-7 w-7 group-hover:translate-x-2 transition-transform relative z-10" />
                                                 </button>
                                                 <Link href="/profile"
-                                                    className="flex items-center justify-center gap-3 border border-white/10 bg-white/4 text-white/70 hover:text-white hover:border-white/25 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all">
-                                                    <User className="h-4 w-4" />View Full Profile
+                                                    className="relative w-full overflow-hidden flex items-center justify-center gap-3 border border-[#FF0000]/20 bg-black/40 text-white hover:border-[#FF0000]/40 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl hover:scale-[1.01] active:scale-95 transition-all group">
+                                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/5 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                    <User className="h-5 w-5 text-white/70 group-hover:text-white transition-colors relative z-10" />
+                                                    <span className="relative z-10">View Full Profile</span>
                                                 </Link>
                                                 <ShareDNACard profile={dna} />
                                                 <button onClick={() => { setStage("intro"); setSelPlaylists([]); setYtTracks(emptyYt()); }} className="w-full mono text-[10px] text-white/45 hover:text-[#FF0000] transition-all uppercase tracking-widest py-2 text-center">↺ Start new scan</button>

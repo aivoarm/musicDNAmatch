@@ -192,10 +192,15 @@ export default function ShareDNACard({ profile, siteUrl }: ShareDNACardProps) {
             {/* Trigger button */}
             <button
                 onClick={handleOpenShare}
-                className="flex items-center justify-center gap-3 border border-white/25 bg-gradient-to-r from-[#FF0000]/20 to-purple-600/20 text-white hover:from-[#FF0000]/30 hover:to-purple-600/30 hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all group"
+                className="relative w-full overflow-hidden flex items-center justify-center gap-3 border border-[#FF0000]/30 bg-black text-white hover:border-[#FF0000]/60 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl hover:scale-[1.01] active:scale-95 transition-all group shadow-[0_0_20px_rgba(255,0,0,0.15)] hover:shadow-[0_0_40px_rgba(255,0,0,0.3)]"
             >
-                <Camera className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Share DNA
+                {/* Subtle animated gradient background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF0000]/20 via-purple-600/10 to-[#FF0000]/20 opacity-40 group-hover:opacity-80 transition-opacity duration-500" />
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full shimmer pointer-events-none" />
+
+                <Camera className="h-5 w-5 text-[#FF0000] group-hover:scale-110 transition-transform relative z-10" />
+                <span className="relative z-10">Capture & Share DNA</span>
             </button>
 
             {/* Hidden card for capture */}

@@ -12,9 +12,17 @@ import { useRouter } from "next/navigation";
 
 type MatchMode = "all" | "convergent" | "resonant" | "divergent";
 
+function computeDisplaySimilarity(sim: number): number {
+    if (sim >= 0.9999) return 1.0;
+    // Map vector cosine similarity (which densely clusters >0.90) into a wider, more realistic UX scale.
+    // Math.pow(sim, 6) scales 0.99 -> ~94%, 0.96 -> ~78%, 0.92 -> ~60%.
+    return Math.max(0, Math.min(0.99, Math.pow(sim, 6)));
+}
+
 function classifyMatch(sim: number): "convergent" | "resonant" | "divergent" {
-    if (sim >= 0.85) return "convergent";
-    if (sim >= 0.70) return "resonant";
+    const displaySim = computeDisplaySimilarity(sim);
+    if (displaySim >= 0.85) return "convergent";
+    if (displaySim >= 0.70) return "resonant";
     return "divergent";
 }
 
@@ -283,7 +291,7 @@ export default function SoulmatesPage() {
                                                 {/* Coherence + Similarity */}
                                                 <div className="text-right hidden sm:block">
                                                     <div className="flex items-baseline gap-1 justify-end">
-                                                        <span className={`text-base font-black ${mc.text}`}>{(match.similarity * 100).toFixed(0)}%</span>
+                                                        <span className={`text-base font-black ${mc.text}`}>{(computeDisplaySimilarity(match.similarity) * 100).toFixed(0)}%</span>
                                                         <span className="mono text-[7px] text-white/40 uppercase font-bold">Sim</span>
                                                     </div>
                                                     <div className="flex items-baseline gap-1 justify-end">
@@ -294,7 +302,7 @@ export default function SoulmatesPage() {
 
                                                 {/* Mobile similarity badge */}
                                                 <div className={`sm:hidden ${mc.badge} text-white text-[9px] font-black px-2 py-1 rounded-md`}>
-                                                    {(match.similarity * 100).toFixed(0)}%
+                                                    {(computeDisplaySimilarity(match.similarity) * 100).toFixed(0)}%
                                                 </div>
 
                                                 {/* Action button */}

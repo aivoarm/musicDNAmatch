@@ -62,7 +62,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={`dark ${syne.variable} ${dmMono.variable}`}>
-            <body className="bg-[#080808] text-white antialiased min-h-screen">
+            <body className="bg-[#080808] text-white antialiased min-h-screen overflow-x-hidden">
                 <Navbar />
                 {children}
                 <CookieConsent />

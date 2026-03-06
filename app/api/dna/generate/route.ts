@@ -124,6 +124,15 @@ export async function POST(req: Request) {
 
         if (error) throw error;
 
+        // Background cleanup: Delete unsecured guest profiles older than 24h
+        // This is fire-and-forget to avoid slowing down the current user's request
+        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+        supabase.from("dna_profiles")
+            .delete()
+            .lt("created_at", twentyFourHoursAgo)
+            .is("metadata->email", null) // Profile hasn't been secured with an email
+            .then(({ error }) => { if (error) console.error("Cleanup error:", error); });
+
         const response = NextResponse.json({
             success: true,
             profileId: profile.id,

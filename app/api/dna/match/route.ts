@@ -34,7 +34,7 @@ export async function GET() {
         // 1. Get current user's DNA profile
         const { data: userProfile, error: profileError } = await supabase
             .from("dna_profiles")
-            .select("sonic_embedding")
+            .select("sonic_embedding, metadata")
             .eq("user_id", userId)
             .single();
 
@@ -66,8 +66,23 @@ export async function GET() {
             bridgeMap.set(partnerId, b.id);
         });
 
+        const myName = String(userProfile.metadata?.display_name || "Anonymous Signal").toLowerCase().trim();
+        const seenNames = new Set<string>();
+        // Add our own name to seen list to prevent matching with our orphan accounts, but don't filter out anonymous users
+        if (myName && myName !== "anonymous signal") {
+            seenNames.add(myName);
+        }
+
+        const filteredMatches = [];
+        for (const m of (matches || [])) {
+            const mName = String(m.metadata?.display_name || "Anonymous Signal").toLowerCase().trim();
+            if (seenNames.has(mName) && mName !== "anonymous signal") continue;
+            seenNames.add(mName);
+            filteredMatches.push(m);
+        }
+
         // 4. Enrich existing matches
-        let enrichedMatches = (matches || []).map((m: any) => ({
+        let enrichedMatches = filteredMatches.map((m: any) => ({
             ...m,
             has_signal: interestIds.has(m.user_id),
             incoming_signal: incomingSignalIds.has(m.user_id),
