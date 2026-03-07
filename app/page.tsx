@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Waves, ArrowRight, Brain, ChevronRight, Youtube,
@@ -9,6 +9,7 @@ import {
     AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail, Sparkles, Fingerprint
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
 
@@ -360,7 +361,7 @@ function DualRadarChart({ v1, v2, c1 = "#FF0000", c2 = "#3B82F6" }: { v1: number
 }
 
 // Landing Page Component (The "First Page")
-function Landing({ onChoice, onArtist }: { onChoice: () => void, onArtist: () => void }) {
+function Landing({ onChoice, onArtist, existing }: { onChoice: () => void, onArtist: () => void, existing?: any }) {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full flex flex-col select-none overflow-x-hidden">
             {/* Visual Focal Point */}
@@ -574,12 +575,13 @@ function Landing({ onChoice, onArtist }: { onChoice: () => void, onArtist: () =>
                     </p>
 
                     <button
-                        onClick={onChoice}
+                        onClick={existing ? () => { window.location.href = "/profile" } : onChoice}
                         className="w-full sm:w-auto overflow-hidden group relative bg-[#FF0000] text-white font-black py-6 px-16 rounded-[2rem] text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-4 shadow-[0_0_50px_rgba(255,0,0,0.5)] mx-auto"
                     >
                         <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
                         <span className="relative z-10 flex items-center justify-center gap-3">
-                            <Play className="h-4 w-4 fill-white" /> Join The Signal
+                            <Play className="h-4 w-4 fill-white" />
+                            {existing ? "Enter Profile Bridge" : "Join The Signal"}
                         </span>
                     </button>
 
@@ -688,7 +690,7 @@ function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash
                             onClick={handleResumeExisting}
                             className="w-full bg-blue-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_50px_rgba(59,130,246,0.5)] border border-blue-400/40"
                         >
-                            Access DNA Bridge
+                            Open My Profile
                         </button>
                         <button
                             onClick={() => { setClash(null); setEmail(""); }}
@@ -699,7 +701,7 @@ function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash
                     </motion.div>
                 )}
                 <div className="mt-16">
-                    <button onClick={onBack} className="mono text-[10px] text-white/30 hover:text-white transition-all uppercase tracking-[0.5em] font-black underline underline-offset-8">← Back to selection</button>
+                    <button onClick={onBack} className="mono text-[10px] text-white/30 hover:text-white transition-all uppercase tracking-[0.5em] font-black underline underline-offset-8">← Back to start</button>
                 </div>
             </div>
         </motion.div>
@@ -988,6 +990,14 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
 export default function Home() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#080808] flex items-center justify-center"><Loader2 className="h-8 w-8 text-[#FF0000] animate-spin" /></div>}>
+            <HomeContent />
+        </Suspense>
+    );
+}
+
+function HomeContent() {
     const [stage, setStage] = useState<Stage>("landing");
     const [genres, setGenres] = useState<string[]>([]);
     const [existing, setExisting] = useState<any>(null);
@@ -1026,7 +1036,15 @@ export default function Home() {
     const [clash, setClash] = useState<any>(null);
     const [checkingEmail, setCheckingEmail] = useState(false);
 
+    const searchParams = useSearchParams();
+
     // ── Init ──────────────────────────────────────────────────────────────
+    useEffect(() => {
+        if (searchParams.get("resume") === "1") {
+            setStage("resume_capture");
+        }
+    }, [searchParams]);
+
     useEffect(() => {
         (async () => {
             try {
@@ -1053,8 +1071,6 @@ export default function Home() {
                     // Route based on query params
                     if (window.location.search.includes("scan=true")) {
                         setStage("sources");
-                    } else if (!window.location.search.includes("restart")) {
-                        window.location.href = "/soulmates";
                     }
                 } else if (window.location.search.includes("scan=true")) {
                     setStage("sources");
@@ -1123,7 +1139,7 @@ export default function Home() {
     const handleResumeExisting = () => {
         if (!clash?.user_id) return;
         document.cookie = `guest_id=${clash.user_id};max-age=31536000;path=/`;
-        window.location.href = "/soulmates";
+        window.location.href = "/profile";
     };
 
     const handleFinalSubmit = async (alreadyConfirmed = false) => {
@@ -1534,6 +1550,7 @@ export default function Home() {
                     <Landing
                         onChoice={() => setStage("entry_choice")}
                         onArtist={() => { window.location.href = "/artists" }}
+                        existing={existing}
                     />
                 )}
 
@@ -1551,7 +1568,7 @@ export default function Home() {
                         setEmail={setEmail}
                         checkingEmail={checkingEmail}
                         onSubmit={handleFinalSubmit}
-                        onBack={() => setStage("entry_choice")}
+                        onBack={() => setStage("landing")}
                         clash={clash}
                         handleResumeExisting={handleResumeExisting}
                         setClash={setClash}
@@ -2194,7 +2211,7 @@ export default function Home() {
                                                         onClick={handleResumeExisting}
                                                         className="w-full bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
                                                     >
-                                                        Resume Existing Signal
+                                                        Login to Profile
                                                     </button>
                                                     <button
                                                         onClick={() => { setClash(null); setEmail(""); }}

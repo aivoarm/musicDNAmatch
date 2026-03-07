@@ -50,7 +50,7 @@ export default function Navbar() {
     const navLinks = [
         { href: "/", label: "Discovery", icon: Search, show: true },
         { href: "/soulmates", label: "Soulmates", icon: Users, show: hasDna },
-        { href: "/profile", label: "Profile", icon: User, show: hasDna },
+        { href: hasDna ? "/profile" : "/?resume=1", label: "Profile", icon: User, show: true },
         { href: "/about", label: "About", icon: Info, show: true },
     ];
 
