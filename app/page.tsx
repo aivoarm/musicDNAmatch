@@ -361,7 +361,7 @@ function DualRadarChart({ v1, v2, c1 = "#FF0000", c2 = "#3B82F6" }: { v1: number
 }
 
 // Landing Page Component (The "First Page")
-function Landing({ onChoice, onArtist, existing }: { onChoice: () => void, onArtist: () => void, existing?: any }) {
+function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: () => void, onArtist: () => void, existing?: any, refreshProfile: () => void }) {
     return (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative w-full flex flex-col select-none overflow-x-hidden">
             {/* Visual Focal Point */}
@@ -591,6 +591,24 @@ function Landing({ onChoice, onArtist, existing }: { onChoice: () => void, onArt
                     >
                         <Activity className="h-3 w-3" /> or connect as an artist
                     </button>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        className="mt-12 w-full flex flex-col items-center"
+                    >
+                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-12" />
+                        <h3 className="mono text-[10px] uppercase tracking-[0.5em] text-white/30 mb-8">Community Discovery</h3>
+                        <Link
+                            href="/artists"
+                            className="group relative h-20 px-12 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center gap-4 hover:bg-[#FF0000]/10 hover:border-[#FF0000]/40 transition-all shadow-2xl overflow-hidden"
+                        >
+                            <Users className="h-6 w-6 text-[#FF0000]" />
+                            <span className="text-white font-black italic uppercase tracking-widest text-lg">Explore Musical Tribe</span>
+                            <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                        </Link>
+                    </motion.div>
                 </div>
 
                 {/* Ticker at the bottom */}
@@ -997,6 +1015,14 @@ export default function Home() {
     );
 }
 
+const getCookie = (name: string) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return null;
+}
+
 function HomeContent() {
     const [stage, setStage] = useState<Stage>("landing");
     const [genres, setGenres] = useState<string[]>([]);
@@ -1045,45 +1071,30 @@ function HomeContent() {
         }
     }, [searchParams]);
 
-    useEffect(() => {
-        (async () => {
-            try {
-                const r = await fetch("/api/dna/profile/me");
-                const d = await r.json();
-                if (d.found) {
-                    setExisting(d.dna);
-                    if (d.dna.display_name && d.dna.display_name !== "Anonymous Signal") {
-                        setDisplayName(d.dna.display_name);
-                    }
-                    if (d.dna.email) {
-                        setEmail(d.dna.email);
-                    } else if (d.dna.metadata && d.dna.metadata.email) {
-                        setEmail(d.dna.metadata.email);
-                    }
-                    if (d.dna.city) {
-                        setCity(d.dna.city);
-                    }
-                    if (d.dna.top_genres) setGenres(d.dna.top_genres);
-                    const ids: string[] = d.dna.scanned_playlist_ids || [];
-                    if (d.dna.scanned_playlist_id && !ids.includes(d.dna.scanned_playlist_id)) ids.push(d.dna.scanned_playlist_id);
-                    setScannedIds(ids);
-
-                    // Route based on query params
-                    if (window.location.search.includes("scan=true")) {
-                        setStage("sources");
-                    }
-                } else if (window.location.search.includes("scan=true")) {
-                    setStage("sources");
-                }
-            } catch { } finally { setChecking(false); }
-        })();
-        const saved = document.cookie.split("; ").find(r => r.startsWith("last_spotify_url="))?.split("=")[1];
-        if (saved) setSpotifyUrl(decodeURIComponent(saved));
-        const savedName = document.cookie.split("; ").find(r => r.startsWith("display_name="))?.split("=")[1];
-        if (savedName) setDisplayName(decodeURIComponent(savedName));
-        const savedCity = document.cookie.split("; ").find(r => r.startsWith("city="))?.split("=")[1];
-        if (savedCity) setCity(decodeURIComponent(savedCity));
+    const refreshProfile = useCallback(async () => {
+        try {
+            const r = await fetch("/api/dna/profile/me");
+            const d = await r.json();
+            if (d.found) {
+                setExisting(d.dna);
+            }
+        } catch (e) {
+            console.error("Failed to refresh profile", e);
+        }
     }, []);
+
+    useEffect(() => {
+        refreshProfile();
+
+        const saved = getCookie("last_spotify_url");
+        if (saved) setSpotifyUrl(decodeURIComponent(saved));
+
+        const savedName = getCookie("display_name");
+        if (savedName) setDisplayName(decodeURIComponent(savedName));
+
+        const savedCity = getCookie("city");
+        if (savedCity) setCity(decodeURIComponent(savedCity));
+    }, [refreshProfile]);
 
     // Auto-scan when entering spotify_input with a saved URL
     useEffect(() => {
@@ -1551,6 +1562,7 @@ function HomeContent() {
                         onChoice={() => setStage("entry_choice")}
                         onArtist={() => { window.location.href = "/artists" }}
                         existing={existing}
+                        refreshProfile={refreshProfile}
                     />
                 )}
 
@@ -2002,7 +2014,7 @@ function HomeContent() {
                                                     <div className="mt-9 flex flex-col items-center pt-7 border-t border-white/10">
                                                         <CheckCircle2 className="h-14 w-14 text-[#FF0000] mb-3 drop-shadow-lg" />
                                                         <span className="text-lg font-black tracking-[0.3em] uppercase text-white italic">Sync Verified</span>
-                                                        <span className="mono text-[9px] text-white/55 uppercase tracking-widest mt-1.5">{dna.display_name}</span>
+                                                        <span className="mono text-[8px] text-white/40 uppercase tracking-widest mt-2 flex items-center gap-1.5 opacity-70"><Fingerprint className="h-2.5 w-2.5" /> Signal Identification: {dna.display_name}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2011,11 +2023,14 @@ function HomeContent() {
                                             <div className="space-y-4">
                                                 <div className="glass rounded-[2.5rem] p-8 border border-[#FF0000]/20 bg-[#FF0000]/4">
                                                     <div className="flex items-center justify-between mb-5">
-                                                        <span className="mono text-[10px] text-[#FF0000] uppercase tracking-widest font-black flex items-center gap-2"><Brain className="h-4 w-4" />Neural Match</span>
+                                                        <span className="mono text-[10px] text-[#FF0000] uppercase tracking-widest font-black flex items-center gap-2"><Fingerprint className="h-4 w-4" />Neural Fingerprint</span>
                                                         <span className="mono text-[9px] text-white/50">12,492 nodes</span>
                                                     </div>
                                                     <div className="flex items-end justify-between border-b border-white/25 pb-5 mb-5">
-                                                        <h4 className="text-xl font-black text-white italic truncate pr-4">{dna.display_name}</h4>
+                                                        <div className="flex flex-col">
+                                                            <p className="mono text-[8px] text-white/40 uppercase tracking-widest mb-1.5">Authenticated As</p>
+                                                            <h4 className="text-xl font-black text-white italic truncate pr-4">{dna.display_name}</h4>
+                                                        </div>
                                                         <div className="text-right shrink-0">
                                                             <p className="mono text-3xl font-black text-[#FF0000]">{((dna.coherence_index ?? 0.8) * 100).toFixed(1)}%</p>
                                                             <p className="mono text-[9px] text-white/80 uppercase tracking-widest">Coherence</p>

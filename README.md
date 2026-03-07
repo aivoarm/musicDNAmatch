@@ -11,10 +11,11 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 
 ### 🧬 Neural Discovery Flow
 - **Frictionless Onboarding:** No mandatory sign-up or login. Users are assigned a persistent **Digital Identity** via guest cookies, allowing instant DNA extraction.
+- **Profile Restoration:** A "Neural Handshake" portal allows returning users to securely recover their profile on any device using their registered email.
 - **Multimodal Signal Capture:**
     - **Spotify Native Scan:** Analyzes public playlists and listening signals without requiring account connection.
     - **YouTube Search & Paste:** Supplement your DNA with specific tracks found on YouTube.
-- **The Identity Stage:** At the end of the extraction process, users define their **Signal Profile** with a display name and an optional email (used for reconnecting and matching).
+- **Signature Identification:** To ensure a unique presence, users are assigned a **Signal ID** (e.g., `NAME-SIGNAL`) and an optional email used for secure profile reconnects and mutal match notifications.
 
 ### 🧬 Neural Discovery Protocol
 - **Vector Space Mapping:** DNA is quantized across 12 distinct axes: *Spectral Energy, Harmonic Depth, Rhythmic Drive, Melodic Warmth, Structural Complexity, Sonic Texture, Tempo Variance, Tonal Brightness, Dynamic Range, Genre Fusion, Experimental Index, and Emotional Density.*
@@ -45,8 +46,8 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 
 ```
 app/
-├── (home) page.tsx      # Multi-stage discovery flow (Genres -> Spotify -> YouTube -> Identity)
-├── profile/page.tsx     # Your 12-dimensional DNA visualization
+├── (home) page.tsx      # Entry hub (New Scan vs. Secure Profile Restore)
+├── profile/page.tsx     # 12-dimensional DNA visualization & identity management
 ├── soulmates/page.tsx   # Discovery feed for finding sonic matches
 ├── bridge/[id]/         # Mutual match connection rooms
 ├── api/

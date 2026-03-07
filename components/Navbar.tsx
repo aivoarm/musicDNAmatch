@@ -51,7 +51,7 @@ export default function Navbar() {
         { href: "/", label: "Discovery", icon: Search, show: true },
         { href: "/soulmates", label: "Soulmates", icon: Users, show: hasDna },
         { href: hasDna ? "/profile" : "/?resume=1", label: "Profile", icon: User, show: true },
-        { href: "/about", label: "About", icon: Info, show: true },
+        { href: "/artists", label: "I'm Artist", icon: Waves, show: true },
     ];
 
     return (

@@ -56,7 +56,7 @@ export async function POST(req: Request) {
         let rawUserId = cookieStore.get("guest_id")?.value || randomUUID();
         let finalDisplayName = displayName;
         if ((!finalDisplayName || finalDisplayName === "Anonymous Signal") && email && typeof email === "string" && email.includes("@")) {
-            finalDisplayName = email.split("@")[0].toUpperCase();
+            finalDisplayName = email.split("@")[0].toUpperCase() + "-SIGNAL";
         } else if (!finalDisplayName) {
             finalDisplayName = "Anonymous Signal";
         }

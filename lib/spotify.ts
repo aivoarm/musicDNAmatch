@@ -127,4 +127,84 @@ export class SpotifyPublicFetcher {
             limit
         };
     }
+
+    async searchArtists(query: string, limit: number = 5, offset: number = 0) {
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+        const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=artist&limit=${limit}&offset=${offset}`;
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) throw new Error("Artist search failed");
+            const data = await res.json();
+
+            return data.artists?.items?.map((a: any) => ({
+                id: a.id,
+                name: a.name,
+                image: a.images?.[0]?.url || "",
+                genres: a.genres || [],
+                popularity: a.popularity || 0,
+                url: a.external_urls?.spotify || ""
+            })) || [];
+        } catch (e: any) {
+            console.error("Spotify searchArtists error:", e);
+            return [];
+        }
+    }
+
+    async getArtistTopTracks(artistId: string) {
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+        // Spotify requires a market parameter for top tracks, typically "US" or from user.
+        const url = `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`;
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) throw new Error("Failed to fetch artist top tracks");
+            const data = await res.json();
+
+            const tracks: SpotifyTrack[] = (data.tracks || []).map((t: any) => ({
+                id: t.id,
+                title: t.name,
+                artist: t.artists[0]?.name || "Unknown Artist",
+                artistId: t.artists[0]?.id || "",
+                thumbnail: t.album?.images[0]?.url || "",
+                url: t.external_urls?.spotify || "",
+                preview_url: t.preview_url
+            }));
+
+            return { tracks };
+        } catch (e: any) {
+            console.error("Spotify getArtistTopTracks error:", e);
+            return { error: e.message, tracks: [] };
+        }
+    }
+    async getAudioFeatures(trackIds: string[]) {
+        if (!trackIds.length) return [];
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+        // Max 100 IDs per request
+        const ids = trackIds.slice(0, 100).join(",");
+        const url = `https://api.spotify.com/v1/audio-features?ids=${ids}`;
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) {
+                // Spotify deprecated this endpoint for general public access in Nov 2024
+                // Status 403 or 410 might occur for certain apps.
+                if (res.status === 403 || res.status === 410 || res.status === 401) {
+                    console.warn(`Spotify audio-features restricted/deprecated (${res.status}). Falling back to genre-based DNA.`);
+                    return [];
+                }
+                const body = await res.text();
+                console.error(`Spotify audio-features API error: ${res.status} ${res.statusText}`, body);
+                throw new Error(`Audio features fetch failed: ${res.status}`);
+            }
+            const data = await res.json();
+            return data.audio_features || [];
+        } catch (e) {
+            // Silently fail to allow DNA computation fallback to rely on genres
+            return [];
+        }
+    }
 }

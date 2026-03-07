@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Syne, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
 
 
@@ -65,6 +66,7 @@ export default function RootLayout({
             <body className="bg-[#080808] text-white antialiased min-h-screen overflow-x-hidden">
                 <Navbar />
                 {children}
+                <Footer />
                 <CookieConsent />
             </body>
 

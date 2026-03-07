@@ -34,7 +34,8 @@ musicDNAmatch is a **web application** that:
    - 25% Spotify audio features (energy, valence, danceability, etc.)
    - 25% YouTube metadata (category, tags, title)
 3. **Matches** users based on cosine similarity of their DNA vectors
-4. **Facilitates** connections ("Bridges") between matched users with email confirmation workflows
+4. **Restores** existing profiles via a "Neural Handshake" (email-based portal) for return visitors
+5. **Facilitates** connections ("Bridges") between matched users with email confirmation workflows
 
 ### Technology Stack
 
@@ -98,7 +99,7 @@ MusicDNA/
 │   │   ├── about/page.tsx
 │   │   ├── profile/page.tsx            # User profile & settings
 │   │   ├── soulmates/page.tsx          # Match browsing
-│   │   ├── artists/page.tsx
+│   │   ├── artists/page.tsx            # I'm Artist (Fan-Artist matching)
 │   │   ├── broadcast/page.tsx
 │   │   ├── youtube/page.tsx
 │   │   ├── privacy/page.tsx
@@ -329,9 +330,10 @@ Fetch current session user information.
 **Logic**:
 1. Computes 3 DNA vectors (genre 50%, Spotify 25%, YouTube 25%)
 2. Validates email domain via DNS MX check (skips on dry_run)
-3. Upserts to `dna_profiles` table
-4. Auto-deletes unsecured profiles >24h old
-5. Sets cookies: `guest_id`, `has_dna`, `profile_id`
+3. Generates **Signal Identifier** from email (e.g., `NAME-SIGNAL`) if nickname is blank
+4. Upserts to `dna_profiles` table
+5. Auto-deletes unsecured profiles >24h old
+6. Sets cookies: `guest_id`, `has_dna`, `profile_id`
 
 ---
 
@@ -654,13 +656,20 @@ Fetch or send messages within a bridge conversation.
 **Purpose**: Main landing and onboarding flow for generating DNA.
 
 **Key Features**:
-- Multi-stage flow: `landing` → `intro` → `genre_selection` → `sources` → `analyzing` → `complete` → `email_capture`
+- **Smart Landing**: Detects returning users and updates CTA to "Enter Profile Bridge"
+- **Entry Choice**: Differentiates between new users and those restoring a "Sonic Signature"
+- **Resume Capture**: Secure "Neural Handshake" (email-based portal) to recover profiles on new devices
+- **Multi-stage flow**: `landing` → `entry_choice` → `resume_capture` → `intro` → `welcome_name` → `welcome_story` → `sources` → `review_songs` → `genre_selection` → `analyzing` → `complete` → `email_capture`
 - Genre selection (56 genres)
 - Spotify playlist scanning
 - YouTube video analysis
 - Email capture & profile completion
-- DNA visualization (radar chart)
+- DNA visualization (radar chart) with hydration-safe SVG elements
 - Real-time ticker of analytics
+
+**Implementation Details**:
+- Wrapped in **Suspense** to support reactive `useSearchParams` across all entry points.
+- Shared logic for "Resume Existing Signal" across onboarding and email clash states.
 
 **Key State**:
 - `stage`: Current onboarding stage
@@ -686,6 +695,7 @@ Fetch or send messages within a bridge conversation.
 - City-based filtering
 - One-click interest expression
 - Show track/artist overlap with each match
+- **Dual Radar Charts**: Compare personal DNA vs. Soulmate DNA with real-time "Them" data fetching
 - Email & broadcasting setup modal
 
 **Key State**:
@@ -709,6 +719,7 @@ Fetch or send messages within a bridge conversation.
 **Key Features**:
 - Display 12-axis radar chart visualization
 - Show top 3 traits, coherence score
+- **Identity Labeling**: Clear "Authenticated As" and "Signal Identification" markers to distinguish ID from genres
 - Edit email, city, display name
 - Profile deletion option
 - Share DNA card
@@ -749,9 +760,10 @@ Fetch or send messages within a bridge conversation.
 **Key Features**:
 - Brand logo with link to home
 - Nav links: Discovery, Soulmates, Profile, About
+- **Persistent Profile Portal**: Profile link always visible; deep-links to `/profile` (if logged in) or `/?resume=1` (for restoration)
 - Notification bell with dropdown
 - Mobile hamburger menu
-- Dynamic link visibility based on user DNA status
+- Dynamic link visibility based on user DNA status (e.g., Soulmates requires DNA)
 
 **Key Props**: None (uses hooks internally)
 
@@ -804,9 +816,8 @@ Fetch or send messages within a bridge conversation.
 **Key Logic**:
 1. Skip static files, `_next`, favicons
 2. Assign `guest_id` UUID if missing
-3. Check if user has DNA profile on home page
-4. Redirect to `/soulmates` if DNA exists
-5. Set persistent cookie (1 year)
+3. **Manual Entry Logic**: No longer auto-redirects to `/soulmates` to allow users to use the upfront landing options
+4. Set persistent cookie (1 year)
 
 ---
 
@@ -877,41 +888,36 @@ User visits home
     ↓
 Middleware assigns guest_id cookie
     ↓
-Stage 1: Landing screen
+Stage 1: Landing screen (Detects existing ? → "Enter Profile Bridge")
     ↓
-Stage 2: Intro / Guided tour
+Stage 2: Entry Choice (New Scan vs. Restore Signal)
     ↓
-Stage 3: Welcome (name entry)
+[If Restore Selected]
+  Stage 3: Resume Capture (Neural Handshake)
+  Verify email → Load existing profile → Redirect to /profile
     ↓
-Stage 4: Story (optional context)
+Stage 4: Intro / Guided tour
     ↓
-Stage 5: Source selection (Spotify/YouTube)
+Stage 5: Welcome (name entry)
     ↓
-Stage 6: Genre selection (56 genres)
+Stage 6: Story (optional context)
     ↓
-[If Spotify selected]
-  Fetch playlists via /api/spotify/scan
-  Extract audio features
-  
-[If YouTube selected]
-  Paste video URLs
-  Analyze via /api/youtube/analyze
+Stage 7: Source selection (Spotify/YouTube/Genre)
     ↓
-Stage 7: Analyzing screen (ticker animation)
+[Sources Flow as before]
+    ↓
+Stage 8: Analyzing screen (Ticker animation)
     ↓
 POST /api/dna/generate
-  - Compute 3 DNA vectors
-  - Blend with weights (50/25/25)
-  - Validate email domain
-  - Upsert to dna_profiles
+  - Identity tagging (NAME-SIGNAL)
     ↓
-Stage 8: Complete (show DNA card)
+Stage 9: Complete (Discovery Card)
     ↓
-Stage 9: Email capture (optional)
+Stage 10: Email capture (Secure Signature)
     ↓
 Set cookies: has_dna=true, profile_id
     ↓
-Redirect or show next steps
+Redirect to Soulmates or Profile
 ```
 
 ---
@@ -1169,5 +1175,5 @@ pnpm lint
 
 ---
 
-**Last Updated**: March 6, 2026  
-**Documentation Version**: 1.0
+**Last Updated**: March 7, 2026  
+**Documentation Version**: 1.1

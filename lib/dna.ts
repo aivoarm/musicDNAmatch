@@ -407,6 +407,15 @@ export function combineDNA(
  * Compute match score between two DNA vectors.
  */
 export function matchScore(a: DNAVector, b: DNAVector) {
+    if (!a?.vector || !b?.vector || !Array.isArray(a.vector) || !Array.isArray(b.vector)) {
+        return {
+            cosine_similarity: 0,
+            divergence_score: 1.0,
+            match_mode: "unknown",
+            axis_diff: Array(12).fill(1.0),
+            axis_labels: [...AXIS_LABELS],
+        };
+    }
     const cosine = cosineSimilarity(a.vector, b.vector);
     const mode = cosine >= 0.85 ? "convergent" : cosine >= 0.70 ? "resonant" : "divergent";
 
