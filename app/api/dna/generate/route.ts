@@ -125,8 +125,9 @@ export async function POST(req: Request) {
             });
         }
 
-        const uppercasedEmail = (email && typeof email === 'string' && email.trim() !== "") ? email.trim().toUpperCase() : null;
-        const uppercasedCity = (city && typeof city === 'string' && city.trim() !== "") ? city.trim().toUpperCase() : null;
+        const { data: existing } = await supabase.from('dna_profiles').select('email, city').eq('user_id', userId).single();
+        let uppercasedEmail = (email && typeof email === 'string' && email.trim() !== "") ? email.trim().toUpperCase() : existing?.email;
+        let uppercasedCity = (city && typeof city === 'string' && city.trim() !== "") ? city.trim().toUpperCase() : existing?.city;
 
         // Strip email and city from metadata for the new schema
         const { email: _, city: __, ...cleanMetadata } = {

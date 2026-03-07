@@ -11,7 +11,7 @@ export default function AboutPage() {
                 className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground hover:text-white transition-colors mb-10 group"
             >
                 <ArrowLeft className="h-3 w-3 group-hover:-translate-x-1 transition-transform" />
-                Back to Pulse
+                Back to Discovery
             </Link>
 
             <header className="mb-16 relative">
@@ -89,7 +89,7 @@ export default function AboutPage() {
                 {/* Algorithm Section */}
                 <section className="glass rounded-[2rem] p-8 sm:p-12 border border-white/10 bg-gradient-to-br from-[#FF0000]/15 to-black/40 relative overflow-hidden">
                     <h2 className="text-2xl sm:text-3xl font-black text-white mb-6 flex items-center gap-3 tracking-tight">
-                        <Code2 className="h-6 w-6 text-[#FF0000]" /> 3. Euclidean Distance Matching
+                        <Code2 className="h-6 w-6 text-[#FF0000]" /> 3. Hybrid Neural Matching
                     </h2>
                     <div className="space-y-4 text-base sm:text-lg">
                         <p>
@@ -97,6 +97,9 @@ export default function AboutPage() {
                         </p>
                         <p>
                             Because the dimensions are normalized (ranging from 0.0 to 1.0), distance represents true structural discordance.
+                        </p>
+                        <p>
+                            Beyond vector similarity, our engine performs a second pass to identify <strong className="text-white">Direct Overlaps</strong> — finding specific shared tracks and common artists in your listening histories to reveal immediate conversational starting points.
                         </p>
                         <ul className="list-disc list-inside space-y-2 ml-4 text-sm sm:text-base mt-4 font-mono">
                             <li><span className="text-white">90%+ Similarity:</span> Deep Neural Resonance (True Soulmates)</li>
@@ -130,6 +133,12 @@ export default function AboutPage() {
                             <h3 className="text-xl font-black text-white mb-3">What are the 12 Dimensions?</h3>
                             <p className="text-base text-white/90 leading-relaxed font-medium">
                                 We don't just use "Rock" or "Pop" to match you. We use 12 distinct auditory axes ranging from <strong>Spectral Energy</strong> (intense soundscapes) and <strong>Rhythmic Drive</strong> (groove-forward music) to <strong>Melodic Warmth</strong> and <strong>Experimental Index</strong>. These dimensions capture exactly <em>why</em> you like the music you do.
+                            </p>
+                        </div>
+                        <div className="glass p-8 rounded-[2rem] border border-white/20 bg-black/60 shadow-xl">
+                            <h3 className="text-xl font-black text-white mb-3">What is "Direct Overlap Matching"?</h3>
+                            <p className="text-base text-white/90 leading-relaxed font-medium">
+                                While vector matching handles "vibes," direct overlap matching handles "facts." After we find someone with a similar DNA signature, we cross-reference your normalized track titles and artist names. This highlights specific common ground, like when two soulmates both have the same rare Tame Impala b-side or share a specific niche Jazz artist in their top 50 tracks.
                             </p>
                         </div>
                     </div>
