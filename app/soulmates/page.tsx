@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AXIS_LABELS } from "@/lib/dna";
 
 type MatchMode = "all" | "convergent" | "resonant" | "divergent" | "sent";
 
@@ -32,12 +33,82 @@ const MODE_COLORS = {
     divergent: { bg: "bg-red-500/8", border: "border-red-500/15", text: "text-red-400", badge: "bg-red-500/60" },
 };
 
+function DualRadarChart({ v1, v2, c1 = "#FF0000", c2 = "#3B82F6" }: { v1: number[], v2: number[], c1?: string, c2?: string }) {
+    const size = 280;
+    const cx = size / 2;
+    const cy = size / 2;
+    const maxR = size / 2 - 30;
+
+    let parsedV1: number[] = [];
+    let parsedV2: number[] = [];
+    try {
+        parsedV1 = Array.isArray(v1) ? v1 : (typeof v1 === 'string' ? JSON.parse(v1) : []);
+        parsedV2 = Array.isArray(v2) ? v2 : (typeof v2 === 'string' ? JSON.parse(v2) : []);
+    } catch { }
+    const n = Math.max(parsedV1.length, parsedV2.length);
+
+    if (n === 0) return null;
+
+    const getPoint = (idx: number, val: number) => {
+        const angle = (Math.PI * 2 * idx) / n - Math.PI / 2;
+        const x = cx + Math.cos(angle) * val * maxR;
+        const y = cy + Math.sin(angle) * val * maxR;
+        return { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
+    };
+
+    const gridLevels = [0.25, 0.5, 0.75, 1.0];
+
+    const pts1 = parsedV1.map((v, i) => getPoint(i, Number(v) || 0));
+    const path1 = pts1.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+
+    const pts2 = parsedV2.map((v, i) => getPoint(i, Number(v) || 0));
+    const path2 = pts2.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+
+    const hexToRgb = (hex: string) => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : "255,0,0";
+    };
+
+    return (
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full max-w-[280px] mx-auto overflow-visible">
+            {gridLevels.map(level => {
+                const pts = Array.from({ length: n }, (_, i) => getPoint(i, level));
+                const d = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+                return <path key={level} d={d} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />;
+            })}
+            {Array.from({ length: n }, (_, i) => {
+                const p = getPoint(i, 1);
+                return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />;
+            })}
+
+            <path d={path1} fill={`rgba(${hexToRgb(c1)},0.2)`} stroke={c1} strokeWidth="2" />
+            <path d={path2} fill={`rgba(${hexToRgb(c2)},0.2)`} stroke={c2} strokeWidth="2" />
+
+            {pts1.map((p, i) => <circle key={`c1-${i}`} cx={p.x} cy={p.y} r="2.5" fill={c1} />)}
+            {pts2.map((p, i) => <circle key={`c2-${i}`} cx={p.x} cy={p.y} r="2.5" fill={c2} />)}
+
+            {Array.from({ length: n }, (_, i) => {
+                const p = getPoint(i, 1.18);
+                const label = AXIS_LABELS[i]?.replace(/_/g, " ") || "";
+                const short = label.split(" ").map(w => w.charAt(0).toUpperCase()).join("");
+                return (
+                    <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="central"
+                        className="fill-white/80 font-black" style={{ fontSize: "8px", letterSpacing: "0.1em" }}>
+                        {short}
+                    </text>
+                );
+            })}
+        </svg>
+    );
+}
+
 export default function SoulmatesPage() {
     const [matches, setMatches] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<MatchMode>("all");
     const [cityFilter, setCityFilter] = useState<string>("all");
     const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
+    const [viewedProfile, setViewedProfile] = useState<any | null>(null);
     const [email, setEmail] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -276,54 +347,57 @@ export default function SoulmatesPage() {
                                         className={`glass rounded-xl p-4 border transition-all relative overflow-hidden group
                                             ${match.is_mutual ? "ring-1 ring-green-500/40 border-green-500/25" : "border-white/15 hover:border-[#FF0000]/30"}`}>
                                         <div className="flex gap-3 items-center">
-                                            {/* Avatar — smaller */}
-                                            <div className="relative shrink-0">
-                                                <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/10 ring-1 ring-white/15 group-hover:ring-[#FF0000]/40 transition-all">
-                                                    {match.metadata?.images?.[0]?.url
-                                                        ? <img src={match.metadata.images[0].url} alt="" className="h-full w-full object-cover" />
-                                                        : <div className="h-full w-full flex items-center justify-center text-white font-black text-lg">
-                                                            {(match.metadata?.display_name || "?")[0]?.toUpperCase()}
-                                                        </div>}
+                                            {/* Avatar + Info wrapper */}
+                                            <button onClick={() => setViewedProfile(match)} className="flex-1 min-w-0 flex gap-3 items-center text-left focus:outline-none">
+                                                {/* Avatar — smaller */}
+                                                <div className="relative shrink-0">
+                                                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/10 ring-1 ring-white/15 group-hover:ring-[#FF0000]/40 transition-all">
+                                                        {match.metadata?.images?.[0]?.url
+                                                            ? <img src={match.metadata.images[0].url} alt="" className="h-full w-full object-cover" />
+                                                            : <div className="h-full w-full flex items-center justify-center text-white font-black text-lg">
+                                                                {(match.metadata?.display_name || "?")[0]?.toUpperCase()}
+                                                            </div>}
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            {/* Info — compact */}
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-1.5 mb-0.5">
-                                                    <h3 className="text-sm font-black text-white italic tracking-tighter truncate">
-                                                        {match.metadata?.display_name || match.display_name || "Anonymous Signal"}
-                                                    </h3>
-                                                    {match.is_mutual && (
-                                                        <span className="text-[7px] font-black bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest shrink-0">Mutual</span>
-                                                    )}
-                                                    {match.incoming_signal && !match.is_mutual && (
-                                                        <span className="text-[7px] font-black bg-[#FF0000]/15 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0 animate-pulse">Signal</span>
-                                                    )}
+                                                {/* Info — compact */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                                        <h3 className="text-sm font-black text-white italic tracking-tighter truncate group-hover:text-[#FF0000] transition-colors">
+                                                            {match.metadata?.display_name || match.display_name || "Anonymous Signal"}
+                                                        </h3>
+                                                        {match.is_mutual && (
+                                                            <span className="text-[7px] font-black bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest shrink-0">Mutual</span>
+                                                        )}
+                                                        {match.incoming_signal && !match.is_mutual && (
+                                                            <span className="text-[7px] font-black bg-[#FF0000]/15 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0 animate-pulse">Signal</span>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${mc.bg} ${mc.border} border ${mc.text}`}>
+                                                            {mode}
+                                                        </span>
+                                                        {matchCity && (
+                                                            <span className="text-[7px] font-bold text-white/40 flex items-center gap-0.5">
+                                                                <MapPin className="h-2.5 w-2.5" />{matchCity}
+                                                            </span>
+                                                        )}
+                                                        {(match.metadata?.top_genres || []).slice(0, 2).map((g: string, i: number) => (
+                                                            <span key={g + i} className="text-[7px] bg-white/8 border border-white/15 text-white/60 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{g}</span>
+                                                        ))}
+                                                        {match.song_match_count > 0 && (
+                                                            <span className="text-[7px] font-black bg-[#FF0000]/10 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0">
+                                                                {match.song_match_count} {match.song_match_count === 1 ? 'Song' : 'Songs'} Match
+                                                            </span>
+                                                        )}
+                                                        {match.artist_match_count > 0 && (
+                                                            <span className="text-[7px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest shrink-0">
+                                                                {match.artist_match_count} {match.artist_match_count === 1 ? 'Artist' : 'Artists'} Match
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1.5 flex-wrap">
-                                                    <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${mc.bg} ${mc.border} border ${mc.text}`}>
-                                                        {mode}
-                                                    </span>
-                                                    {matchCity && (
-                                                        <span className="text-[7px] font-bold text-white/40 flex items-center gap-0.5">
-                                                            <MapPin className="h-2.5 w-2.5" />{matchCity}
-                                                        </span>
-                                                    )}
-                                                    {(match.metadata?.top_genres || []).slice(0, 2).map((g: string, i: number) => (
-                                                        <span key={g + i} className="text-[7px] bg-white/8 border border-white/15 text-white/60 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{g}</span>
-                                                    ))}
-                                                    {match.song_match_count > 0 && (
-                                                        <span className="text-[7px] font-black bg-[#FF0000]/10 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0">
-                                                            {match.song_match_count} {match.song_match_count === 1 ? 'Song' : 'Songs'} Match
-                                                        </span>
-                                                    )}
-                                                    {match.artist_match_count > 0 && (
-                                                        <span className="text-[7px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest shrink-0">
-                                                            {match.artist_match_count} {match.artist_match_count === 1 ? 'Artist' : 'Artists'} Match
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
+                                            </button>
 
                                             {/* Stats + Action — right side */}
                                             <div className="flex items-center gap-2.5 shrink-0">
@@ -445,6 +519,164 @@ export default function SoulmatesPage() {
                     </div>
                 </div>
             </div>
+
+            {/* View Profile Modal */}
+            <AnimatePresence>
+                {viewedProfile && userDna && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setViewedProfile(null)} className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            className="glass w-full max-w-lg rounded-2xl p-7 md:p-8 relative z-10 border border-white/20 max-h-[90vh] overflow-y-auto sb">
+                            <button onClick={() => setViewedProfile(null)} className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-20"><X className="h-3.5 w-3.5" /></button>
+
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="h-16 w-16 rounded-2xl bg-white/10 flex items-center justify-center text-white/80 font-black text-2xl overflow-hidden shadow-xl border border-white/10">
+                                    {viewedProfile.metadata?.images?.[0]?.url
+                                        ? <img src={viewedProfile.metadata.images[0].url} alt="" className="h-full w-full object-cover" />
+                                        : (viewedProfile.metadata?.display_name || viewedProfile.display_name || "?")[0]}
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-white italic tracking-tighter">
+                                        {viewedProfile.metadata?.display_name || viewedProfile.display_name || "Anonymous Signal"}
+                                    </h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs font-black text-[#FF0000]">{(computeDisplaySimilarity(viewedProfile.similarity) * 100).toFixed(0)}% Match</span>
+                                        <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${MODE_COLORS[classifyMatch(viewedProfile.similarity)].bg} ${MODE_COLORS[classifyMatch(viewedProfile.similarity)].text}`}>
+                                            {classifyMatch(viewedProfile.similarity)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mb-6 relative">
+                                <DualRadarChart
+                                    v1={userDna.vector || []}
+                                    v2={viewedProfile.vector || []}
+                                    c1="#FF0000"
+                                    c2="#3B82F6"
+                                />
+                                <div className="flex justify-center gap-6 mt-4 opacity-80">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#FF0000]"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-white">You</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-3 h-3 rounded-full bg-[#3B82F6]"></div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-white">Them</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black mb-3">Top Genres</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(viewedProfile.metadata?.top_genres || []).map((g: string, i: number) => (
+                                            <span key={g + i} className="bg-white/10 border border-white/20 text-white px-2.5 py-1 rounded font-black text-[10px] uppercase tracking-widest">{g}</span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {viewedProfile.shared_artists && viewedProfile.shared_artists.length > 0 && (
+                                    <div>
+                                        <h3 className="mono text-[9px] text-blue-400 uppercase tracking-widest font-black mb-3">Shared Artists</h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {viewedProfile.shared_artists.map((a: string, i: number) => (
+                                                <span key={a + i} className="bg-blue-500/10 border border-blue-500/20 text-blue-300 px-2.5 py-1 rounded font-black text-[10px] uppercase tracking-widest">{a}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(() => {
+                                    let parsedUserVector = [];
+                                    let parsedThemVector = [];
+                                    try {
+                                        parsedUserVector = Array.isArray(userDna?.vector) ? userDna.vector : (typeof userDna?.vector === 'string' ? JSON.parse(userDna.vector) : []);
+                                        parsedThemVector = Array.isArray(viewedProfile?.vector) ? viewedProfile.vector : (typeof viewedProfile?.vector === 'string' ? JSON.parse(viewedProfile.vector) : []);
+                                    } catch (e) {
+                                        console.error("Vector parsing error", e);
+                                    }
+
+                                    const axisDiffs = parsedUserVector.map((v: number, i: number) => {
+                                        const themV = parsedThemVector?.[i] || 0;
+                                        return {
+                                            label: (AXIS_LABELS[i] || "").replace(/_/g, " "),
+                                            diff: Math.abs(v - themV),
+                                            user: v,
+                                            them: themV
+                                        };
+                                    });
+                                    const alignments = [...axisDiffs].sort((a, b) => a.diff - b.diff).slice(0, 3);
+                                    const differences = [...axisDiffs].sort((a, b) => b.diff - a.diff).slice(0, 3);
+
+                                    return (
+                                        <div className="pt-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                <div>
+                                                    <h3 className="mono text-[9px] text-green-400 uppercase tracking-widest font-black mb-3">Strongest Alignments</h3>
+                                                    <div className="space-y-2">
+                                                        {alignments.map((a, i) => (
+                                                            <div key={i} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                                                                <div className="flex justify-between items-center mb-2">
+                                                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{a.label}</span>
+                                                                    <span className="text-[7px] font-black text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded shrink-0">{(100 - a.diff * 100).toFixed(0)}% Match</span>
+                                                                </div>
+                                                                <div className="flex flex-col gap-1.5">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[7px] text-[#FF0000] font-black w-6 text-right">YOU</span>
+                                                                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                                            <div className="h-full bg-[#FF0000]" style={{ width: `${a.user * 100}%` }} />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[7px] text-[#3B82F6] font-black w-6 text-right">THEM</span>
+                                                                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                                            <div className="h-full bg-[#3B82F6]" style={{ width: `${a.them * 100}%` }} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="mono text-[9px] text-amber-500 uppercase tracking-widest font-black mb-3">Biggest Differences</h3>
+                                                    <div className="space-y-2">
+                                                        {differences.map((d, i) => (
+                                                            <div key={i} className="bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                                                                <div className="flex justify-between items-center mb-2">
+                                                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider truncate">{d.label}</span>
+                                                                    <span className="text-[7px] font-black text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded shrink-0">{(100 - d.diff * 100).toFixed(0)}% Match</span>
+                                                                </div>
+                                                                <div className="flex flex-col gap-1.5">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[7px] text-[#FF0000] font-black w-6 text-right">YOU</span>
+                                                                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                                            <div className="h-full bg-[#FF0000]" style={{ width: `${d.user * 100}%` }} />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <span className="text-[7px] text-[#3B82F6] font-black w-6 text-right">THEM</span>
+                                                                        <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                                            <div className="h-full bg-[#3B82F6]" style={{ width: `${d.them * 100}%` }} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Email modal */}
             <AnimatePresence>

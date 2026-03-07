@@ -6,7 +6,7 @@ import {
     Waves, ArrowRight, Brain, ChevronRight, Youtube,
     Music2, HelpCircle, Plus, ExternalLink, CheckCircle2,
     Scan, Users, Play, User, Check, X,
-    AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail
+    AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
@@ -14,7 +14,7 @@ import ShareDNACard from "@/components/ShareDNACard";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "landing" | "intro" | "welcome_name" | "welcome_story" | "sources" | "genre_selection" | "analyzing" | "complete" | "email_capture";
+type Stage = "landing" | "intro" | "welcome_name" | "welcome_story" | "sources" | "review_songs" | "genre_selection" | "analyzing" | "complete" | "email_capture";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -118,7 +118,7 @@ function Ticker() {
 }
 
 // ─── Step progress bar ───────────────────────────────────────────────────
-const STEP_LABELS = ["Sources", "Genres", "Analyse"];
+const STEP_LABELS = ["Sources", "Tracks", "Genres", "Analyse"];
 function Stepper({ step }: { step: number }) {
     return (
         <div className="flex items-center justify-center lg:justify-start gap-1 mb-8 md:mb-10 w-full">
@@ -255,7 +255,9 @@ function RadarChart({ vector, color = "#FF0000" }: { vector: number[], color?: s
 
     const getPoint = (idx: number, val: number) => {
         const angle = (Math.PI * 2 * idx) / n - Math.PI / 2;
-        return { x: cx + Math.cos(angle) * val * maxR, y: cy + Math.sin(angle) * val * maxR };
+        const x = cx + Math.cos(angle) * val * maxR;
+        const y = cy + Math.sin(angle) * val * maxR;
+        return { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
     };
 
     const gridLevels = [0.25, 0.5, 0.75, 1.0];
@@ -306,7 +308,9 @@ function DualRadarChart({ v1, v2, c1 = "#FF0000", c2 = "#3B82F6" }: { v1: number
 
     const getPoint = (idx: number, val: number) => {
         const angle = (Math.PI * 2 * idx) / n - Math.PI / 2;
-        return { x: cx + Math.cos(angle) * val * maxR, y: cy + Math.sin(angle) * val * maxR };
+        const x = cx + Math.cos(angle) * val * maxR;
+        const y = cy + Math.sin(angle) * val * maxR;
+        return { x: Number(x.toFixed(4)), y: Number(y.toFixed(4)) };
     };
 
     const gridLevels = [0.25, 0.5, 0.75, 1.0];
@@ -1099,9 +1103,24 @@ export default function Home() {
         }
     }, []);
 
-    // YouTube search
-    const searchYt = useCallback(async (query: string) => {
+    const searchYt = async (query: string) => {
         if (!query.trim()) { setYtResults([]); return; }
+
+        if (query.includes("youtube.com/") || query.includes("youtu.be/")) {
+            setYtTracks(prev => {
+                const idx = prev.findIndex(t => !t.url || t.status === "idle");
+                if (idx === -1) {
+                    alert("All 5 slots are full! Please remove a track first.");
+                    return prev;
+                }
+                setTimeout(() => resolveYt(idx, query), 0);
+                return prev.map((x, i) => i === idx ? { ...x, url: query, status: "loading" } : x);
+            });
+            setYtQuery("");
+            setYtShowSearch(false);
+            return;
+        }
+
         setYtSearching(true);
         try {
             const r = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
@@ -1109,13 +1128,15 @@ export default function Home() {
             setYtResults(Array.isArray(d) ? d : []);
         } catch { setYtResults([]); }
         finally { setYtSearching(false); }
-    }, []);
+    };
 
     const addYtSearchResult = useCallback((video: any) => {
-        // Find first empty slot
         setYtTracks(prev => {
             const idx = prev.findIndex(t => !t.url || t.status === "idle");
-            if (idx === -1) return prev; // all slots full
+            if (idx === -1) {
+                alert("All 5 slots are full! Please remove a track first.");
+                return prev;
+            }
             const url = `https://www.youtube.com/watch?v=${video.id}`;
             return prev.map((x, i) => i === idx ? {
                 ...x, url, status: "ok" as const,
@@ -1126,6 +1147,83 @@ export default function Home() {
         setYtQuery("");
         setYtResults([]);
     }, []);
+
+    const magicFillSlots = async (video: any, e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        const prev = ytTracks;
+        const idx = prev.findIndex(t => !t.url || t.status === "idle");
+        if (idx === -1) {
+            alert("All 5 slots are full! Please remove tracks first.");
+            return;
+        }
+
+        // Count how many we need
+        let needed = 0;
+        prev.forEach((t, i) => {
+            if (i !== idx && (!t.url || t.status === "idle" || t.status === "error")) {
+                needed++;
+            }
+        });
+
+        setYtTracks(current => {
+            const url = `https://www.youtube.com/watch?v=${video.id}`;
+            const next = current.map((x, i) => i === idx ? {
+                ...x, url, status: "ok" as const,
+                title: video.title, channel: video.channelTitle, thumbnail: video.thumbnail,
+            } : x);
+
+            if (needed > 0) {
+                next.forEach((t, i) => {
+                    if (i !== idx && (!t.url || t.status === "idle" || t.status === "error")) {
+                        next[i] = { ...next[i], status: 'loading', url: 'finding similar...' };
+                    }
+                });
+            }
+            return next;
+        });
+
+        if (needed === 0) {
+            setYtShowSearch(false);
+            setYtQuery("");
+            setYtResults([]);
+            return;
+        }
+
+        try {
+            const r = await fetch(`/api/youtube/similar?title=${encodeURIComponent(video.title)}&channel=${encodeURIComponent(video.channelTitle)}`);
+            const similar = await r.json();
+
+            setYtTracks(prev => {
+                const next = [...prev];
+                let simIdx = 0;
+                for (let i = 0; i < 5; i++) {
+                    if (next[i].status === 'loading' && next[i].url === 'finding similar...') {
+                        if (simIdx < similar.length) {
+                            const s = similar[simIdx++];
+                            next[i] = {
+                                id: s.id,
+                                url: `https://www.youtube.com/watch?v=${s.id}`,
+                                title: s.title,
+                                channel: s.channelTitle,
+                                thumbnail: s.thumbnail,
+                                status: 'ok'
+                            };
+                        } else {
+                            next[i] = { id: "", url: "", status: "idle" };
+                        }
+                    }
+                }
+                return next;
+            });
+        } catch {
+            setYtTracks(prev => prev.map(t => (t.status === 'loading' && t.url === 'finding similar...') ? { id: "", url: "", status: "idle", title: undefined, channel: undefined, thumbnail: undefined } : t));
+        }
+
+        setYtShowSearch(false);
+        setYtQuery("");
+        setYtResults([]);
+    };
 
     // Close search dropdown on click outside
     useEffect(() => {
@@ -1222,8 +1320,8 @@ export default function Home() {
             }
         } catch { }
 
-        // Go to genre selection
-        setStage("genre_selection");
+        // Go to review songs
+        setStage("review_songs");
         setProgress(0);
     };
 
@@ -1355,10 +1453,76 @@ export default function Home() {
                         <div className="max-w-5xl mx-auto px-4 md:px-8 pt-[5rem] lg:pt-28 pb-40 w-full">
                             <AnimatePresence mode="wait">
 
+                                {/* ── REVIEW SONGS ── */}
+                                {stage === "review_songs" && (
+                                    <motion.div key="rs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                                        <Stepper step={1} />
+                                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                                            <div className="lg:col-span-8 space-y-6">
+                                                <div>
+                                                    <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-1">Found <span className="text-[#FF0000]">Tracks</span></h2>
+                                                    <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Review the tracks extracted from your sources</p>
+                                                </div>
+                                                <div className="glass p-7 rounded-[2.5rem] border border-white/14">
+                                                    <div className="space-y-3 max-h-[50vh] overflow-y-auto sb pr-2">
+                                                        {fetchedSources?.spotifyTracks?.map((t: any, i: number) => (
+                                                            <div key={`sp-${i}`} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5">
+                                                                {t.thumbnail ? <img src={t.thumbnail} className="w-10 h-10 object-cover rounded-lg" /> : <div className="w-10 h-10 bg-[#1DB954]/20 rounded-lg flex items-center justify-center"><Music2 className="w-4 h-4 text-[#1DB954]" /></div>}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-white text-xs font-bold truncate mb-0.5">{t.title}</p>
+                                                                    <p className="text-white/40 mono text-[9px] truncate">{t.artist}</p>
+                                                                </div>
+                                                                <div className="w-6 h-6 rounded-full bg-[#1DB954]/20 flex items-center justify-center shrink-0">
+                                                                    <Music2 className="w-3 h-3 text-[#1DB954]" />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {fetchedSources?.youtubeTracks?.map((t: any, i: number) => (
+                                                            <div key={`yt-${i}`} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5">
+                                                                {t.thumbnail ? <img src={t.thumbnail} className="w-10 h-10 object-cover rounded-lg" /> : <div className="w-10 h-10 bg-[#FF0000]/20 rounded-lg flex items-center justify-center"><Youtube className="w-4 h-4 text-[#FF0000]" /></div>}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-white text-xs font-bold truncate mb-0.5" dangerouslySetInnerHTML={{ __html: t.title }}></p>
+                                                                    <p className="text-white/40 mono text-[9px] truncate">{t.artist}</p>
+                                                                </div>
+                                                                <div className="w-6 h-6 rounded-full bg-[#FF0000]/20 flex items-center justify-center shrink-0">
+                                                                    <Youtube className="w-3 h-3 text-[#FF0000]" />
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        {(!fetchedSources?.spotifyTracks?.length && !fetchedSources?.youtubeTracks?.length) && (
+                                                            <div className="text-center py-10">
+                                                                <AlertCircle className="w-8 h-8 text-white/20 mx-auto mb-3" />
+                                                                <p className="text-white/40 mono text-[10px] uppercase">No tracks could be found from your sources</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="lg:col-span-4 sticky top-24">
+                                                <div className="glass p-7 rounded-[2rem] border border-[#FF0000]/20 bg-[#FF0000]/5 flex flex-col gap-5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-xs font-black uppercase tracking-[0.3em] text-[#FF0000]">Extracted Tracks</span>
+                                                        <span className="mono text-[10px] text-white/60">{(fetchedSources?.spotifyTracks?.length || 0) + (fetchedSources?.youtubeTracks?.length || 0)} total</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-white/60 leading-relaxed font-bold">
+                                                        These are the tracks we found from your connected sources. We will prioritize these to compute your DNA.
+                                                    </p>
+                                                    <button onClick={() => { setStage("genre_selection"); setProgress(0); }} className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.2)]">
+                                                        Confirm Genres <ArrowRight className="h-3.5 w-3.5" />
+                                                    </button>
+                                                    <button onClick={() => setStage("sources")} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest mt-1">
+                                                        ← Back to Sources
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+
                                 {/* ── GENRE SELECTION ── */}
                                 {stage === "genre_selection" && (
                                     <motion.div key="gs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                                        <Stepper step={1} />
+                                        <Stepper step={2} />
                                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                                             <div className="lg:col-span-8 space-y-6">
                                                 <div>
@@ -1534,13 +1698,20 @@ export default function Home() {
                                                                     ytResults.map(v => {
                                                                         const alreadyAdded = ytTracks.some(t => t.url.includes(v.id) && t.status === "ok");
                                                                         return (
-                                                                            <button key={v.id} onClick={() => !alreadyAdded && addYtSearchResult(v)} className={`w-full flex items-center gap-3 p-3 rounded-xl border-b border-white/5 hover:bg-white/5 transition-colors ${alreadyAdded ? 'opacity-30' : ''}`}>
-                                                                                <img src={v.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
-                                                                                <div className="flex-1 text-left min-w-0">
-                                                                                    <p className="text-white text-[11px] font-bold truncate mb-1" dangerouslySetInnerHTML={{ __html: v.title }}></p>
-                                                                                    <p className="text-white/40 mono text-[9px] truncate">{v.channelTitle}</p>
-                                                                                </div>
-                                                                            </button>
+                                                                            <div key={v.id} className={`w-full flex items-center justify-between gap-3 p-3 rounded-xl border-b border-white/5 hover:bg-white/5 transition-colors group ${alreadyAdded ? 'opacity-30' : ''}`}>
+                                                                                <button onClick={() => !alreadyAdded && addYtSearchResult(v)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                                                                                    <img src={v.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                                                    <div className="flex-1 min-w-0">
+                                                                                        <p className="text-white text-[11px] font-bold truncate mb-1" dangerouslySetInnerHTML={{ __html: v.title }}></p>
+                                                                                        <p className="text-white/40 mono text-[9px] truncate">{v.channelTitle}</p>
+                                                                                    </div>
+                                                                                </button>
+                                                                                {!alreadyAdded && (
+                                                                                    <button onClick={(e) => magicFillSlots(v, e)} className="shrink-0 flex items-center gap-1.5 bg-[#FF0000]/20 text-[#FF0000] px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#FF0000] hover:text-white transition-all">
+                                                                                        <Sparkles className="h-3 w-3" /> Magic Fill 5
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
                                                                         )
                                                                     })
                                                                 )}
@@ -1549,22 +1720,60 @@ export default function Home() {
                                                     </AnimatePresence>
                                                 </div>
 
-                                                <div className="space-y-2 mt-2">
+                                                <div className="space-y-2 mt-4">
                                                     {ytTracks.map((tr, idx) => (
-                                                        <div key={tr.id} className="flex gap-2 items-center">
-                                                            <input type="text" value={tr.url} onChange={e => setYtTracks(t => t.map((x, i) => i === idx ? { ...x, url: e.target.value, status: "idle" } : x))} onBlur={e => resolveYt(idx, e.target.value)} onKeyDown={e => e.key === "Enter" && resolveYt(idx, tr.url)} placeholder={`Song ${idx + 1}`} className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white font-mono min-w-0" />
-                                                            {tr.status === "ok" && <CheckCircle2 className="h-4 w-4 text-[#FF0000] shrink-0" />}
-                                                            {tr.status === "loading" && <Loader2 className="h-4 w-4 text-white/50 animate-spin shrink-0" />}
-                                                            {tr.status === "error" && <AlertCircle className="h-4 w-4 text-red-500 shrink-0" />}
+                                                        <div key={tr.id || idx} className={`flex gap-3 items-center p-3 rounded-xl border transition-all ${tr.status !== "idle" ? "bg-white/5 border-white/10" : "bg-white/2 border-white/5 border-dashed"}`}>
+                                                            {tr.status === "ok" || tr.thumbnail ? (
+                                                                <img src={tr.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                            ) : (
+                                                                <div className="w-12 h-12 flex items-center justify-center bg-white/5 rounded-lg flex-shrink-0">
+                                                                    <Youtube className="w-5 h-5 text-white/20" />
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex-1 min-w-0">
+                                                                {tr.status === "loading" ? (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Loader2 className="w-4 h-4 animate-spin text-white/50" />
+                                                                        <span className="text-[10px] text-white/50 uppercase tracking-widest">Resolving Link...</span>
+                                                                    </div>
+                                                                ) : tr.status === "ok" ? (
+                                                                    <>
+                                                                        <p className="text-white text-xs font-bold truncate mb-0.5" dangerouslySetInnerHTML={{ __html: tr.title || "Unknown" }}></p>
+                                                                        <p className="text-white/40 mono text-[9px] truncate">{tr.channel || "YouTube"}</p>
+                                                                    </>
+                                                                ) : tr.status === "error" ? (
+                                                                    <div className="flex items-center gap-2">
+                                                                        <AlertCircle className="w-4 h-4 text-red-500" />
+                                                                        <span className="text-[10px] text-red-400 uppercase tracking-widest">{tr.error || "Failed to load"}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <p className="text-white/30 text-[11px] font-bold mb-0.5 uppercase tracking-widest">Slot {idx + 1}</p>
+                                                                        <p className="text-white/20 mono text-[9px] italic">Search or paste URL above</p>
+                                                                    </>
+                                                                )}
+                                                            </div>
+
+                                                            {tr.status !== "idle" && (
+                                                                <button onClick={() => setYtTracks(t => t.map((x, i) => i === idx ? { ...x, url: "", status: "idle", title: undefined, channel: undefined, thumbnail: undefined, error: undefined } : x))} className="p-2 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors group" title="Remove Track">
+                                                                    <X className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     ))}
+                                                </div>
+                                                <div className="mt-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                                    <p className="text-[10px] text-white/45 leading-relaxed font-medium">
+                                                        💡 <strong className="text-white/70">Tip:</strong> Search for 5 distinct tracks that represent your sound securely, or paste valid YouTube video URLs.
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="flex justify-center">
                                             <button onClick={fetchSourcesAndPreselect} disabled={selPlaylists.length === 0 && !hasYt} className="w-full sm:w-auto relative flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[13px] uppercase tracking-wider px-12 py-5 rounded-2xl hover:bg-red-500 transition-all hover:scale-[1.02] active:scale-95 shadow-[0_0_35px_rgba(255,0,0,0.3)] disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed">
-                                                Next: Genres Confirmation <ArrowRight className="h-4 w-4" />
+                                                Next: Review Tracks <ArrowRight className="h-4 w-4" />
                                             </button>
                                         </div>
                                         <div className="flex justify-center mt-6">

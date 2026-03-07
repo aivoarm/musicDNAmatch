@@ -86,6 +86,18 @@ export async function GET() {
             filteredMatches.push(m);
         }
 
+        const matchUserIds = filteredMatches.map(m => m.user_id);
+        const embeddingMap = new Map();
+
+        if (matchUserIds.length > 0) {
+            const { data: matchProfiles } = await supabase
+                .from("dna_profiles")
+                .select("user_id, sonic_embedding")
+                .in("user_id", matchUserIds);
+
+            (matchProfiles || []).forEach(p => embeddingMap.set(p.user_id, p.sonic_embedding));
+        }
+
         // 4. Enrich existing matches
         let enrichedMatches = filteredMatches.map((m: any) => {
             const mTracks = (m.metadata?.recent_tracks || []) as any[];
@@ -107,6 +119,7 @@ export async function GET() {
                 city: m.city || m.metadata?.city || null,
                 song_match_count: commonSongs.length,
                 artist_match_count: commonArtistsCount,
+                vector: embeddingMap.get(m.user_id) || m.sonic_embedding || m.metadata?.sonic_embedding || m.metadata?.vector || [],
             };
         });
 
@@ -145,6 +158,7 @@ export async function GET() {
                         city: (p as any).city || (p as any).metadata?.city || null,
                         song_match_count: commonSongs.length,
                         artist_match_count: commonArtistsCount,
+                        vector: (p as any).sonic_embedding || (p as any).metadata?.sonic_embedding || (p as any).metadata?.vector || [],
                     };
                 });
                 enrichedMatches = [...enrichedMatches, ...manualMatches];
