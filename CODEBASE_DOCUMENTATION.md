@@ -72,6 +72,9 @@ MusicDNA/
 │   │   │   ├── messages/route.ts
 │   │   │   ├── merge/route.ts
 │   │   │   └── synthesize/route.ts
+│   │   ├── artists/                    # Artist discovery & verification
+│   │   │   ├── route.ts                # Main community feed (paginated)
+│   │   │   └── search/route.ts         # Spotify-linked artist search
 │   │   ├── dna/                        # DNA profile management
 │   │   │   ├── generate/route.ts       # Core DNA calculation
 │   │   │   ├── invite/route.ts
@@ -115,6 +118,7 @@ MusicDNA/
 │   ├── Navbar.tsx                      # Top navigation
 │   ├── CookieConsent.tsx               # Cookie banner
 │   ├── ShareDNACard.tsx                # DNA sharing modal
+│   ├── UnifiedArtistCard.tsx           # Multi-mode artist profile (player/embed)
 │   └── ui/                             # Utility components
 ├── lib/                                 # Utility libraries
 │   ├── dna.ts                          # Core DNA engine
@@ -131,7 +135,9 @@ MusicDNA/
 │       ├── 20260302_init.sql
 │       ├── 20260302_collaboration.sql
 │       ├── 20260302_match_interests.sql
-│       └── 20260306_fix_created_at.sql
+│       ├── 20260306_fix_created_at.sql
+│       ├── 20260307_artists.sql        # Verified community schema
+│       └── 99999999_final_artists.sql  # Consolidated tribe schema
 ├── middleware.ts                       # Next.js middleware (guest_id cookie)
 ├── next.config.ts
 ├── tsconfig.json
@@ -273,6 +279,35 @@ MusicDNA/
 ---
 
 ## API Routes
+
+### Artist Ecosystem
+
+#### `GET /api/artists`
+Fetch verified community artists with DNA-based sorting.
+
+**Query Parameters**:
+- `q`: Name search
+- `genre`: Style/tag filtering
+- `limit`: Pagination limit (default 10)
+- `offset`: Pagination offset
+
+**Response**:
+```typescript
+{
+  success: boolean,
+  artists: Artist[],
+  total: number,
+  hasMore: boolean
+}
+```
+
+#### `POST /api/artists`
+Create/Update artist profile for verification.
+
+#### `GET /api/artists/search`
+Proxy Spotify search to find and link official artist profiles.
+
+---
 
 ### Authentication
 
@@ -651,21 +686,17 @@ Fetch or send messages within a bridge conversation.
 
 ## Page Components
 
-### `app/page.tsx` — Home / Discovery (1697 lines)
+### `app/page.tsx` — Home / Discovery
 
 **Purpose**: Main landing and onboarding flow for generating DNA.
 
 **Key Features**:
+- **Neural Scan UI**: Streamlined interface focusing on DNA extraction.
+- **Tribe Entry**: Direct CTA linking to the community discovery page.
 - **Smart Landing**: Detects returning users and updates CTA to "Enter Profile Bridge"
-- **Entry Choice**: Differentiates between new users and those restoring a "Sonic Signature"
 - **Resume Capture**: Secure "Neural Handshake" (email-based portal) to recover profiles on new devices
-- **Multi-stage flow**: `landing` → `entry_choice` → `resume_capture` → `intro` → `welcome_name` → `welcome_story` → `sources` → `review_songs` → `genre_selection` → `analyzing` → `complete` → `email_capture`
-- Genre selection (56 genres)
-- Spotify playlist scanning
-- YouTube video analysis
-- Email capture & profile completion
-- DNA visualization (radar chart) with hydration-safe SVG elements
-- Real-time ticker of analytics
+- **Multi-stage onboarding**: `landing` → `intro` → `welcome` → `sources` → `review` → `analyzing` → `complete`
+- Radar chart visualization for real-time DNA feedback.
 
 **Implementation Details**:
 - Wrapped in **Suspense** to support reactive `useSearchParams` across all entry points.
@@ -743,7 +774,16 @@ Fetch or send messages within a bridge conversation.
 | `app/about/page.tsx` | About the platform |
 | `app/privacy/page.tsx` | Privacy policy |
 | `app/terms/page.tsx` | Terms of service |
-| `app/artists/page.tsx` | Artist recommendation feature |
+### `app/artists/page.tsx` — Musical Tribe Discovery
+
+**Purpose**: Discover and connect with verified community artists.
+
+**Key Features**:
+- **Tribe Feed**: Infinite scrolling (Load More) list of synchronized artists.
+- **Advanced Filtering**: Server-side search by name and genre-based exploration chips.
+- **DNA Matching**: Real-time relevance sorting based on user's sonic embedding.
+- **Verification Portal**: Integrated workflow for artists to link Spotify profiles and apply for verification.
+- **Neural Gate**: Requires existing DNA profile to view community matches.
 | `app/broadcast/page.tsx` | Broadcasting/visibility settings |
 | `app/youtube/page.tsx` | YouTube integration tutorial |
 | `app/bridge/[id]/page.tsx` | Bridge conversation & synthesis |
@@ -842,6 +882,20 @@ city              TEXT
 broadcasting      BOOLEAN DEFAULT false
 created_at        TIMESTAMP DEFAULT now()
 updated_at        TIMESTAMP DEFAULT now()
+```
+
+#### `artists`
+```sql
+id                UUID PRIMARY KEY
+user_id           TEXT UNIQUE           -- Links to dna_profiles (can be null for benchmark data)
+name              TEXT NOT NULL
+style             TEXT                  -- Sonic signature description
+genres            JSONB                 -- Array of genre strings
+tags              JSONB                 -- Array of sonic tags
+verified          BOOLEAN DEFAULT false
+image_url         TEXT                  -- persistent media asset
+spotify_url       TEXT
+preview_url       TEXT                  -- MP3 preview signal
 ```
 
 #### `match_interests`
@@ -1142,12 +1196,12 @@ pnpm lint
 
 | Category | Count | Total Lines |
 |----------|-------|-------------|
-| API Routes | 23 | ~1,500 |
-| Page Components | 10+ | ~3,500 |
-| Reusable Components | 3 | ~900 |
+| API Routes | 25 | ~1,800 |
+| Page Components | 10+ | ~3,800 |
+| Reusable Components | 5 | ~1,200 |
 | Libraries | 5 | ~2,000 |
 | Config Files | 5 | ~100 |
-| **Total** | **50+** | **~8,000** |
+| **Total** | **55+** | **~9,000** |
 
 ---
 
@@ -1176,4 +1230,4 @@ pnpm lint
 ---
 
 **Last Updated**: March 7, 2026  
-**Documentation Version**: 1.1
+**Documentation Version**: 1.2
