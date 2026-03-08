@@ -568,7 +568,7 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
                 <div className="relative z-10 max-w-2xl w-full">
                     <Waves className="h-16 w-16 text-[#FF0000] mx-auto mb-8 opacity-80" />
                     <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic mb-8 text-white">
-                        Ready To <br />Broadcast?
+                        What to reveal your <br />Musical Taste ?
                     </h2>
                     <p className="text-white/60 text-lg font-bold mb-12">
                         Start scanning your library. Generate your acoustic DNA. Share your vector globally.
@@ -581,7 +581,7 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
                         <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
                         <span className="relative z-10 flex items-center justify-center gap-3">
                             <Play className="h-4 w-4 fill-white" />
-                            {existing ? "Enter Profile Bridge" : "Join The Signal"}
+                            {existing ? "Calculate my DNA" : "Join The Signal"}
                         </span>
                     </button>
 

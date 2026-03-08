@@ -809,7 +809,7 @@ Fetch or send messages within a bridge conversation.
 **Key Features**:
 - **Neural Scan UI**: Streamlined interface focusing on DNA extraction.
 - **Tribe Entry**: Direct CTA linking to the community discovery page.
-- **Smart Landing**: Detects returning users and updates CTA to "Enter Profile Bridge"
+- **Smart Landing**: Detects returning users and updates CTA to "Calculate my DNA"
 - **Resume Capture**: Secure "Neural Handshake" (email-based portal) to recover profiles on new devices
 - **Multi-stage onboarding**: `landing` → `intro` → `welcome` → `sources` → `review` → `analyzing` → `complete`
 - **Artist DNA Sync**: Handles `?sync_artist=<spotifyId>` URL param to auto-fetch top tracks and begin DNA flow
@@ -1109,7 +1109,7 @@ User visits home
     ↓
 Middleware assigns guest_id cookie
     ↓
-Stage 1: Landing screen (Detects existing ? → "Enter Profile Bridge")
+Stage 1: Landing screen (Detects existing ? → "Calculate my DNA")
     ↓
 Stage 2: Entry Choice (New Scan vs. Restore Signal)
     ↓
