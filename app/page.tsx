@@ -662,18 +662,93 @@ function EntryChoice({ onNew, onResume, onBack }: { onNew: () => void, onResume:
 }
 
 function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash, handleResumeExisting, setClash }: any) {
+    const [magicLinkSent, setMagicLinkSent] = useState(false);
+    const [sending, setSending] = useState(false);
+    const [magicError, setMagicError] = useState<string | null>(null);
+
+    const handleSendMagicLink = async () => {
+        if (!email.trim() || !email.includes("@")) return;
+        setSending(true);
+        setMagicError(null);
+
+        try {
+            // First check if a profile exists with this email (for instant restore)
+            const checkRes = await fetch("/api/dna/profile/check-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const checkData = await checkRes.json();
+
+            if (checkData.exists) {
+                // Profile found — show clash UI for instant restore
+                setClash(checkData.profile);
+                setSending(false);
+                return;
+            }
+
+            // No profile found — send magic link for verified identity creation
+            const res = await fetch("/api/auth/magic-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                setMagicError(data.error || "Failed to send magic link");
+                setSending(false);
+                return;
+            }
+
+            setMagicLinkSent(true);
+        } catch (e: any) {
+            setMagicError(e.message || "Network error");
+        } finally {
+            setSending(false);
+        }
+    };
+
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
             className="min-h-screen flex items-center justify-center p-6 text-center relative z-10 bg-[#080808]">
             <div className="max-w-lg w-full">
-                {!clash ? (
+                {magicLinkSent ? (
+                    /* ─── CHECK YOUR INBOX STATE ─── */
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+                        <motion.div
+                            animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                            className="h-24 w-24 rounded-[2.5rem] bg-green-500/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_80px_rgba(34,197,94,0.15)] border border-green-500/20"
+                        >
+                            <Mail className="h-12 w-12 text-green-400" />
+                        </motion.div>
+                        <h2 className="text-5xl md:text-6xl font-black text-white italic tracking-tighter mb-4 uppercase">Check Inbox</h2>
+                        <p className="text-white/60 mono text-[10px] uppercase tracking-[0.4em] mb-6 font-bold max-w-sm mx-auto leading-relaxed">
+                            A secure link has been sent to
+                        </p>
+                        <p className="text-green-400 font-black text-lg mb-8 tracking-tight">{email}</p>
+                        <div className="glass p-6 rounded-[2rem] border border-white/10 max-w-sm mx-auto mb-8">
+                            <p className="text-white/50 text-xs leading-relaxed">
+                                Click the link in your email to verify your identity and restore your DNA profile. The link expires in 1 hour.
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => { setMagicLinkSent(false); setEmail(""); }}
+                            className="mono text-[10px] text-white/40 hover:text-white transition-all uppercase tracking-widest font-black"
+                        >
+                            ← Use different email
+                        </button>
+                    </motion.div>
+                ) : !clash ? (
+                    /* ─── EMAIL ENTRY STATE ─── */
                     <>
                         <div className="h-24 w-24 rounded-[2.5rem] bg-blue-500/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_80px_rgba(59,130,246,0.1)] border border-blue-500/20">
                             <Fingerprint className="h-12 w-12 text-blue-400" />
                         </div>
                         <h2 className="text-5xl md:text-6xl font-black text-white italic tracking-tighter mb-4 uppercase">Restore Signal</h2>
                         <p className="text-white/60 mono text-[10px] uppercase tracking-[0.4em] mb-12 font-bold max-w-sm mx-auto leading-relaxed">
-                            Enter the email linked to your existing DNA profile to resync.
+                            Enter your email to receive a secure magic link for identity verification.
                         </p>
 
                         <div className="flex flex-col gap-4">
@@ -681,21 +756,25 @@ function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash
                                 type="email"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
-                                onKeyDown={e => e.key === "Enter" && onSubmit()}
+                                onKeyDown={e => e.key === "Enter" && handleSendMagicLink()}
                                 placeholder="your@email.com"
                                 autoFocus
                                 className="w-full bg-white/8 border border-white/20 rounded-3xl py-7 px-8 focus:outline-none focus:border-blue-500/60 transition-all text-center text-3xl font-black text-white placeholder:text-white/20 tracking-tight"
                             />
+                            {magicError && (
+                                <p className="text-red-400 mono text-[10px] uppercase tracking-widest">{magicError}</p>
+                            )}
                             <button
-                                onClick={() => onSubmit()}
-                                disabled={checkingEmail || !email.trim() || !email.includes("@")}
+                                onClick={handleSendMagicLink}
+                                disabled={sending || !email.trim() || !email.includes("@")}
                                 className="w-full px-16 flex items-center justify-center gap-3 bg-blue-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_60px_rgba(59,130,246,0.4)] mt-4 border border-blue-400/30"
                             >
-                                {checkingEmail ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"} <ArrowRight className="h-5 w-5" />
+                                {sending ? <Loader2 className="h-6 w-6 animate-spin" /> : "Send Magic Link"} <ArrowRight className="h-5 w-5" />
                             </button>
                         </div>
                     </>
                 ) : (
+                    /* ─── PROFILE FOUND (CLASH) STATE ─── */
                     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass p-12 rounded-[3.5rem] border border-blue-500/40 bg-blue-500/10 backdrop-blur-3xl shadow-[0_0_150px_rgba(59,130,246,0.2)]">
                         <div className="h-24 w-24 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-10 border border-blue-500/30">
                             <CheckCircle2 className="h-12 w-12 text-blue-400" />
