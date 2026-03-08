@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextResponse } from "next/server";
 import { SpotifyPublicFetcher } from "@/lib/spotify";
 

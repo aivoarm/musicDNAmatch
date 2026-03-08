@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { SpotifyPublicFetcher } from "@/lib/spotify";
 import { NextResponse } from "next/server";
 import { supabase, toUUID } from "@/lib/supabase";

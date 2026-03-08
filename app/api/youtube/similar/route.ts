@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { searchYouTube } from "@/lib/youtube";
 import { NextResponse } from "next/server";
 

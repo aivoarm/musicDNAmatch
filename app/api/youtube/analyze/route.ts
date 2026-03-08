@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextResponse } from "next/server";
 
 /**
@@ -6,7 +7,7 @@ import { NextResponse } from "next/server";
  * Returns: { videos: [{ id, title, channelTitle, categoryId, durationSeconds, tags }] }
  */
 export async function POST(req: Request) {
-    const { urls } = await req.json();
+    const { urls } = await req.json() as any;
 
     if (!urls || !Array.isArray(urls) || urls.length === 0) {
         return NextResponse.json({ error: "No YouTube URLs provided" }, { status: 400 });
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "YouTube API request failed" }, { status: res.status });
         }
 
-        const data = await res.json();
+        const data = await res.json() as any;
         const videos = (data.items || []).map((item: any) => ({
             id: item.id,
             title: item.snippet?.title || "",

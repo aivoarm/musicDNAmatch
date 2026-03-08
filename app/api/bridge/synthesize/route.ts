@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
     if (!googleToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     try {
-        const { bridgeId } = await request.json();
+        const { bridgeId } = await request.json() as any;
 
         // 1. Get bridge details and profiles
         const { data: bridge, error: bridgeError } = await supabase

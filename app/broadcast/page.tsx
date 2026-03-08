@@ -94,7 +94,7 @@ function BroadcastContent() {
                 }),
                 headers: { "Content-Type": "application/json" }
             });
-            const data = await res.json();
+            const data = await res.json() as any;
             if (!res.ok) {
                 setErrorMessage(data.error || "Failed to scan Spotify profile.");
                 if (offset === 0) setStage('initial');
@@ -143,7 +143,7 @@ function BroadcastContent() {
                 }),
                 headers: { "Content-Type": "application/json" }
             });
-            const data = await res.json();
+            const data = await res.json() as any;
             tracks = data.tracks || [];
         } catch (err) {
             console.error("Lazy load failed:", err);
@@ -160,7 +160,7 @@ function BroadcastContent() {
                     spotifyTracks: tracks,
                 })
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             if (d.success) {
                 const vector = d.vector;
                 const top_genres = d.metadata?.top_genres || [playlist.name.split(' ')[0]];
@@ -200,7 +200,7 @@ function BroadcastContent() {
             const res = await fetch("/api/dna/generate", { method: "POST" });
 
             if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
+                const errData = await res.json().catch(() => ({})) as any;
                 setErrorMessage(errData.error || `Server error (${res.status})`);
                 setAnalyzing(false);
                 setStage('initial');
@@ -208,7 +208,7 @@ function BroadcastContent() {
                 return;
             }
 
-            const data = await res.json();
+            const data = await res.json() as any;
 
             for (let i = 21; i <= 100; i++) {
                 setProgress(i);

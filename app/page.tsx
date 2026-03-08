@@ -677,7 +677,7 @@ function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
-            const checkData = await checkRes.json();
+            const checkData = await checkRes.json() as any;
 
             if (checkData.exists) {
                 // Profile found — show clash UI for instant restore
@@ -1122,7 +1122,7 @@ function HomeContent() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
-            const checkData = await checkRes.json();
+            const checkData = await checkRes.json() as any;
 
             if (checkData.exists) {
                 setClash(checkData.profile);
@@ -1151,7 +1151,7 @@ function HomeContent() {
             });
 
             if (!genRes.ok) {
-                const errData = await genRes.json();
+                const errData = await genRes.json() as any;
                 setEmailVerifyError(errData.error || "Failed to generate DNA");
                 setCheckingEmail(false);
                 return;
@@ -1183,7 +1183,7 @@ function HomeContent() {
         try {
             // 1. Fetch top 5 tracks for this artist
             const res = await fetch(`/api/artists/top-tracks?id=${artistId}`);
-            const data = await res.json();
+            const data = await res.json() as any;
             if (!data.success || !data.tracks) {
                 setStage("landing");
                 return;
@@ -1201,7 +1201,7 @@ function HomeContent() {
                     artist_genres: [] // We'll get some from the tracks later if needed
                 })
             });
-            const scanData = await scanRes.json();
+            const scanData = await scanRes.json() as any;
 
             // 3. Merge with existing sources
             let combinedTracks: any[] = [];
@@ -1244,7 +1244,7 @@ function HomeContent() {
                     dry_run: true
                 })
             });
-            const dryData = await dryRes.json();
+            const dryData = await dryRes.json() as any;
             if (dryData.success && dryData.suggested_genres) {
                 const preselected: string[] = [];
                 for (const sg of dryData.suggested_genres) {
@@ -1270,7 +1270,7 @@ function HomeContent() {
     const refreshProfile = useCallback(async () => {
         try {
             const r = await fetch("/api/dna/profile/me");
-            const d = await r.json();
+            const d = await r.json() as any;
             if (d.found) {
                 setExisting(d.dna);
             }
@@ -1324,7 +1324,7 @@ function HomeContent() {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ spotify_user_id: id, offset, limit: 6 })
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             if (!r.ok) { setScanErr(d.error || "Failed to load playlists."); return; }
             document.cookie = `last_spotify_url=${encodeURIComponent(spotifyUrl)};max-age=31536000;path=/`;
             if (offset === 0 && !d.playlists?.length) { setScanErr("No public playlists found."); return; }
@@ -1360,7 +1360,7 @@ function HomeContent() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email })
                 });
-                const d = await res.json();
+                const d = await res.json() as any;
                 if (d.exists) {
                     setClash(d.profile);
                     setCheckingEmail(false);
@@ -1401,7 +1401,7 @@ function HomeContent() {
         });
 
         if (!genRes.ok) {
-            const errData = await genRes.json();
+            const errData = await genRes.json() as any;
             alert(errData.error || "Failed to secure your signal");
             return;
         }
@@ -1427,7 +1427,7 @@ function HomeContent() {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ urls: [url] })
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             const v = d.videos?.[0];
             if (v) setYtTracks(t => t.map((x, i) => i === idx ? { ...x, status: "ok", title: v.title, channel: v.channelTitle, thumbnail: v.thumbnail } : x));
             else setYtTracks(t => t.map((x, i) => i === idx ? { ...x, status: "error", error: "Couldn't load video" } : x));
@@ -1457,7 +1457,7 @@ function HomeContent() {
         setYtSearching(true);
         try {
             const r = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
-            const d = await r.json();
+            const d = await r.json() as any;
             setYtResults(Array.isArray(d) ? d : []);
         } catch { setYtResults([]); }
         finally { setYtSearching(false); }
@@ -1525,7 +1525,7 @@ function HomeContent() {
 
         try {
             const r = await fetch(`/api/youtube/similar?title=${encodeURIComponent(video.title)}&channel=${encodeURIComponent(video.channelTitle)}`);
-            const similar = await r.json();
+            const similar = await r.json() as any;
 
             setYtTracks(prev => {
                 const next = [...prev];
@@ -1590,7 +1590,7 @@ function HomeContent() {
                         playlist_ids: selPlaylists.map(p => p.id),
                     })
                 });
-                const d = await r.json();
+                const d = await r.json() as any;
                 spotifyTracks = d.tracks || [];
                 audioFeatures = d.audioFeatures || [];
                 artistGenres = d.artistGenres || [];
@@ -1606,7 +1606,7 @@ function HomeContent() {
                     method: "POST", headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ urls: ytOkTracks.map(t => t.url) })
                 });
-                const d = await r.json();
+                const d = await r.json() as any;
                 youtubeVideos = d.videos || [];
             } catch { }
         }
@@ -1656,7 +1656,7 @@ function HomeContent() {
                     dry_run: true
                 })
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             if (d.success && d.suggested_genres) {
                 // Add suggested ones if they exist in GENRES list
                 const preselected: string[] = [];
@@ -1710,7 +1710,7 @@ function HomeContent() {
                     dry_run: false
                 })
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             setProgress(90);
 
             if (d.success) {

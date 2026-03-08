@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -12,7 +13,7 @@ import { supabase } from "@/lib/supabase";
  */
 export async function POST(req: Request) {
     try {
-        const { authUserId, email, guestId } = await req.json();
+        const { authUserId, email, guestId } = await req.json() as any;
 
         if (!authUserId || !email) {
             return NextResponse.json(

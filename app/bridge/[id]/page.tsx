@@ -48,7 +48,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
                     setLoading(false);
                     return;
                 }
-                const d = await r.json();
+                const d = await r.json() as any;
                 setMe(d.me);
                 setPartner(d.partner);
             } catch { setError("Failed to load bridge."); }
@@ -61,7 +61,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
         try {
             const r = await fetch(`/api/bridge/messages?bridgeId=${bridgeId}`);
             if (r.ok) {
-                const d = await r.json();
+                const d = await r.json() as any;
                 setMessages(d.messages || []);
             }
         } catch { }

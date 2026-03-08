@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";

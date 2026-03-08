@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { NextResponse } from "next/server";
 import { SpotifyPublicFetcher } from "@/lib/spotify";
 
@@ -9,7 +10,7 @@ import { SpotifyPublicFetcher } from "@/lib/spotify";
  * Also accepts direct track_ids for syncing specific tracks.
  */
 export async function POST(req: Request) {
-    const body = await req.json();
+    const body = await req.json() as any;
     const { spotify_user_id, playlist_ids, playlist_id, track_ids, artist_genres, limit = 5, offset = 0 } = body;
 
     if (!spotify_user_id && !playlist_ids?.length && !track_ids?.length) {
@@ -54,12 +55,12 @@ export async function POST(req: Request) {
                     body: "grant_type=client_credentials",
                 });
                 if (tokenRes.ok) {
-                    const { access_token } = await tokenRes.json();
+                    const { access_token } = await tokenRes.json() as any;
                     const plRes = await fetch(`https://api.spotify.com/v1/playlists/${pId}`, {
                         headers: { Authorization: `Bearer ${access_token}` }
                     });
                     if (plRes.ok) {
-                        const plData = await plRes.json();
+                        const plData = await plRes.json() as any;
                         if (plData.owner?.id) resolvedSpotifyId = plData.owner.id;
                     }
                 }
@@ -141,7 +142,7 @@ async function fetchAudioFeatures(trackIds: string[], clientId: string, clientSe
     });
 
     if (!tokenRes.ok) return [];
-    const { access_token } = await tokenRes.json();
+    const { access_token } = await tokenRes.json() as any;
 
     // Batch in groups of 100 (Spotify limit)
     const features: any[] = [];
@@ -152,7 +153,7 @@ async function fetchAudioFeatures(trackIds: string[], clientId: string, clientSe
             { headers: { Authorization: `Bearer ${access_token}` } }
         );
         if (res.ok) {
-            const data = await res.json();
+            const data = await res.json() as any;
             features.push(...(data.audio_features || []).filter(Boolean));
         }
     }
@@ -177,7 +178,7 @@ async function fetchArtistGenres(artistIds: string[], clientId: string, clientSe
     });
 
     if (!tokenRes.ok) return [];
-    const { access_token } = await tokenRes.json();
+    const { access_token } = await tokenRes.json() as any;
 
     const allGenres = new Set<string>();
     for (let i = 0; i < artistIds.length; i += 50) {
@@ -187,7 +188,7 @@ async function fetchArtistGenres(artistIds: string[], clientId: string, clientSe
             { headers: { Authorization: `Bearer ${access_token}` } }
         );
         if (res.ok) {
-            const data = await res.json();
+            const data = await res.json() as any;
             for (const artist of data.artists || []) {
                 if (artist && artist.genres) {
                     for (const genre of artist.genres) {

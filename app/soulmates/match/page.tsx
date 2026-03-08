@@ -25,7 +25,7 @@ export default function MatchPage() {
                 // Fetch user DNA for stats
                 const profileRes = await fetch("/api/dna/profile/me");
                 if (profileRes.ok) {
-                    const profileData = await profileRes.json();
+                    const profileData = await profileRes.json() as any;
                     setUserDna(profileData.dna);
 
                     // Check for verified session
@@ -38,7 +38,7 @@ export default function MatchPage() {
 
                 const res = await fetch("/api/dna/match");
                 if (res.ok) {
-                    const data = await res.json();
+                    const data = await res.json() as any;
                     setMatches(data);
                 }
             } catch (err) {

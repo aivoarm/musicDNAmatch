@@ -18,7 +18,7 @@ export async function searchYouTube(query: string, maxResults = 5): Promise<YouT
 
     try {
         const res = await fetch(url);
-        const data = await res.json();
+        const data = await res.json() as any;
 
         if (data.error) {
             console.error("YouTube API Error:", data.error);
@@ -48,7 +48,7 @@ export async function getVideoDetails(videoId: string) {
 
     try {
         const res = await fetch(url);
-        const data = await res.json();
+        const data = await res.json() as any;
         return data.items?.[0] || null;
     } catch (err) {
         console.error("Failed to get video details:", err);
@@ -63,7 +63,7 @@ export async function getTrendingMusic(maxResults = 10): Promise<YouTubeVideo[]>
 
     try {
         const res = await fetch(url);
-        const data = await res.json();
+        const data = await res.json() as any;
 
         const rawResults = (data.items || []).map((item: any) => ({
             id: item.id,
@@ -92,7 +92,7 @@ export async function getPersonalHistory(accessToken: string, maxResults = 10): 
         const res = await fetch(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const data = await res.json();
+        const data = await res.json() as any;
 
         if (data.error) {
             console.error("YouTube User API error:", data.error);
@@ -144,7 +144,7 @@ export async function filterMusicVideos(videos: YouTubeVideo[]): Promise<YouTube
 
         try {
             const res = await fetch(url);
-            const data = await res.json();
+            const data = await res.json() as any;
 
             if (data.error) {
                 console.error("YouTube Category API error:", data.error);

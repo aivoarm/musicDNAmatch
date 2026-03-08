@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     try {
-        const { bridgeId } = await request.json();
+        const { bridgeId } = await request.json() as any;
         let userId = "";
 
         const cachedUser = cookieStore.get("google_user")?.value;
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
             const userRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
                 headers: { Authorization: `Bearer ${googleToken}` },
             });
-            const googleUser = await userRes.json();
+            const googleUser = await userRes.json() as any;
             userId = googleUser.sub;
         }
 

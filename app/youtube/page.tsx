@@ -21,7 +21,7 @@ export default function YouTubeAnalyzer() {
             try {
                 const res = await fetch("/api/youtube/trending");
                 if (res.ok) {
-                    const data = await res.json();
+                    const data = await res.json() as any;
                     setTrending(data);
                 }
             } catch (err) {
@@ -42,7 +42,7 @@ export default function YouTubeAnalyzer() {
         try {
             const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
             if (res.ok) {
-                const data = await res.json();
+                const data = await res.json() as any;
                 setResults(data);
             }
         } catch (err) {
@@ -60,7 +60,7 @@ export default function YouTubeAnalyzer() {
         // Actual DNA generation call (frictionless)
         try {
             const res = await fetch("/api/dna/generate", { method: "POST" });
-            const data = await res.json();
+            const data = await res.json() as any;
 
             // Artificial delay for UX
             await new Promise(r => setTimeout(r, 2000));

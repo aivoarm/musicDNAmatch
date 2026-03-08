@@ -31,7 +31,7 @@ export default function TempRoomPage({ params }: { params: Promise<{ id: string 
                     setLoading(false);
                     return;
                 }
-                const data = await res.json();
+                const data = await res.json() as any;
                 setBridge(data);
             } catch {
                 setError("Failed to load bridge data.");

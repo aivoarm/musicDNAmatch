@@ -1,7 +1,7 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import crypto from 'node:crypto';
 
 export async function POST(request: Request) {
     const cookieStore = await cookies();
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
 
         // 1. Parse request body
-        const { targetId, email } = await request.json();
+        const { targetId, email } = await request.json() as any;
 
         if (!targetId || !email) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

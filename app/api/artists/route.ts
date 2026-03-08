@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -135,7 +136,7 @@ export async function GET(req: Request) {
 // POST: Create an artist profile for the current user
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json() as any;
         const cookieStore = await cookies();
         const guestId = cookieStore.get("guest_id")?.value;
         if (!guestId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

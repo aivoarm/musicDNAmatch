@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { getPersonalHistory } from "@/lib/youtube";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";

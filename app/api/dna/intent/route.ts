@@ -1,10 +1,11 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json() as any;
         const { intent } = body;
 
         const cookieStore = await cookies();
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
                     headers: { Authorization: `Bearer ${googleToken}` },
                 });
                 if (userRes.ok) {
-                    const googleUser = await userRes.json();
+                    const googleUser = await userRes.json() as any;
                     rawUserId = googleUser.sub;
                 }
             }

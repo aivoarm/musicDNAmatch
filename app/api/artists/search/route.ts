@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { SpotifyPublicFetcher } from "@/lib/spotify";
 import { NextResponse } from "next/server";
 import { supabase, toUUID } from "@/lib/supabase";
@@ -102,7 +103,7 @@ export async function GET(req: Request) {
             return { ...artist, topTracks: top.tracks?.slice(0, 5) || [] };
         }));
 
-        const allTrackIds = artistsWithTracks.flatMap(a => a.topTracks.map((t: any) => t.id));
+        const allTrackIds = artistsWithTracks.flatMap((a: any) => a.topTracks.map((t: any) => t.id));
         const features = await fetcher.getAudioFeatures(allTrackIds);
         const featuresMap = new Map((features || []).filter((f: any) => f).map((f: any) => [f.id, f]));
 

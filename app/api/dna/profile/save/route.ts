@@ -1,12 +1,12 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { isEmailDomainValid } from "@/lib/server/dns-check";
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json() as any;
         const { displayName, email, genres, bio, broadcasting, city, forceOverwrite } = body;
 
         const cookieStore = await cookies();

@@ -1,7 +1,7 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import {
     computeGenreVector,
     computeSpotifyVector,
@@ -29,7 +29,7 @@ import { isEmailDomainValid } from "@/lib/server/dns-check";
  */
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json() as any;
         const {
             genres = [],
             audioFeatures = [],
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
         // ── Identify user ──────────────────────────────
         const cookieStore = await cookies();
-        let rawUserId = cookieStore.get("guest_id")?.value || randomUUID();
+        let rawUserId = cookieStore.get("guest_id")?.value || crypto.randomUUID();
         let finalDisplayName = displayName;
         if ((!finalDisplayName || finalDisplayName === "Anonymous Signal") && email && typeof email === "string" && email.includes("@")) {
             finalDisplayName = email.split("@")[0].toUpperCase() + "-SIGNAL";

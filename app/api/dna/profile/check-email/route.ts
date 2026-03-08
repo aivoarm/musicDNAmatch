@@ -1,9 +1,10 @@
+export const runtime = "edge";
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
     try {
-        const { email } = await req.json();
+        const { email } = await req.json() as any;
 
         if (!email || !email.includes("@")) {
             return NextResponse.json({ error: "Invalid email" }, { status: 400 });

@@ -76,7 +76,7 @@ export default function UnifiedArtistCard({ artist, index, hasDna, isAlreadySync
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ artistId: spotifyId })
             });
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 setIsDone(true);
                 // Trigger global profile refresh event or callback

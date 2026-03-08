@@ -1,3 +1,4 @@
+export const runtime = "edge";
 import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest) {
 
     console.log("Sync Artist hit for guestId:", guestId);
 
-    const { artistId } = await request.json();
+    const { artistId } = await request.json() as any;
     console.log("artistId:", artistId);
 
     if (!artistId) {

@@ -47,7 +47,7 @@ export default function MusicalTribe() {
     const fetchProfile = async () => {
         try {
             const res = await fetch("/api/dna/profile/me");
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.found) setMyDna(data.dna);
         } catch (e) { console.error(e); }
         finally { setLoading(false); }
@@ -57,7 +57,7 @@ export default function MusicalTribe() {
         setLoadingTribe(true);
         try {
             const res = await fetch(`/api/artists?registered=true&offset=${offset}&limit=5`);
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 if (offset === 0) setMatches(data.artists || []);
                 else setMatches(prev => [...prev, ...(data.artists || [])]);
@@ -75,7 +75,7 @@ export default function MusicalTribe() {
         setLoadingFans(true);
         try {
             const res = await fetch("/api/dna/community");
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 setFans(data.profiles || []);
             }
@@ -98,7 +98,7 @@ export default function MusicalTribe() {
 
         try {
             const res = await fetch(`/api/artists/search?q=${encodeURIComponent(searchQuery)}&offset=${offset}&limit=6`);
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 if (offset === 0) {
                     setSearchResults(data.artists || []);
@@ -139,7 +139,7 @@ export default function MusicalTribe() {
                     verification_email: contactEmail
                 })
             });
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 setRegistrationStep("success");
             } else {

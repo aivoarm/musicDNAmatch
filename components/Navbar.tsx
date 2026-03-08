@@ -18,12 +18,12 @@ export default function Navbar() {
     const fetchProfileData = async () => {
         try {
             const r = await fetch("/api/dna/profile/me");
-            const d = await r.json();
+            const d = await r.json() as any;
             setHasDna(d.found);
             if (d.found) {
                 // If we found DNA, also check for notifications
                 const nr = await fetch("/api/match/notifications");
-                const nd = await nr.json();
+                const nd = await nr.json() as any;
                 setNotifications(nd.signals || []);
                 setUnreadCount((nd.signals || []).length);
             }
@@ -37,7 +37,7 @@ export default function Navbar() {
         const interval = setInterval(() => {
             if (hasDna) {
                 fetch("/api/match/notifications")
-                    .then(r => r.json())
+                    .then(r => r.json() as any)
                     .then(nd => {
                         setNotifications(nd.signals || []);
                         setUnreadCount((nd.signals || []).length);

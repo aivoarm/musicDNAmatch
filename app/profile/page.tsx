@@ -114,7 +114,7 @@ export default function ProfilePage() {
         (async () => {
             try {
                 const r = await fetch("/api/dna/profile/me");
-                const d = await r.json();
+                const d = await r.json() as any;
                 if (d.found) {
                     setProfile(d.dna);
                     if (d.dna.email) setEmail(d.dna.email);
@@ -136,7 +136,7 @@ export default function ProfilePage() {
         const listener = () => {
             // Re-fetch profile data
             fetch("/api/dna/profile/me")
-                .then(r => r.json())
+                .then(r => r.json() as any)
                 .then(d => {
                     if (d.found) setProfile(d.dna);
                 })
@@ -159,7 +159,7 @@ export default function ProfilePage() {
         setLoadingTribe(true);
         try {
             const res = await fetch(`/api/artists?q=${encodeURIComponent(localSearchQuery)}&genre=${encodeURIComponent(genreFilter)}&offset=${offset}&limit=5`);
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 if (offset === 0) setTribeMatches(data.artists || []);
                 else setTribeMatches(prev => [...prev, ...(data.artists || [])]);
@@ -204,7 +204,7 @@ export default function ProfilePage() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email }),
                 });
-                const checkData = await checkRes.json();
+                const checkData = await checkRes.json() as any;
 
                 if (checkData.exists && checkData.profile?.user_id !== profile?.user_id) {
                     const existingName = checkData.profile.display_name || "another user";

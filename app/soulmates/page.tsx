@@ -128,7 +128,7 @@ export default function SoulmatesPage() {
 
                 let foundDna = false;
                 if (profileRes.ok) {
-                    const pd = await profileRes.json();
+                    const pd = await profileRes.json() as any;
                     if (pd.found) {
                         foundDna = true;
                         setUserDna(pd.dna);
@@ -148,7 +148,7 @@ export default function SoulmatesPage() {
                 }
 
                 if (foundDna && matchRes.ok) {
-                    const md = await matchRes.json();
+                    const md = await matchRes.json() as any;
                     setMatches(Array.isArray(md) ? md : []);
                 } else if (!foundDna) {
                     window.location.href = "/";
@@ -170,7 +170,7 @@ export default function SoulmatesPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ targetId, email }),
             });
-            const d = await r.json();
+            const d = await r.json() as any;
             if (r.ok) {
                 setSuccess(true);
                 if (d.isMutual && d.bridgeId) {

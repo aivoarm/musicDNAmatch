@@ -42,7 +42,7 @@ export default function AuthCompletePage() {
                         guestId: guestId,
                     }),
                 });
-                const data = await res.json();
+                const data = await res.json() as any;
 
                 if (data.success && data.guestId) {
                     document.cookie = `guest_id=${data.guestId};max-age=31536000;path=/`;

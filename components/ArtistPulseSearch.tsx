@@ -21,7 +21,7 @@ export default function ArtistPulseSearch({ myDna, onDnaUpdate }: { myDna?: any,
         setLoading(true);
         try {
             const res = await fetch(`/api/artists/search?q=${encodeURIComponent(val)}`);
-            const data = await res.json();
+            const data = await res.json() as any;
             if (data.success) {
                 setResults(data.artists || []);
             }

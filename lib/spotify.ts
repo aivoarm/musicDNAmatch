@@ -45,7 +45,7 @@ export class SpotifyPublicFetcher {
             throw new Error(`Failed to get Spotify token: ${res.status} ${res.statusText} - ${errBody}`);
         }
 
-        const data = await res.json();
+        const data = await res.json() as any;
         this.accessToken = data.access_token;
         return this.accessToken!;
     }
@@ -63,7 +63,7 @@ export class SpotifyPublicFetcher {
                     const errBody = await res.text();
                     throw new Error(`Spotify Playlist tracks fetch failed: ${res.status} - ${errBody}`);
                 }
-                const data = await res.json();
+                const data = await res.json() as any;
                 const items = data.items || [];
                 const tracks: SpotifyTrack[] = items
                     .filter((item: any) => item.track)
@@ -89,7 +89,7 @@ export class SpotifyPublicFetcher {
         let total = 0;
 
         if (res.status === 200) {
-            const data = await res.json();
+            const data = await res.json() as any;
             playlistsRaw = data.items || [];
             total = data.total || 0;
         } else {
@@ -97,7 +97,7 @@ export class SpotifyPublicFetcher {
             const searchQuery = `owner:${spotifyUserId}`;
             const searchUrl = `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=playlist&limit=${limit}&offset=${offset}`;
             res = await fetch(searchUrl, { headers });
-            let data = await res.json();
+            let data = await res.json() as any;
             playlistsRaw = data.playlists?.items || [];
             total = data.playlists?.total || 0;
 
@@ -105,7 +105,7 @@ export class SpotifyPublicFetcher {
             if (playlistsRaw.length === 0) {
                 const fallbackUrl = `https://api.spotify.com/v1/search?q=${encodeURIComponent(spotifyUserId)}&type=playlist&limit=${limit}&offset=${offset}`;
                 res = await fetch(fallbackUrl, { headers });
-                data = await res.json();
+                data = await res.json() as any;
                 playlistsRaw = data.playlists?.items || [];
                 total = data.playlists?.total || 0;
             }
@@ -137,7 +137,7 @@ export class SpotifyPublicFetcher {
         try {
             const res = await fetch(url, { headers });
             if (!res.ok) throw new Error("Artist search failed");
-            const data = await res.json();
+            const data = await res.json() as any;
 
             return data.artists?.items?.map((a: any) => ({
                 id: a.id,
@@ -162,7 +162,7 @@ export class SpotifyPublicFetcher {
         try {
             const res = await fetch(url, { headers });
             if (!res.ok) throw new Error("Failed to fetch artist top tracks");
-            const data = await res.json();
+            const data = await res.json() as any;
 
             const tracks: SpotifyTrack[] = (data.tracks || []).map((t: any) => ({
                 id: t.id,
@@ -201,7 +201,7 @@ export class SpotifyPublicFetcher {
                 console.error(`Spotify audio-features API error: ${res.status} ${res.statusText}`, body);
                 throw new Error(`Audio features fetch failed: ${res.status}`);
             }
-            const data = await res.json();
+            const data = await res.json() as any;
             return data.audio_features || [];
         } catch (e) {
             // Silently fail to allow DNA computation fallback to rely on genres
@@ -217,7 +217,7 @@ export class SpotifyPublicFetcher {
         try {
             const res = await fetch(url, { headers });
             if (!res.ok) return [];
-            const data = await res.json();
+            const data = await res.json() as any;
             return data.genres || [];
         } catch (e) {
             return [];
@@ -248,7 +248,7 @@ export class SpotifyPublicFetcher {
                 }
                 return { tracks: [] };
             }
-            const data = await res.json();
+            const data = await res.json() as any;
             const tracks: SpotifyTrack[] = (data.tracks || []).map((t: any) => ({
                 id: t.id,
                 title: t.name,
@@ -275,7 +275,7 @@ export class SpotifyPublicFetcher {
         try {
             const res = await fetch(url, { headers });
             if (!res.ok) return [];
-            const data = await res.json();
+            const data = await res.json() as any;
             return data.artists || [];
         } catch (e) {
             return [];
