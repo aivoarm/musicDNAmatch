@@ -81,21 +81,39 @@ export default function Navbar() {
 
                 {/* Desktop Links */}
                 <div className="hidden md:flex items-center gap-6">
-                    {navLinks.filter(link => link.show).map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            onClick={() => {
-                                if (link.label === "Soulmates") {
-                                    fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
-                                }
-                            }}
-                            className={`mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`}
-                        >
-                            <link.icon className="h-3.5 w-3.5" />
-                            <span>{link.label}</span>
-                        </Link>
-                    ))}
+                    {navLinks.filter(link => link.show).map((link) => {
+                        const isExternal = link.href === "/login";
+                        const content = (
+                            <>
+                                <link.icon className="h-3.5 w-3.5" />
+                                <span>{link.label}</span>
+                            </>
+                        );
+                        const className = `mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`;
+
+                        if (isExternal) {
+                            return (
+                                <a key={link.href} href={link.href} className={className}>
+                                    {content}
+                                </a>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={() => {
+                                    if (link.label === "Soulmates") {
+                                        fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                                    }
+                                }}
+                                className={className}
+                            >
+                                {content}
+                            </Link>
+                        );
+                    })}
 
                     {/* Notification Bell */}
                     {hasDna && (
@@ -192,22 +210,40 @@ export default function Navbar() {
                         exit={{ opacity: 0, y: -10 }}
                         className="absolute top-16 left-0 right-0 bg-[#080808] border-b border-white/25 p-6 flex flex-col gap-6 md:hidden z-[90] shadow-2xl"
                     >
-                        {navLinks.filter(link => link.show).map((link) => (
-                            <Link
-                                key={link.href}
-                                href={link.href}
-                                onClick={() => {
-                                    setIsMenuOpen(false);
-                                    if (link.label === "Soulmates") {
-                                        fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
-                                    }
-                                }}
-                                className={`mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`}
-                            >
-                                <link.icon className="h-4 w-4" />
-                                <span>{link.label}</span>
-                            </Link>
-                        ))}
+                        {navLinks.filter(link => link.show).map((link) => {
+                            const isExternal = link.href === "/login";
+                            const content = (
+                                <>
+                                    <link.icon className="h-4 w-4" />
+                                    <span>{link.label}</span>
+                                </>
+                            );
+                            const className = `mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`;
+
+                            if (isExternal) {
+                                return (
+                                    <a key={link.href} href={link.href} className={className}>
+                                        {content}
+                                    </a>
+                                );
+                            }
+
+                            return (
+                                <Link
+                                    key={link.href}
+                                    href={link.href}
+                                    onClick={() => {
+                                        setIsMenuOpen(false);
+                                        if (link.label === "Soulmates") {
+                                            fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
+                                        }
+                                    }}
+                                    className={className}
+                                >
+                                    {content}
+                                </Link>
+                            );
+                        })}
                     </motion.div>
                 )}
             </AnimatePresence>
