@@ -36,6 +36,7 @@ musicDNAmatch is a **web application** that:
 3. **Matches** users based on cosine similarity of their DNA vectors
 4. **Restores** existing profiles via a "Neural Handshake" (email-based portal) for return visitors
 5. **Facilitates** connections ("Bridges") between matched users with email confirmation workflows
+6. **Curates** official artist profiles ("The Syndicate") for creators to connect with their listener base
 
 ### Technology Stack
 
@@ -91,7 +92,8 @@ MusicDNA/
 │   │   │       ├── me/route.ts
 │   │   │       ├── save/route.ts
 │   │   │       ├── delete/route.ts
-│   │   │       └── check-email/route.ts
+│   │   │       ├── check-email/route.ts
+│   │   │       └── community/route.ts       # Fan cluster data
 │   │   ├── match/                      # Matching & signals
 │   │   │   ├── join/route.ts           # Express interest
 │   │   │   └── notifications/route.ts  # Get incoming signals
@@ -299,6 +301,7 @@ MusicDNA/
 Fetch verified community artists with DNA-based sorting.
 
 **Query Parameters**:
+- `registered`: Filter for official artists only (`true`/`false`)
 - `q`: Name search
 - `genre`: Style/tag filtering
 - `limit`: Pagination limit (default 10)
@@ -363,6 +366,17 @@ Fetch personalized artist recommendations based on user DNA and listening histor
 1. Uses `SpotifyPublicFetcher.getArtistTopTracks()` with market=US
 2. Returns formatted track objects (id, title, artist, thumbnail, url, preview_url)
 3. Limited to 5 tracks for focused DNA calculation
+
+#### `GET /api/dna/community`
+Fetch active DNA profiles for the "Sonic Pulse" fan cluster view.
+
+**Response**:
+```typescript
+{
+  success: boolean,
+  profiles: DNAProfile[]  // Partial profiles for cluster visualization
+}
+```
 
 ---
 
@@ -834,7 +848,7 @@ Fetch or send messages within a bridge conversation.
 **Key Features**:
 - Display 12-axis radar chart visualization
 - Show top 3 traits, coherence score
-- **DNA Refinement**: Personalized artist suggestions section using `MinimalArtistCard`.
+- **Tribe Discovery**: Integrated community search (moved from /artists) to find and sync with other signals using `UnifiedArtistCard`.
 - **Identity Labeling**: Clear "Authenticated As" and "Signal Identification" markers to distinguish ID from genres
 - Edit email, city, display name
 - Profile deletion option
@@ -859,16 +873,15 @@ Fetch or send messages within a bridge conversation.
 | `app/about/page.tsx` | About the platform |
 | `app/privacy/page.tsx` | Privacy policy |
 | `app/terms/page.tsx` | Terms of service |
-### `app/artists/page.tsx` — Musical Tribe Discovery
+### `app/artists/page.tsx` — The Syndicate (Artist Sanctuary)
 
-**Purpose**: Discover and connect with verified community artists.
+**Purpose**: Showcase for official artists and the larger fan ecosystem.
 
 **Key Features**:
-- **Tribe Feed**: Infinite scrolling (Load More) list of synchronized artists.
-- **Advanced Filtering**: Server-side search by name and genre-based exploration chips.
-- **DNA Matching**: Real-time relevance sorting based on user's sonic embedding.
-- **Verification Portal**: Integrated workflow for artists to link Spotify profiles and apply for verification.
-- **Neural Gate**: Requires existing DNA profile to view community matches.
+- **Official Artists**: Exclusively displays registered creators who have linked their DNA.
+- **Sonic Pulse**: "Cluster of Fans" visualization showing real DNA profiles from the community.
+- **Verification Portal**: Portal for new artists to link their Spotify/YouTube signals and join The Syndicate.
+- **Neural Gate**: Requires existing DNA profile to view the sanctuary.
 | `app/broadcast/page.tsx` | Broadcasting/visibility settings |
 | `app/youtube/page.tsx` | YouTube integration tutorial |
 | `app/bridge/[id]/page.tsx` | Bridge conversation & synthesis |

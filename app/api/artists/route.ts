@@ -13,9 +13,13 @@ export async function GET(req: Request) {
         const limit = parseInt(searchParams.get("limit") || "10");
         const offset = parseInt(searchParams.get("offset") || "0");
 
+        const registeredOnly = searchParams.get("registered") === "true";
+
         let dbQuery = supabase
             .from("artists")
             .select('*');
+
+        if (registeredOnly) dbQuery = dbQuery.not("user_id", "is", null);
 
         if (query) dbQuery = dbQuery.ilike("name", `%${query}%`);
         if (genre) {

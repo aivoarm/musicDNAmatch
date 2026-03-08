@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 import {
     Waves, Users, ArrowRight, Brain, User, CheckCircle2,
     ChevronRight, Activity, ExternalLink, Play, RefreshCw,
-    Mail, X, MapPin, Loader2, Sparkles
+    Mail, X, MapPin, Loader2, Sparkles, Search
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
-import MinimalArtistCard from "@/components/MinimalArtistCard";
+import UnifiedArtistCard from "@/components/UnifiedArtistCard";
 
 
 function AxisBar({ label, value, idx }: { label: string; value: number; idx: number }) {
@@ -102,8 +102,12 @@ export default function ProfilePage() {
     const [deleting, setDeleting] = useState(false);
     const [verifyPopup, setVerifyPopup] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
-    const [suggestions, setSuggestions] = useState<any[]>([]);
-    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+    const [tribeMatches, setTribeMatches] = useState<any[]>([]);
+    const [loadingTribe, setLoadingTribe] = useState(false);
+    const [localSearchQuery, setLocalSearchQuery] = useState("");
+    const [genreFilter, setGenreFilter] = useState("");
+    const [tribeOffset, setTribeOffset] = useState(0);
+    const [hasMoreTribe, setHasMoreTribe] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -144,22 +148,28 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (profile) {
-            fetchSuggestions();
+            const timer = setTimeout(() => {
+                fetchTribe(0);
+            }, 300);
+            return () => clearTimeout(timer);
         }
-    }, [profile]);
+    }, [profile, localSearchQuery, genreFilter]);
 
-    const fetchSuggestions = async () => {
-        setLoadingSuggestions(true);
+    const fetchTribe = async (offset = 0) => {
+        setLoadingTribe(true);
         try {
-            const r = await fetch("/api/artists/suggest");
-            const d = await r.json();
-            if (d.success) {
-                setSuggestions(d.artists || []);
+            const res = await fetch(`/api/artists?q=${encodeURIComponent(localSearchQuery)}&genre=${encodeURIComponent(genreFilter)}&offset=${offset}&limit=5`);
+            const data = await res.json();
+            if (data.success) {
+                if (offset === 0) setTribeMatches(data.artists || []);
+                else setTribeMatches(prev => [...prev, ...(data.artists || [])]);
+                setHasMoreTribe(data.hasMore);
+                setTribeOffset(offset);
             }
         } catch (e) {
-            console.error("Failed to fetch suggestions:", e);
+            console.error(e);
         } finally {
-            setLoadingSuggestions(false);
+            setLoadingTribe(false);
         }
     };
 
@@ -536,39 +546,80 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        {/* Artist Suggestions */}
-                        {(suggestions.length > 0 || loadingSuggestions) && (
-                            <div className="space-y-6">
-                                <div className="flex items-center justify-between px-2">
-                                    <div>
-                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
-                                            <Sparkles className="h-5 w-5 text-[#FF0000]" />
-                                            DNA <span className="text-[#FF0000]">Refinement</span>
-                                        </h3>
-                                        <p className="mono text-[9px] text-white/50 uppercase tracking-[0.2em]">Suggested signals to strengthen your profile</p>
-                                    </div>
-                                    <Link href="/artists" className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black border-b border-[#FF0000]/30 hover:border-[#FF0000] transition-all">
-                                        Explore More
-                                    </Link>
+                        {/* Community Discovery */}
+                        <div className="space-y-8 mt-12 pb-10">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
+                                <div>
+                                    <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                        <Users className="h-6 w-6 text-[#FF0000]" />
+                                        Musical <span className="text-[#FF0000]">Tribe</span>
+                                    </h3>
+                                    <p className="mono text-[9px] text-white/50 uppercase tracking-[0.2em]">Synchronized signals from the community</p>
                                 </div>
-                                {loadingSuggestions ? (
-                                    <div className="flex flex-col items-center justify-center p-12 glass rounded-2xl border border-white/5">
-                                        <Loader2 className="h-6 w-6 text-[#FF0000] animate-spin mb-3" />
-                                        <p className="mono text-[9px] text-white/40 uppercase tracking-widest">Scanning DNA Network...</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
-                                        {suggestions.map((artist, idx) => (
-                                            <MinimalArtistCard
+                                <div className="flex flex-wrap gap-2">
+                                    {["", "Electronic", "Jazz", "Hip-Hop", "Experimental"].map((g) => (
+                                        <button
+                                            key={g}
+                                            onClick={() => setGenreFilter(g)}
+                                            className={`px-4 py-2 rounded-xl border mono text-[8px] uppercase tracking-widest transition-all ${genreFilter === g
+                                                ? "bg-[#FF0000] border-[#FF0000] text-white"
+                                                : "bg-white/5 border-white/10 text-white/40 hover:text-white"
+                                                }`}
+                                        >
+                                            {g || "All"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Search Local */}
+                            <div className="relative group px-1">
+                                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF0000] transition-colors" />
+                                <input
+                                    type="text"
+                                    value={localSearchQuery}
+                                    onChange={(e) => setLocalSearchQuery(e.target.value)}
+                                    placeholder="SEARCH TRIBE MEMBERS..."
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-14 pr-4 text-sm font-bold italic uppercase text-white outline-none focus:border-[#FF0000]/40 transition-all placeholder:text-white/10"
+                                />
+                                {loadingTribe && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 h-4 w-4 text-[#FF0000] animate-spin" />}
+                            </div>
+
+                            <div className="flex flex-col gap-8">
+                                {tribeMatches.length > 0 ? (
+                                    <>
+                                        {tribeMatches.map((artist, idx) => (
+                                            <UnifiedArtistCard
                                                 key={artist.id}
                                                 artist={artist}
                                                 index={idx}
+                                                hasDna={true}
+                                                forceEmbed={true}
+                                                hideSync={true}
+                                                hideLabel={true}
                                             />
                                         ))}
+
+                                        {hasMoreTribe && (
+                                            <button
+                                                onClick={() => fetchTribe(tribeOffset + 5)}
+                                                disabled={loadingTribe}
+                                                className="w-full py-6 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center gap-3 hover:border-[#FF0000]/30 transition-all group"
+                                            >
+                                                {loadingTribe ? <Loader2 className="h-4 w-4 animate-spin text-[#FF0000]" /> : <Activity className="h-4 w-4 text-[#FF0000]" />}
+                                                <span className="text-white/60 font-black italic uppercase tracking-[0.2em] text-[10px]">
+                                                    Load More Signals
+                                                </span>
+                                            </button>
+                                        )}
+                                    </>
+                                ) : !loadingTribe && (
+                                    <div className="py-20 text-center glass rounded-3xl border border-white/5">
+                                        <p className="mono text-[10px] text-white/20 uppercase tracking-[0.4em]">No matching signals in your frequency</p>
                                     </div>
                                 )}
                             </div>
-                        )}
+                        </div>
                     </motion.div>
                 )}
             </div>

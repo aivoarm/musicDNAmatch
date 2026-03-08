@@ -24,11 +24,11 @@ export default function MusicalTribe() {
     const [selectedArtist, setSelectedArtist] = useState<any>(null);
     const [contactEmail, setContactEmail] = useState("");
     const [submitting, setSubmitting] = useState(false);
-    const [localSearchQuery, setLocalSearchQuery] = useState("");
-    const [genreFilter, setGenreFilter] = useState("");
     const [tribeOffset, setTribeOffset] = useState(0);
     const [hasMoreTribe, setHasMoreTribe] = useState(false);
     const [loadingTribe, setLoadingTribe] = useState(false);
+    const [fans, setFans] = useState<any[]>([]);
+    const [loadingFans, setLoadingFans] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -40,11 +40,9 @@ export default function MusicalTribe() {
     }, []);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchTribe(0);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [localSearchQuery, genreFilter]);
+        fetchTribe(0);
+        fetchFans();
+    }, []);
 
     const fetchProfile = async () => {
         try {
@@ -58,7 +56,7 @@ export default function MusicalTribe() {
     const fetchTribe = async (offset = 0) => {
         setLoadingTribe(true);
         try {
-            const res = await fetch(`/api/artists?q=${encodeURIComponent(localSearchQuery)}&genre=${encodeURIComponent(genreFilter)}&offset=${offset}&limit=5`);
+            const res = await fetch(`/api/artists?registered=true&offset=${offset}&limit=5`);
             const data = await res.json();
             if (data.success) {
                 if (offset === 0) setMatches(data.artists || []);
@@ -70,6 +68,21 @@ export default function MusicalTribe() {
             console.error(e);
         } finally {
             setLoadingTribe(false);
+        }
+    };
+
+    const fetchFans = async () => {
+        setLoadingFans(true);
+        try {
+            const res = await fetch("/api/dna/community");
+            const data = await res.json();
+            if (data.success) {
+                setFans(data.profiles || []);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoadingFans(false);
         }
     };
 
@@ -159,135 +172,144 @@ export default function MusicalTribe() {
 
             <div className="max-w-6xl mx-auto relative z-10">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20">
                     <div>
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-3 mb-4">
-                            <div className="bg-[#FF0000] p-2 rounded-lg">
-                                <Radio className="h-5 w-5 text-white animate-pulse" />
+                            <div className="bg-[#FF0000] p-1.5 rounded-lg">
+                                <Star className="h-4 w-4 text-white fill-white" />
                             </div>
-                            <span className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.5em] font-black underline underline-offset-8 decoration-white/20">Artist Ecosystem v1.2</span>
+                            <span className="mono text-[9px] text-[#FF0000] uppercase tracking-[0.4em] font-black">Official Artist Sanctuary</span>
                         </motion.div>
                         <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-6xl md:text-8xl font-black uppercase tracking-tighter italic leading-[0.8]">
-                            Musical <span className="text-[#FF0000]">Tribe</span>
+                            The <span className="text-[#FF0000]">Syndicate</span>
                         </motion.h1>
                         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-white/60 text-lg mt-6 max-w-xl font-medium italic">
-                            Bridging the gap between creator and listener. Find the artists whose DNA resonates within your unique frequency.
+                            Verified creators defining the sonic pulse of the protocol. Explore the architects behind the frequency.
                         </motion.p>
                     </div>
 
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} className="flex gap-4">
-                        <button onClick={() => setShowArtistModal(true)} className="group relative bg-white/5 border border-white/20 hover:border-[#FF0000]/50 transition-all p-5 rounded-3xl flex items-center gap-4 overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-[#FF0000]/0 to-[#FF0000]/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center group-hover:bg-[#FF0000] transition-colors">
-                                <Star className="h-6 w-6 text-white" />
-                            </div>
-                            <div className="text-left relative z-10">
-                                <p className="mono text-[10px] uppercase tracking-widest text-[#FF0000] font-black">Artist Portal</p>
-                                <p className="text-sm font-black uppercase text-white/90 italic">Register Your Signal</p>
-                            </div>
+                        <button onClick={() => setShowArtistModal(true)} className="group relative bg-[#FF0000] text-white font-black py-6 px-10 rounded-3xl uppercase tracking-widest text-[10px] italic flex items-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]">
+                            <Plus className="h-5 w-5" /> Join The SYNDICATE
                         </button>
                     </motion.div>
                 </div>
 
                 {!myDna ? (
-                    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass border border-white/10 rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden">
+                    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} className="glass border border-white/10 rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden mb-20">
                         <div className="absolute top-0 right-0 p-10 opacity-5">
                             <Users className="h-64 w-64" />
                         </div>
                         <div className="relative z-10 max-w-lg mx-auto">
                             <Brain className="h-20 w-20 text-[#FF0000] mx-auto mb-8 animate-bounce" />
-                            <h2 className="text-4xl font-black uppercase italic mb-6">Neural Identity Required</h2>
-                            <p className="text-white/60 text-lg mb-10 font-medium">To join a tribe, we first need to extract your sonic signature. Scan your music library to begin the synchronization.</p>
-                            <Link href="/" className="inline-flex items-center gap-3 bg-[#FF0000] text-white font-black py-6 px-12 rounded-3xl text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]">
-                                <Zap className="h-5 w-5 fill-white" /> Start Neural Scan
+                            <h2 className="text-4xl font-black uppercase italic mb-6 text-white">Neural Uplink Offline</h2>
+                            <p className="text-white/60 text-lg mb-10 font-medium italic">Identification required. Connect your musical DNA to access the inner santuary of the syndicate.</p>
+                            <Link href="/" className="inline-flex items-center gap-3 bg-[#FF0000] text-white font-black py-6 px-12 rounded-[2rem] text-xs uppercase tracking-widest hover:scale-105 transition-all">
+                                <Zap className="h-5 w-5 fill-white" /> Establish Connection
                             </Link>
                         </div>
                     </motion.div>
                 ) : (
-                    <>
-                        {/* Filters & Search */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="max-w-4xl mx-auto mb-16 space-y-8"
-                        >
-                            {/* Search Input */}
-                            <div className="relative group">
-                                <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-[#FF0000] transition-colors" />
-                                <input
-                                    type="text"
-                                    value={localSearchQuery}
-                                    onChange={(e) => setLocalSearchQuery(e.target.value)}
-                                    placeholder="Search Tribe Members..."
-                                    className="w-full bg-white/5 border border-white/10 rounded-3xl py-6 pl-16 pr-8 text-xl font-bold italic uppercase text-white outline-none focus:border-[#FF0000]/40 transition-all placeholder:text-white/10"
-                                />
-                                {loadingTribe && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 h-5 w-5 text-[#FF0000] animate-spin" />}
+                    <div className="space-y-32">
+                        {/* Registered Artists List */}
+                        <section>
+                            <div className="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
+                                <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">Synchronized <span className="text-[#FF0000]">Creators</span></h2>
+                                <div className="mono text-[10px] text-white/40 uppercase tracking-widest flex items-center gap-2">
+                                    <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" /> Global Verification Protocol Active
+                                </div>
                             </div>
 
-                            {/* Genre Chips */}
-                            <div className="flex flex-wrap gap-3 justify-center">
-                                {["", "Electronic", "Techno", "House", "Ambient", "Jazz", "Hip-Hop", "Rock", "Experimental", "Folk"].map((g) => (
-                                    <button
-                                        key={g}
-                                        onClick={() => setGenreFilter(g)}
-                                        className={`px-6 py-3 rounded-2xl border font-black italic text-[10px] uppercase tracking-widest transition-all ${genreFilter === g
-                                            ? "bg-[#FF0000] border-[#FF0000] text-white shadow-[0_0_20px_rgba(255,0,0,0.3)]"
-                                            : "bg-white/5 border-white/10 text-white/40 hover:border-white/20 hover:text-white"
-                                            }`}
-                                    >
-                                        {g || "All Signals"}
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
-
-                        <div className="flex flex-col gap-12 max-w-4xl mx-auto">
-                            {matches.length > 0 ? (
-                                <>
-                                    {matches.map((artist, idx) => (
-                                        <UnifiedArtistCard key={artist.id} artist={artist} index={idx} hasDna={!!myDna} forceEmbed={true} hideSync={true} hideLabel={true} />
-                                    ))}
-
-                                    {/* Pagination */}
-                                    {hasMoreTribe && (
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => fetchTribe(tribeOffset + 5)}
-                                            disabled={loadingTribe}
-                                            className="w-full h-24 rounded-[2rem] border border-white/10 bg-white/5 flex items-center justify-center gap-4 hover:border-[#FF0000]/30 hover:bg-[#FF0000]/5 group transition-all"
-                                        >
-                                            <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-[#FF0000] transition-colors">
-                                                {loadingTribe ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
-                                            </div>
-                                            <span className="text-white font-black italic uppercase tracking-[0.2em] text-[12px]">
-                                                {loadingTribe ? "Synchronizing..." : "Load More Signals"}
-                                            </span>
-                                        </motion.button>
-                                    )}
-                                </>
-                            ) : !loadingTribe && (
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    className="p-24 text-center border border-white/5 bg-white/2 rounded-[4rem] italic"
-                                >
-                                    <div className="h-16 w-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 opacity-20">
-                                        <Activity className="h-8 w-8" />
+                            <div className="flex flex-col gap-12 max-w-4xl">
+                                {loadingTribe ? (
+                                    <div className="py-20 flex flex-col items-center justify-center">
+                                        <Loader2 className="h-10 w-10 text-[#FF0000] animate-spin mb-4" />
+                                        <p className="mono text-[10px] text-white/30 uppercase tracking-[0.5em]">Synchronizing Official Profiles...</p>
                                     </div>
-                                    <p className="text-white/20 font-black uppercase tracking-[0.3em] text-[12px]">No Synchronized Signals Found</p>
-                                    {(localSearchQuery || genreFilter) && (
-                                        <button
-                                            onClick={() => { setLocalSearchQuery(""); setGenreFilter(""); }}
-                                            className="mt-6 text-[#FF0000] font-black italic text-[10px] uppercase tracking-widest hover:underline"
+                                ) : matches.length > 0 ? (
+                                    <>
+                                        {matches.map((artist, idx) => (
+                                            <UnifiedArtistCard key={artist.id} artist={artist} index={idx} hasDna={true} forceEmbed={true} hideSync={true} />
+                                        ))}
+
+                                        {hasMoreTribe && (
+                                            <button
+                                                onClick={() => fetchTribe(tribeOffset + 5)}
+                                                className="w-full h-24 rounded-[2rem] border border-white/10 bg-white/5 flex items-center justify-center gap-4 hover:border-[#FF0000]/30 transition-all group"
+                                            >
+                                                <div className="h-10 w-10 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-[#FF0000] transition-colors">
+                                                    <Plus className="h-5 w-5" />
+                                                </div>
+                                                <span className="text-white font-black italic uppercase tracking-[0.2em] text-[12px]">View More Architects</span>
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="p-24 text-center glass border border-white/10 rounded-[3rem]">
+                                        <p className="text-white/40 font-black uppercase tracking-[0.5em] text-[12px]">The Syndicate is currently assembling...</p>
+                                        <button onClick={() => setShowArtistModal(true)} className="mt-8 text-[#FF0000] font-black italic uppercase text-xs hover:underline underline-offset-8">Be the first to register →</button>
+                                    </div>
+                                )}
+                            </div>
+                        </section>
+
+                        {/* Cluster of Fans */}
+                        <section className="relative">
+                            <div className="absolute -top-20 -right-20 pointer-events-none opacity-5">
+                                <Users className="h-96 w-96 text-blue-500" />
+                            </div>
+
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16 px-4">
+                                <div className="max-w-xl">
+                                    <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-white leading-none">Sonic <span className="text-blue-500">Pulse</span></h2>
+                                    <p className="text-white/40 text-sm font-medium italic mt-4">The collective subconscious. A cluster of unique frequencies harmonizing within the syndicate ecosystem.</p>
+                                </div>
+                                <div className="mono text-[10px] text-blue-500/60 uppercase tracking-widest font-black border border-blue-500/20 px-6 py-3 rounded-full bg-blue-500/5">
+                                    240 Neural Identities Active
+                                </div>
+                            </div>
+
+                            <div className="glass rounded-[4rem] border border-white/10 p-12 md:p-20 relative overflow-hidden">
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 md:gap-10">
+                                    {(fans.length > 0 ? fans : [...Array(24)]).map((fan, i) => (
+                                        <motion.div
+                                            key={fan?.id || i}
+                                            initial={{ opacity: 0, scale: 0.5 }}
+                                            whileInView={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: i * 0.02, type: "spring", stiffness: 100 }}
+                                            className="group relative"
                                         >
-                                            Reset Filters
-                                        </button>
-                                    )}
-                                </motion.div>
-                            )}
-                        </div>
-                    </>
+                                            <div className="aspect-square rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden transition-all group-hover:border-blue-500/50 group-hover:scale-110 cursor-pointer">
+                                                <div className="h-full w-full bg-gradient-to-tr from-white/5 to-white/10 group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-all flex items-center justify-center overflow-hidden">
+                                                    {fan?.metadata?.user_image ? (
+                                                        <img src={fan.metadata.user_image} className="h-full w-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
+                                                    ) : (
+                                                        <Fingerprint className="h-8 w-8 text-white/10 group-hover:text-blue-400 group-hover:animate-pulse transition-all" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white px-3 py-1.5 rounded-lg mono text-[8px] uppercase tracking-widest border border-blue-500/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 shadow-2xl">
+                                                {fan?.display_name || `NEURAL_SIGNAL_${i}`} • {((fan?.coherence_index || 0.8) * 100).toFixed(0)}%
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                                {/* Particle Effects Overlay */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                    <div className="absolute top-1/4 left-1/2 h-1 w-1 bg-blue-500 rounded-full animate-ping opacity-20" />
+                                    <div className="absolute bottom-1/3 left-1/4 h-1 w-1 bg-purple-500 rounded-full animate-ping opacity-20" style={{ animationDelay: '1s' }} />
+                                    <div className="absolute top-1/2 right-1/4 h-1 w-1 bg-blue-400 rounded-full animate-ping opacity-20" style={{ animationDelay: '2s' }} />
+                                </div>
+                            </div>
+
+                            <div className="mt-12 text-center">
+                                <Link href="/soulmates" className="mono text-[10px] text-white/30 uppercase tracking-[0.5em] hover:text-white transition-all">
+                                    Dive into the collective collective frequency →
+                                </Link>
+                            </div>
+                        </section>
+                    </div>
                 )}
 
                 {/* Tribe Community CTA */}
