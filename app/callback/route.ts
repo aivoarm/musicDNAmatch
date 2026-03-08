@@ -1,4 +1,5 @@
 import { handleAuth } from "@workos-inc/authkit-nextjs";
+export const runtime = "edge";
 
 /**
  * GET /callback

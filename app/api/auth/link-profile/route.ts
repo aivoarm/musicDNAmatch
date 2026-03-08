@@ -1,89 +1,81 @@
-export const runtime = "edge";
+// app/api/auth/link-profile/route.ts
+export const runtime = "nodejs";
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 
-/**
- * POST /api/auth/link-profile
- * 
- * Links a guest DNA profile to a verified auth user.
- * Called after successful WorkOS AuthKit verification.
- * 
- * Body: { authUserId: string, email: string }
- * Returns: { success: boolean, guestId?: string }
- */
+interface LinkProfileRequest {
+    authUserId: string;
+    email: string;
+    guestId?: string;
+}
+
 export async function POST(req: Request) {
     try {
-        const { authUserId, email, guestId } = await req.json() as any;
+        const { authUserId, email, guestId } = await req.json() as LinkProfileRequest;
 
         if (!authUserId || !email) {
-            return NextResponse.json(
-                { error: "authUserId and email are required" },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        const cleanEmail = email.trim().toLowerCase();
+        const storageEmail = email.trim().toUpperCase();
 
-        // 1. Try to find existing profile by email
-        const { data: profileByEmail } = await supabase
+        // 1. Check if a profile already exists for this verified email
+        const { data: profileByEmail } = await supabaseAdmin
             .from("dna_profiles")
-            .select("id, user_id, auth_user_id, email")
-            .ilike("email", cleanEmail)
+            .select("id, user_id, auth_user_id")
+            .ilike("email", storageEmail)
             .maybeSingle();
 
         if (profileByEmail) {
-            // Link the auth user to this profile if not already linked
-            if (!profileByEmail.auth_user_id) {
-                await supabase
-                    .from("dna_profiles")
-                    .update({ auth_user_id: authUserId })
-                    .eq("id", profileByEmail.id);
-            }
+            // Update existing user with new WorkOS ID and activate broadcasting
+            const { data: updated, error: updateError } = await supabaseAdmin
+                .from("dna_profiles")
+                .update({
+                    auth_user_id: authUserId,
+                    email: storageEmail,
+                    broadcasting: true
+                })
+                .eq("id", profileByEmail.id)
+                .select()
+                .maybeSingle();
+
+            if (updateError) throw updateError;
+            if (!updated) throw new Error("Update failed — no data returned");
 
             return NextResponse.json({
                 success: true,
-                guestId: profileByEmail.user_id,
-                linked: true,
+                guestId: updated.user_id,
+                linked: true
             });
         }
 
-        // 2. No profile by email — try finding by guestId (new verification flow)
+        // 2. If no email match, link current guestId (newly verified user)
         if (guestId) {
-            const { data: profileByGuest } = await supabase
+            const { data: profileByGuest, error: guestLinkError } = await supabaseAdmin
                 .from("dna_profiles")
-                .select("id, user_id, auth_user_id, email")
+                .update({
+                    email: storageEmail,
+                    auth_user_id: authUserId,
+                    broadcasting: true
+                })
                 .eq("user_id", guestId)
+                .select()
                 .maybeSingle();
 
-            if (profileByGuest) {
-                // Link this anonymous profile to the verified email and auth_user_id
-                await supabase
-                    .from("dna_profiles")
-                    .update({
-                        email: cleanEmail,
-                        auth_user_id: authUserId
-                    })
-                    .eq("id", profileByGuest.id);
+            if (guestLinkError) throw guestLinkError;
 
+            if (profileByGuest) {
                 return NextResponse.json({
                     success: true,
                     guestId: profileByGuest.user_id,
-                    linked: true,
+                    linked: true
                 });
             }
         }
 
-        // 3. Still no profile found — user needs to create one OR they verified an email that has no profile yet
-        return NextResponse.json({
-            success: true,
-            guestId: guestId || null,
-            linked: false,
-        });
+        return NextResponse.json({ success: true, linked: false });
     } catch (error: any) {
-        console.error("Link Profile Error:", error);
-        return NextResponse.json(
-            { error: error.message || "Failed to link profile" },
-            { status: 500 }
-        );
+        console.error("Link Profile API Error:", error);
+        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
     }
 }

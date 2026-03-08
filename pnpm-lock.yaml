@@ -17,6 +17,9 @@ importers:
       '@workos-inc/authkit-nextjs':
         specifier: ^2.15.0
         version: 2.15.0(next@16.1.6(@babel/core@7.29.0)(@playwright/test@1.58.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@workos-inc/node':
+        specifier: ^8.8.0
+        version: 8.8.0
       clsx:
         specifier: latest
         version: 2.1.1

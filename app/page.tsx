@@ -1110,31 +1110,34 @@ function HomeContent() {
     const searchParams = useSearchParams();
 
     // ── Email Verify (WorkOS Magic Auth) ────────────────────────────────
-    const handleEmailVerify = async () => {
+    const handleEmailVerify = async (forceConfirm = false) => {
         if (!email.trim() || !email.includes("@")) return;
         setCheckingEmail(true);
         setEmailVerifyError(null);
 
         try {
-            // First check for email clash
-            const checkRes = await fetch("/api/dna/profile/check-email", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const checkData = await checkRes.json() as any;
+            if (!forceConfirm) {
+                // Check for email clash first
+                const checkRes = await fetch("/api/dna/profile/check-email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email }),
+                });
+                const checkData = await checkRes.json() as any;
 
-            if (checkData.exists) {
-                setClash(checkData.profile);
-                setCheckingEmail(false);
-                return;
+                if (checkData.exists) {
+                    setClash(checkData.profile);
+                    setCheckingEmail(false);
+                    return;
+                }
             }
 
-            // Save the DNA profile first (without email — it gets linked after verification)
+            // Save DNA now WITH the email — verification will confirm it momentarily
+            // If user abandons, /api/dna/generate already handles >24h cleanup
             const payload = {
                 genres,
                 displayName,
-                email: "", // Don't attach email until verified
+                email,  // ← include email now, link-profile will also stamp it after WorkOS confirms
                 city,
                 audioFeatures: fetchedSources?.audioFeatures || [],
                 youtubeVideos: fetchedSources?.youtubeVideos || [],
@@ -1157,7 +1160,7 @@ function HomeContent() {
                 return;
             }
 
-            // Redirect to WorkOS hosted Magic Auth with email hint
+            // Redirect to WorkOS
             window.location.href = `/login?email=${encodeURIComponent(email)}`;
         } catch (e: any) {
             setEmailVerifyError(e.message || "Network error");
@@ -2420,7 +2423,7 @@ function HomeContent() {
                                                         <p className="text-red-400 mono text-[10px] uppercase tracking-widest">{emailVerifyError}</p>
                                                     )}
                                                     <button
-                                                        onClick={handleEmailVerify}
+                                                        onClick={() => handleEmailVerify()}
                                                         disabled={checkingEmail || !email.trim() || !email.includes("@")}
                                                         className="w-full sm:w-auto px-16 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-6 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_40px_rgba(255,0,0,0.3)] mt-2"
                                                     >
@@ -2434,25 +2437,41 @@ function HomeContent() {
                                                 <div className="h-20 w-20 rounded-full bg-[#FF0000]/20 flex items-center justify-center mx-auto mb-8">
                                                     <AlertCircle className="h-10 w-10 text-[#FF0000]" />
                                                 </div>
-                                                <h3 className="text-3xl font-black text-white italic mb-3">Found your match!</h3>
+                                                <h3 className="text-3xl font-black text-white italic mb-3">
+                                                    {clash.source === "workos" ? "Account Found" : "Found your match!"}
+                                                </h3>
                                                 <p className="text-white/80 text-sm mb-10 leading-relaxed font-bold">
-                                                    The email <span className="font-bold text-[#FF0000]">{email}</span> is already tied to <span className="text-white font-bold">{clash.display_name}</span>.<br /><br />
-                                                    Overwrite that DNA profile with your new analysis?
+                                                    {clash.source === "workos" ? (
+                                                        <>The email <span className="font-bold text-[#FF0000]">{email}</span> is already registered with WorkOS. Proceed to login & link your DNA?</>
+                                                    ) : (
+                                                        <>Found your existing DNA profile linked to <span className="font-bold text-[#FF0000]">{email}</span>. Would you like to log in to it, or overwrite it with this new analysis?</>
+                                                    )}
                                                 </p>
 
                                                 <div className="flex flex-col gap-3">
-                                                    <button
-                                                        onClick={() => handleFinalSubmit(true)}
-                                                        className="w-full bg-[#FF0000] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
-                                                    >
-                                                        Yes, Overwrite
-                                                    </button>
-                                                    <button
-                                                        onClick={handleResumeExisting}
-                                                        className="w-full bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
-                                                    >
-                                                        Login to Profile
-                                                    </button>
+                                                    {clash.source === "workos" ? (
+                                                        <button
+                                                            onClick={() => handleEmailVerify(true)}
+                                                            className="w-full bg-[#FF0000] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
+                                                        >
+                                                            Proceed to Login
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleFinalSubmit(true)}
+                                                                className="w-full bg-[#FF0000] text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(255,0,0,0.3)]"
+                                                            >
+                                                                Yes, Overwrite
+                                                            </button>
+                                                            <button
+                                                                onClick={handleResumeExisting}
+                                                                className="w-full bg-white text-black py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
+                                                            >
+                                                                Login to Profile
+                                                            </button>
+                                                        </>
+                                                    )}
                                                     <button
                                                         onClick={() => { setClash(null); setEmail(""); }}
                                                         className="w-full bg-white/5 border border-white/10 text-white/50 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"

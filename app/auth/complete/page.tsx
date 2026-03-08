@@ -30,45 +30,62 @@ export default function AuthCompletePage() {
             setMessage("Linking your DNA profile...");
 
             try {
-                const guestId = document.cookie.split(";").find(c => c.trim().startsWith("guest_id="))?.split("=")[1];
+                // Robust cookie extraction
+                const cookies = document.cookie.split('; ').reduce((acc: any, curr) => {
+                    const [key, value] = curr.split('=');
+                    acc[key] = value;
+                    return acc;
+                }, {});
 
-                // Call our API to link the guest profile to the verified email
+                const guestId = cookies['guest_id'];
+
+                // 1. Standardize to UPPERCASE to match DNA engine and DB triggers
+                const storageEmail = user.email!.trim().toUpperCase();
+
+                console.log("link-profile request:", { authUserId: user.id, email: storageEmail, guestId });
+
                 const res = await fetch("/api/auth/link-profile", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         authUserId: user.id,
-                        email: user.email,
+                        email: storageEmail,
                         guestId: guestId,
                     }),
                 });
+
                 const data = await res.json() as any;
 
-                if (data.success && data.guestId) {
-                    document.cookie = `guest_id=${data.guestId};max-age=31536000;path=/`;
-                    document.cookie = `has_dna=true;max-age=31536000;path=/`;
+                console.log("link-profile response:", { status: res.status, ok: res.ok, data });
+
+                if (!res.ok) throw new Error(data.error || "Failed to link identity");
+
+                if (data.success) {
+                    // Only update guest_id cookie if the server returned one
+                    if (data.guestId) {
+                        document.cookie = `guest_id=${data.guestId};max-age=31536000;path=/;SameSite=Lax`;
+                        document.cookie = `has_dna=true;max-age=31536000;path=/;SameSite=Lax`;
+                    }
+
+                    // Always store normalized email for UI persistence
+                    document.cookie = `auth_email=${storageEmail};max-age=31536000;path=/;SameSite=Lax`;
+
+                    setMessage("Identity verified! Redirecting...");
+                    setStatus("success");
+
+                    setTimeout(() => {
+                        window.location.href = "/profile?auth=success";
+                    }, 1000);
+
+                    return;
                 }
 
-                // Always set auth_email cookie on successful verification
-                document.cookie = `auth_email=${user.email!.toLowerCase()};max-age=31536000;path=/`;
+                throw new Error(data.error || "Link failed — no success from server");
 
-                setMessage("Identity verified! Redirecting to your profile...");
-                setStatus("success");
-
-                setTimeout(() => {
-                    window.location.href = "/profile?auth=success";
-                }, 1500);
             } catch (err: any) {
                 console.error("Link profile error:", err);
-                // Still redirect — verification succeeded
-                document.cookie = `auth_email=${user.email!.toLowerCase()};max-age=31536000;path=/`;
-
-                setMessage("Verified! Setting up your signal...");
-                setStatus("success");
-
-                setTimeout(() => {
-                    window.location.href = "/?auth=verified&email=" + encodeURIComponent(user.email!);
-                }, 1500);
+                setMessage(`Link Error: ${err.message}`);
+                setStatus("error");
             }
         };
 

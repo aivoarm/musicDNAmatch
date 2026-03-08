@@ -1,3 +1,4 @@
+export const runtime = "experimental-edge";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { authkitMiddleware } from "@workos-inc/authkit-nextjs";
@@ -14,7 +15,7 @@ try {
     console.error("WorkOS Middleware initialization error:", e);
 }
 
-export async function proxy(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Fast-path for static assets or internal Next.js requests

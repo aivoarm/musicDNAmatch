@@ -711,38 +711,39 @@ export default function SoulmatesPage() {
                                         </div>
                                     </div>
                                     <form onSubmit={handleInterest} className="space-y-4">
-                                        {!isVerified ? (
-                                            <div className="bg-[#FF0000]/5 border border-[#FF0000]/20 rounded-xl p-5 text-center">
-                                                <p className="mono text-[9px] text-white/70 uppercase tracking-widest leading-relaxed mb-4">
-                                                    Authentication Required to Send Signals
-                                                </p>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => window.location.href = `/login?email=${encodeURIComponent(email)}`}
-                                                    className="w-full bg-white text-black font-black py-3 rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-all text-[10px] uppercase tracking-widest"
-                                                >
-                                                    <Mail className="h-3.5 w-3.5" /> Verify Identity
-                                                </button>
+                                        <div>
+                                            <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-1.5 ml-1">
+                                                Your Signal Identity {isVerified ? "(Verified)" : "(Unverified)"}
+                                            </label>
+                                            <div className="relative">
+                                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/60" />
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={e => !isVerified && setEmail(e.target.value)}
+                                                    readOnly={isVerified}
+                                                    placeholder="your@email.com"
+                                                    required
+                                                    className={`w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 focus:outline-none transition-all mono text-xs text-white ${isVerified ? "opacity-60 cursor-not-allowed" : "focus:border-[#FF0000]/40"}`}
+                                                />
                                             </div>
-                                        ) : (
-                                            <>
-                                                <div>
-                                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-1.5 ml-1">Your Email (Verified)</label>
-                                                    <div className="relative">
-                                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/60" />
-                                                        <input type="email" readOnly value={email}
-                                                            className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 focus:outline-none transition-all mono text-xs text-white/60 cursor-not-allowed" />
-                                                    </div>
-                                                </div>
-                                                <p className="mono text-[8px] text-white/50 leading-relaxed font-bold">
-                                                    Your email will only be shared if the interest is mutual. A DNA Bridge will be created automatically.
-                                                </p>
-                                                <button type="submit" disabled={submitting}
-                                                    className="w-full bg-[#FF0000] text-white font-black py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
-                                                    {submitting ? <Activity className="h-3.5 w-3.5 animate-spin" /> : <>Send Signal <ChevronRight className="h-3.5 w-3.5" /></>}
-                                                </button>
-                                            </>
+                                        </div>
+
+                                        <p className="mono text-[8px] text-white/50 leading-relaxed font-bold">
+                                            Your email will only be shared if the interest is mutual. A DNA Bridge will be created automatically.
+                                        </p>
+
+                                        {!isVerified && (
+                                            <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-lg flex items-center gap-3">
+                                                <Mail className="h-4 w-4 text-[#FF0000]" />
+                                                <p className="text-[8px] text-white italic font-bold">Verify later via WorkOS to prevent spoofing.</p>
+                                            </div>
                                         )}
+
+                                        <button type="submit" disabled={submitting || !email.includes("@")}
+                                            className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-xs uppercase tracking-widest disabled:opacity-50 hover:scale-[1.02] active:scale-95 shadow-[0_10px_30px_rgba(255,0,0,0.2)]">
+                                            {submitting ? <Activity className="h-4 w-4 animate-spin" /> : <>Send Signal <ChevronRight className="h-3.5 w-3.5" /></>}
+                                        </button>
                                     </form>
                                 </>
                             )}

@@ -1,4 +1,5 @@
 import { getSignInUrl } from "@workos-inc/authkit-nextjs";
+export const runtime = "edge";
 import { redirect } from "next/navigation";
 
 /**

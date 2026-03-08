@@ -14,6 +14,7 @@
     "@supabase/supabase-js": "latest",
     "@tailwindcss/postcss": "^4.2.1",
     "@workos-inc/authkit-nextjs": "^2.15.0",
+    "@workos-inc/node": "^8.8.0",
     "clsx": "latest",
     "crypto-js": "^4.2.0",
     "framer-motion": "latest",

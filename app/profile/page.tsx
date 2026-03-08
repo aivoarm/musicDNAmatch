@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
 import UnifiedArtistCard from "@/components/UnifiedArtistCard";
+import ArtistPulseSearch from "@/components/ArtistPulseSearch";
 
 
 function AxisBar({ label, value, idx }: { label: string; value: number; idx: number }) {
@@ -119,13 +120,6 @@ export default function ProfilePage() {
                     setProfile(d.dna);
                     if (d.dna.email) setEmail(d.dna.email);
                     if (d.dna.city) setCity(d.dna.city);
-
-                    // Show verification popup for existing users without verified email
-                    // Check if auth_email cookie exists (means they've verified via magic link)
-                    const authEmail = document.cookie.split(";").find(c => c.trim().startsWith("auth_email="));
-                    if (d.dna.email && !authEmail) {
-                        setVerifyPopup(true);
-                    }
                 } else {
                     router.replace("/");
                 }
@@ -148,6 +142,15 @@ export default function ProfilePage() {
 
     useEffect(() => {
         if (profile) {
+            // Pre-select genre from top_genres if available
+            if (!genreFilter && profile.top_genres && profile.top_genres.length > 0) {
+                // Find a genre that is in our predefined UI list if possible, or just take the first one
+                const uiGenres = ["Electronic", "Jazz", "Hip-Hop", "Experimental"];
+                const match = profile.top_genres.find((g: string) => uiGenres.includes(g));
+                if (match) setGenreFilter(match);
+                else setGenreFilter(profile.top_genres[0]);
+            }
+
             const timer = setTimeout(() => {
                 fetchTribe(0);
             }, 300);
@@ -546,8 +549,8 @@ export default function ProfilePage() {
                             </div>
                         )}
 
-                        {/* Community Discovery */}
-                        <div className="space-y-8 mt-12 pb-10">
+                        {/* Community Discovery / Tribe */}
+                        <div className="space-y-8 mt-12">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
                                 <div>
                                     <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
@@ -572,7 +575,6 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Search Local */}
                             <div className="relative group px-1">
                                 <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#FF0000] transition-colors" />
                                 <input
@@ -585,7 +587,7 @@ export default function ProfilePage() {
                                 {loadingTribe && <Loader2 className="absolute right-6 top-1/2 -translate-y-1/2 h-4 w-4 text-[#FF0000] animate-spin" />}
                             </div>
 
-                            <div className="flex flex-col gap-8">
+                            <div className="flex flex-col gap-6">
                                 {tribeMatches.length > 0 ? (
                                     <>
                                         {tribeMatches.map((artist, idx) => (
@@ -618,6 +620,34 @@ export default function ProfilePage() {
                                         <p className="mono text-[10px] text-white/20 uppercase tracking-[0.4em]">No matching signals in your frequency</p>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* DNA Refinement Section */}
+                        <div className="space-y-8 mt-24 pb-10 border-t border-white/5 pt-12">
+                            <div className="px-2">
+                                <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                    <RefreshCw className="h-6 w-6 text-[#FF0000]" />
+                                    Refine Your <span className="text-[#FF0000]">DNA</span>
+                                </h3>
+                                <p className="mono text-[9px] text-white/50 uppercase tracking-[0.2em]">Sync more artists to sharpen your sonic profile</p>
+                            </div>
+
+                            {/* Multi-Search Refinement */}
+                            <div className="glass rounded-[2.5rem] p-8 md:p-12 border border-white/10 relative overflow-hidden bg-gradient-to-br from-white/[0.02] to-transparent">
+                                <div className="max-w-xl mx-auto text-center space-y-6">
+                                    <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-6">
+                                        <RefreshCw className="h-8 w-8 text-[#FF0000] opacity-50" />
+                                    </div>
+                                    <h4 className="text-white font-black text-lg uppercase tracking-tight italic">Evolve Your Signal</h4>
+                                    <p className="text-white/60 text-xs font-bold leading-relaxed">
+                                        Your Musical DNA is a living thing. Synchronize new artists to adjust your axis alignment and discovery matches that were previously out of phase.
+                                    </p>
+
+                                    <div className="pt-4">
+                                        <ArtistPulseSearch />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </motion.div>

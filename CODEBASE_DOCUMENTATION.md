@@ -59,6 +59,31 @@ musicDNAmatch is a **web application** that:
 
 ---
 
+## Dual-Hosting & Cloudflare Backup Strategy
+
+To ensure high availability, musicDNAmatch uses a **Vercel-Primary, Cloudflare-Backup** architecture.
+
+### 1. Primary: Vercel (Node.js/Edge Hybrid)
+- **Deployment**: Automatic via GitHub integration on `main` branch.
+- **Environment**: Standard Next.js environment.
+- **URL**: `dna.armanayva.com`
+
+### 2. Backup: Cloudflare Pages (Edge-Only)
+- **Deployment**: Triggered via `pnpm deploy:cf` or automated GitHub Action.
+- **Environment**: V8 Edge Runtime via `@opennextjs/cloudflare`.
+- **Constraint**: All routes must be compatible with **Edge Runtime**.
+- **Constraint**: Middleware must use the `middleware.ts` convention with `experimental-edge`.
+- **URL**: `musicdnamatch.pages.dev`
+
+### Edge Runtime Requirements
+All dynamic API routes and pages **MUST** export:
+```typescript
+export const runtime = 'edge';
+```
+Node-specific modules (like `crypto`) must use web-standard equivalents (`globalThis.crypto`).
+
+---
+
 ## Directory Structure
 
 ```
