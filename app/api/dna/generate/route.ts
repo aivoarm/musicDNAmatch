@@ -125,7 +125,7 @@ export async function POST(req: Request) {
             });
         }
 
-        const { data: existing } = await supabase.from('dna_profiles').select('email, city').eq('user_id', userId).single();
+        const { data: existing } = await supabase.from('dna_profiles').select('email, city, auth_user_id').eq('user_id', userId).maybeSingle();
         let uppercasedEmail = (email && typeof email === 'string' && email.trim() !== "") ? email.trim().toUpperCase() : existing?.email;
         let uppercasedCity = (city && typeof city === 'string' && city.trim() !== "") ? city.trim().toUpperCase() : existing?.city;
 
@@ -145,6 +145,7 @@ export async function POST(req: Request) {
                 email: uppercasedEmail,
                 city: uppercasedCity,
                 broadcasting: !!uppercasedEmail,
+                auth_user_id: existing?.auth_user_id // Preserve the WorkOS identity link
             }, { onConflict: "user_id" })
             .select()
             .single();

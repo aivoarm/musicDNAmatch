@@ -53,13 +53,28 @@ export async function POST() {
         // Use the WorkOS ID from the profile record
         const workosIdToDelete = profile.auth_user_id;
 
-        if (workosIdToDelete && emailToMatch !== adminEmail) {
-            try {
-                await workos.userManagement.deleteUser(workosIdToDelete);
-                console.log(`WorkOS user ${workosIdToDelete} deleted.`);
-            } catch (workosErr: any) {
-                console.error("Failed to delete WorkOS user:", workosErr);
-                // We continue clearing local state even if WorkOS deletion fails
+        if (emailToMatch !== adminEmail) {
+            if (workosIdToDelete) {
+                try {
+                    await workos.userManagement.deleteUser(workosIdToDelete);
+                    console.log(`WorkOS user ${workosIdToDelete} deleted.`);
+                } catch (workosErr: any) {
+                    console.error("Failed to delete WorkOS user:", workosErr);
+                }
+            }
+
+            if (emailToMatch) {
+                try {
+                    const { data: users } = await workos.userManagement.listUsers({ email: profile.email });
+                    for (const u of (users || [])) {
+                        if (u.id !== workosIdToDelete) {
+                            await workos.userManagement.deleteUser(u.id);
+                            console.log(`WorkOS user ${u.id} deleted via email search (${profile.email}).`);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Email-based WorkOS deletion failed", err);
+                }
             }
         }
 

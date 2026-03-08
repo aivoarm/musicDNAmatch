@@ -12,6 +12,7 @@ interface LinkProfileRequest {
 export async function POST(req: Request) {
     try {
         const { authUserId, email, guestId } = await req.json() as LinkProfileRequest;
+        console.log("Link Profile Request:", { authUserId, email, guestId });
 
         if (!authUserId || !email) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -19,63 +20,88 @@ export async function POST(req: Request) {
 
         const storageEmail = email.trim().toUpperCase();
 
-        // 1. Check if a profile already exists for this verified email
-        const { data: profileByEmail } = await supabaseAdmin
+        // 🔍 Strategy A: Search by verified email
+        const { data: byEmail, error: errA } = await supabaseAdmin
             .from("dna_profiles")
-            .select("id, user_id, auth_user_id")
-            .ilike("email", storageEmail)
-            .maybeSingle();
+            .select("id, user_id, auth_user_id, email")
+            .ilike("email", storageEmail);
 
-        if (profileByEmail) {
-            // Update existing user with new WorkOS ID and activate broadcasting
-            const { data: updated, error: updateError } = await supabaseAdmin
-                .from("dna_profiles")
-                .update({
-                    auth_user_id: authUserId,
-                    email: storageEmail,
-                    broadcasting: true
-                })
-                .eq("id", profileByEmail.id)
-                .select()
-                .maybeSingle();
+        if (errA) console.error("Search by email error:", errA);
 
-            if (updateError) throw updateError;
-            if (!updated) throw new Error("Update failed — no data returned");
+        // 🔍 Strategy B: Search by guest identifier (user_id field)
+        const { data: byGuest, error: errB } = guestId
+            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email").eq("user_id", guestId)
+            : { data: null, error: null };
 
-            return NextResponse.json({
-                success: true,
-                guestId: updated.user_id,
-                linked: true
+        if (errB) console.error("Search by user_id error:", errB);
+
+        // 🔍 Strategy C: Search by primary key (id field) - handles cases where guestId passed was actually profileId
+        const { data: byId, error: errC } = (guestId && guestId.length === 36) // UUID length
+            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email").eq("id", guestId)
+            : { data: null, error: null };
+
+        if (errC) console.error("Search by primary key error:", errC);
+
+        // 🔍 Strategy D: Search in metadata JSONB (legacy fallback)
+        const { data: byMetadata, error: errD } = await supabaseAdmin
+            .from("dna_profiles")
+            .select("id, user_id, auth_user_id, email")
+            .contains('metadata', { email: email.trim().toLowerCase() });
+
+        if (errD) console.error("Search by metadata error:", errD);
+
+        // 🔗 Combine all candidates
+        const allMatches = [
+            ...(byEmail || []),
+            ...(byGuest || []),
+            ...(byId || []),
+            ...(byMetadata || [])
+        ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+
+        console.log(`Matching process found ${allMatches.length} profiles for ${storageEmail} / ${guestId}. IDs: ${allMatches.map(m => m.id).join(', ')}`);
+
+        if (allMatches.length > 0) {
+            console.log(`Updating ${allMatches.length} profiles with authUserId: ${authUserId}`);
+            // Update every matching record to ensure consistent state
+            const updatePromises = allMatches.map(async (profile) => {
+                console.log(`Updating profile ${profile.id}...`);
+                const { data: updated, error: updateError } = await supabaseAdmin
+                    .from("dna_profiles")
+                    .update({
+                        auth_user_id: authUserId,
+                        email: storageEmail,
+                        broadcasting: true
+                    })
+                    .eq("id", profile.id)
+                    .select()
+                    .maybeSingle();
+
+                if (updateError) {
+                    console.error(`Update failed for profile ${profile.id}:`, updateError);
+                    return { success: false };
+                }
+                console.log(`Successfully updated profile ${profile.id}. New auth_user_id: ${updated?.auth_user_id}`);
+                return { success: !!updated, guestId: updated?.user_id };
             });
-        }
 
-        // 2. If no email match, link current guestId (newly verified user)
-        if (guestId) {
-            const { data: profileByGuest, error: guestLinkError } = await supabaseAdmin
-                .from("dna_profiles")
-                .update({
-                    email: storageEmail,
-                    auth_user_id: authUserId,
-                    broadcasting: true
-                })
-                .eq("user_id", guestId)
-                .select()
-                .maybeSingle();
+            const updateResults = await Promise.all(updatePromises);
+            const successfulUpdates = updateResults.filter(r => r.success);
 
-            if (guestLinkError) throw guestLinkError;
-
-            if (profileByGuest) {
+            if (successfulUpdates.length > 0) {
+                console.log(`Successfully linked ${successfulUpdates.length} row(s) to WorkOS ${authUserId}`);
                 return NextResponse.json({
                     success: true,
-                    guestId: profileByGuest.user_id,
-                    linked: true
+                    guestId: successfulUpdates[0].guestId,
+                    linked: true,
+                    count: successfulUpdates.length
                 });
             }
         }
 
+        console.log("No profile found to link. Verified email saved to session, linkage pending.");
         return NextResponse.json({ success: true, linked: false });
     } catch (error: any) {
-        console.error("Link Profile API Error:", error);
-        return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
+        console.error("Link Profile Fatal Error:", error);
+        return NextResponse.json({ error: error.message || "Link failed" }, { status: 500 });
     }
 }

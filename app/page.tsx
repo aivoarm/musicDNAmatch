@@ -592,23 +592,6 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
                         <Activity className="h-3 w-3" /> or connect as an artist
                     </button>
 
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        className="mt-12 w-full flex flex-col items-center"
-                    >
-                        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-12" />
-                        <h3 className="mono text-[10px] uppercase tracking-[0.5em] text-white/30 mb-8">Community Discovery</h3>
-                        <Link
-                            href="/artists"
-                            className="group relative h-20 px-12 rounded-[2rem] bg-white/5 border border-white/10 flex items-center justify-center gap-4 hover:bg-[#FF0000]/10 hover:border-[#FF0000]/40 transition-all shadow-2xl overflow-hidden"
-                        >
-                            <Users className="h-6 w-6 text-[#FF0000]" />
-                            <span className="text-white font-black italic uppercase tracking-widest text-lg">Explore Musical Tribe</span>
-                            <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                        </Link>
-                    </motion.div>
                 </div>
 
                 {/* Ticker at the bottom */}

@@ -30,19 +30,20 @@ export default function AuthCompletePage() {
             setMessage("Linking your DNA profile...");
 
             try {
-                // Robust cookie extraction
-                const cookies = document.cookie.split('; ').reduce((acc: any, curr) => {
-                    const [key, value] = curr.split('=');
-                    acc[key] = value;
+                // Robust cookie extraction with trim() to avoid leading spaces
+                const cookies = document.cookie.split(';').reduce((acc: any, curr) => {
+                    const [key, value] = curr.split('=').map(t => t.trim());
+                    if (key) acc[key] = value;
                     return acc;
                 }, {});
 
                 const guestId = cookies['guest_id'];
+                const profileId = cookies['profile_id'];
 
                 // 1. Standardize to UPPERCASE to match DNA engine and DB triggers
                 const storageEmail = user.email!.trim().toUpperCase();
 
-                console.log("link-profile request:", { authUserId: user.id, email: storageEmail, guestId });
+                console.log("link-profile request:", { authUserId: user.id, email: storageEmail, guestId, profileId });
 
                 const res = await fetch("/api/auth/link-profile", {
                     method: "POST",
@@ -50,7 +51,7 @@ export default function AuthCompletePage() {
                     body: JSON.stringify({
                         authUserId: user.id,
                         email: storageEmail,
-                        guestId: guestId,
+                        guestId: guestId || profileId, // Fallback to profileId if guest_id is missing
                     }),
                 });
 

@@ -52,16 +52,27 @@ export default async function middleware(request: NextRequest) {
     // 3. Persistence logic: guest_id for anonymous identification
     try {
         if (!request.cookies.get("guest_id") && !request.cookies.get("google_access_token")) {
-            // Robust ID generation (works in Node and Edge)
+            // Robust ID generation
             const guestId = (typeof crypto !== "undefined" && "randomUUID" in crypto)
                 ? crypto.randomUUID()
-                : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                : Math.random().toString(36).substring(2, 15);
 
-            // Safer way to add a cookie to any Response/NextResponse
-            response.headers.append(
-                "Set-Cookie",
-                `guest_id=${guestId}; Max-Age=31536000; Path=/; SameSite=Lax`
-            );
+            // Use the standard cookies.set API for reliability if available
+            if ("cookies" in response) {
+                (response as NextResponse).cookies.set({
+                    name: "guest_id",
+                    value: guestId,
+                    maxAge: 31536000,
+                    path: "/",
+                    sameSite: "lax",
+                });
+            } else {
+                // Fallback to headers for raw Response objects
+                response.headers.append(
+                    "Set-Cookie",
+                    `guest_id=${guestId}; Max-Age=31536000; Path=/; SameSite=Lax`
+                );
+            }
         }
     } catch (e) {
         console.error("Guest ID Persistence error:", e);
