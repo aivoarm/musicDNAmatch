@@ -31,7 +31,7 @@ export default function Footer() {
 
                 {/* Copyright info */}
                 <div className="mono text-[9px] uppercase tracking-[0.2em] text-white/30 text-center md:text-right">
-                    © {new Date().getFullYear()} DNA Protocol
+                    © {new Date().getFullYear()} rights reserved by <a href="https://armanayva.com" target="_blank" className="hover:text-white transition-colors">armanayva.com</a>
                 </div>
 
             </div>

@@ -126,6 +126,7 @@ MusicDNA/
 │   ├── CookieConsent.tsx               # Cookie banner
 │   ├── ShareDNACard.tsx                # DNA sharing modal
 │   ├── UnifiedArtistCard.tsx           # Multi-mode artist profile (player/embed)
+│   ├── MinimalArtistCard.tsx           # Sleek artist card for discovery
 │   └── ui/                             # Utility components
 ├── lib/                                 # Utility libraries
 │   ├── dna.ts                          # Core DNA engine
@@ -206,6 +207,11 @@ MusicDNA/
 **Methods**:
 - `getAccessToken()`: Obtain OAuth client credentials token
 - `getUserPublicData(spotifyUserId, playlistIdToFetch?, limit, offset)`: Fetch playlists or specific playlist tracks
+- `getArtistTopTracks(artistId)`: Fetch an artist's top tracks (market=US)
+- `getAudioFeatures(trackIds)`: Fetch audio features (with 403 restriction fallback)
+- `getAvailableGenreSeeds()`: Fetch valid genre seeds for discovery
+- `getRecommendations(seedArtistIds, seedGenres, seedTrackIds, limit)`: Multi-strategy recommendation engine
+- `getArtists(artistIds)`: Bulk fetch artist profiles
 
 **Interfaces**:
 - `SpotifyPlaylist`: `{ id, name, image, track_count, url }`
@@ -328,6 +334,30 @@ Fetch an artist's top 5 tracks from Spotify for DNA syncing.
   count: number
 }
 ```
+
+#### `GET /api/artists/suggest`
+Fetch personalized artist recommendations based on user DNA and listening history.
+
+**Query Parameters**: None (uses `guest_id` from cookies)
+
+**Response**:
+```typescript
+{
+  success: boolean,
+  artists: Artist[]  // Enriched with match scores and previews
+}
+```
+
+**Logic**:
+1. Extracts `recent_tracks` and `top_genres` from user profile metadata.
+2. Maps top genres to Spotify-compatible seeds using a validation cache (`getAvailableGenreSeeds`).
+3. Executes a multi-stage discovery strategy:
+   - **Stage A**: Combined artist + genre seeds.
+   - **Stage B**: Artist seeds only (fallback).
+   - **Stage C**: Genre seeds only (fallback).
+   - **Stage D**: Broad genre search (guaranteed fallback).
+4. Filters out already synced artists.
+5. Enriches artists with DNA match scores (using genre-based fallback if Spotify audio features are 403 restricted).
 
 **Logic**:
 1. Uses `SpotifyPublicFetcher.getArtistTopTracks()` with market=US
@@ -804,6 +834,7 @@ Fetch or send messages within a bridge conversation.
 **Key Features**:
 - Display 12-axis radar chart visualization
 - Show top 3 traits, coherence score
+- **DNA Refinement**: Personalized artist suggestions section using `MinimalArtistCard`.
 - **Identity Labeling**: Clear "Authenticated As" and "Signal Identification" markers to distinguish ID from genres
 - Edit email, city, display name
 - Profile deletion option
@@ -898,10 +929,29 @@ Fetch or send messages within a bridge conversation.
 - `hasDna`: Whether user has existing DNA profile
 - `onSynced?`: Callback after sync
 - `forceEmbed?`: Start with Spotify embed visible
+- `hideLabel?`: Hide "NEURAL SIGNAL" and "Active Identity" labels (used on community page)
 
 **Key Logic**:
 - `spotifyId` extracted from `artist.spotify_url` (DB artists) or `artist.id` (Spotify search results)
-- `handleSync`: Uses `useRouter` to navigate to `/?sync_artist=${spotifyId}` instead of calling the old sync-artist API directly
+- `handleSync`: Uses `useRouter` to navigate to `/?sync_artist=${spotifyId}`
+
+---
+
+### `components/MinimalArtistCard.tsx`
+
+**Purpose**: Sleek, discovery-focused artist card for personalized suggestions.
+
+**Key Features**:
+- Immersive square thumbnail with grayscale-to-color hover effect.
+- **Center Play Button**: Overlays thumbnail for instant sampling.
+- **DNA Meta Overlay**: Displays artist name, primary genre, and resonance style.
+- **Robust Playback**: Handles preview URLs from multiple metadata formats.
+- External link to source.
+- Removes "Sync" utility for a cleaner aesthetic.
+
+**Key Props**:
+- `artist`: Artist suggestion object.
+- `index`: Staggered animation index.
 
 ---
 
@@ -1351,5 +1401,5 @@ pnpm lint
 
 ---
 
-**Last Updated**: March 7, 2026  
-**Documentation Version**: 1.3
+**Last Updated**: March 8, 2026  
+**Documentation Version**: 1.4

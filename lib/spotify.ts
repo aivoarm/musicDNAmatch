@@ -14,6 +14,7 @@ export interface SpotifyTrack {
     artistId?: string;
     thumbnail: string;
     url: string;
+    preview_url?: string;
 }
 
 export class SpotifyPublicFetcher {
@@ -204,6 +205,79 @@ export class SpotifyPublicFetcher {
             return data.audio_features || [];
         } catch (e) {
             // Silently fail to allow DNA computation fallback to rely on genres
+            return [];
+        }
+    }
+
+    async getAvailableGenreSeeds() {
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+        const url = "https://api.spotify.com/v1/recommendations/available-genre-seeds";
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.genres || [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    async getRecommendations(seedArtistIds: string[], seedGenres: string[], seedTrackIds: string[], limit: number = 10) {
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+
+        const params = new URLSearchParams();
+        if (seedArtistIds.length) params.append("seed_artists", seedArtistIds.slice(0, 5).join(","));
+        if (seedGenres.length) params.append("seed_genres", seedGenres.slice(0, 5).join(","));
+        if (seedTrackIds.length) params.append("seed_tracks", seedTrackIds.slice(0, 5).join(","));
+        params.append("limit", limit.toString());
+
+        const url = `https://api.spotify.com/v1/recommendations?${params.toString()}`;
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) {
+                const body = await res.text();
+                console.error(`Spotify recommendations API error: ${res.status} ${res.statusText}`, body);
+
+                // If 404, it's likely an invalid seed.
+                if (res.status === 404 || res.status === 400) {
+                    console.warn("Invalid seeds detected for Spotify recommendations. Attempting fallback...");
+                }
+                return { tracks: [] };
+            }
+            const data = await res.json();
+            const tracks: SpotifyTrack[] = (data.tracks || []).map((t: any) => ({
+                id: t.id,
+                title: t.name,
+                artist: t.artists[0]?.name || "Unknown",
+                artistId: t.artists[0]?.id || "",
+                thumbnail: t.album?.images[0]?.url || "",
+                url: t.external_urls?.spotify || "",
+                preview_url: t.preview_url
+            }));
+            return { tracks };
+        } catch (e) {
+            console.error("getRecommendations error:", e);
+            return { tracks: [] };
+        }
+    }
+
+    async getArtists(artistIds: string[]) {
+        if (!artistIds.length) return [];
+        const token = await this.getAccessToken();
+        const headers = { "Authorization": `Bearer ${token}` };
+        const ids = artistIds.slice(0, 50).join(",");
+        const url = `https://api.spotify.com/v1/artists?ids=${ids}`;
+
+        try {
+            const res = await fetch(url, { headers });
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data.artists || [];
+        } catch (e) {
             return [];
         }
     }

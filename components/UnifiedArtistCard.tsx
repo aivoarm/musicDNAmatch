@@ -9,14 +9,17 @@ interface UnifiedArtistCardProps {
     artist: any;
     index: number;
     hasDna: boolean;
+    isAlreadySynced?: boolean;
     onSynced?: () => void;
     forceEmbed?: boolean;
+    hideSync?: boolean;
+    hideLabel?: boolean;
 }
 
-export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, forceEmbed = false }: UnifiedArtistCardProps) {
+export default function UnifiedArtistCard({ artist, index, hasDna, isAlreadySynced = false, onSynced, forceEmbed = false, hideSync = false, hideLabel = false }: UnifiedArtistCardProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
-    const [isDone, setIsDone] = useState(false);
+    const [isDone, setIsDone] = useState(isAlreadySynced);
     const [showEmbed, setShowEmbed] = useState(forceEmbed);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -57,11 +60,35 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
     const handleSync = async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isSyncing || isDone) return;
-        setIsSyncing(true);
 
-        if (spotifyId) {
-            router.push(`/?sync_artist=${spotifyId}`);
-        } else {
+        // If the user doesn't have a DNA profile yet, they MUST go through the full scan
+        if (!hasDna) {
+            if (spotifyId) {
+                router.push(`/?sync_artist=${spotifyId}`);
+            }
+            return;
+        }
+
+        setIsSyncing(true);
+        try {
+            const res = await fetch("/api/dna/profile/sync-artist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ artistId: spotifyId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setIsDone(true);
+                // Trigger global profile refresh event or callback
+                window.dispatchEvent(new CustomEvent("profile-updated"));
+                if (onSynced) onSynced();
+            } else {
+                alert(data.error || "Failed to sync artist");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Network error. Please try again.");
+        } finally {
             setIsSyncing(false);
         }
     };
@@ -141,7 +168,7 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
                 </AnimatePresence>
 
                 {/* Tribe Badge */}
-                {artist.is_db && (
+                {artist.is_db && !hideLabel && (
                     <div className="absolute top-6 left-6 z-40 bg-[#FF0000] text-white font-black text-[8px] px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-xl">
                         <Fingerprint className="h-3 w-3" /> NEURAL SIGNAL
                     </div>
@@ -153,7 +180,9 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
                 <div>
                     <div className="flex items-start justify-between mb-2">
                         <div>
-                            <span className="mono text-[10px] uppercase tracking-[0.4em] text-[#FF0000] font-black block mb-2">{artist.is_db ? "Active Identity" : "Simulated Match"}</span>
+                            {!hideLabel && (
+                                <span className="mono text-[10px] uppercase tracking-[0.4em] text-[#FF0000] font-black block mb-2">{artist.is_db ? "Active Identity" : "Simulated Match"}</span>
+                            )}
                             <h4 className="text-4xl md:text-5xl font-black uppercase italic text-white leading-none tracking-tighter mb-4">
                                 {artist.name}
                             </h4>
@@ -185,22 +214,24 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <button
-                        onClick={handleSync}
-                        disabled={isSyncing || isDone}
-                        className={`flex-1 w-full h-16 rounded-2xl flex items-center justify-center gap-4 font-black text-xs uppercase tracking-[0.2em] transition-all ${isDone
-                            ? "bg-green-500/20 text-green-400 border border-green-500/20"
-                            : "bg-[#FF0000] text-white hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_rgba(255,0,0,0.2)]"
-                            } disabled:opacity-80`}
-                    >
-                        {isSyncing ? (
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : isDone ? (
-                            <><CheckCircle2 className="h-5 w-5" /> SYNCHRONIZED</>
-                        ) : (
-                            <><Zap className="h-5 w-5 fill-current" /> {hasDna ? "Sync into DNA" : "Calc via Resonance"}</>
-                        )}
-                    </button>
+                    {!hideSync && (
+                        <button
+                            onClick={handleSync}
+                            disabled={isSyncing || isDone}
+                            className={`flex-1 w-full h-16 rounded-2xl flex items-center justify-center gap-4 font-black text-xs uppercase tracking-[0.2em] transition-all ${isDone
+                                ? "bg-green-500/20 text-green-400 border border-green-500/20"
+                                : "bg-[#FF0000] text-white hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_rgba(255,0,0,0.2)]"
+                                } disabled:opacity-80`}
+                        >
+                            {isSyncing ? (
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : isDone ? (
+                                <><CheckCircle2 className="h-5 w-5" /> SYNCHRONIZED</>
+                            ) : (
+                                <><Zap className="h-5 w-5 fill-current" /> {hasDna ? "Sync into DNA" : "Calc via Resonance"}</>
+                            )}
+                        </button>
+                    )}
 
                     {!forceEmbed && (
                         <button

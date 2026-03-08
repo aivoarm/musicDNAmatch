@@ -1027,7 +1027,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                     )}
 
                                     <p className="text-center mono text-[9px] text-white/50 uppercase tracking-widest">
-                                        © 2026 Arman Ayva · <a href="https://www.armanayva.com" target="_blank" className="hover:text-white/80 transition-colors">armanayva.com</a>
+                                        © 2026 rights reserved by <a href="https://armanayva.com" target="_blank" className="hover:text-white transition-colors">armanayva.com</a>
                                     </p>
                                 </motion.div>
                             </motion.div>

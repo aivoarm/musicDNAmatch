@@ -21,6 +21,7 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 - **Vector Space Mapping:** DNA is quantized across 12 distinct axes: *Spectral Energy, Harmonic Depth, Rhythmic Drive, Melodic Warmth, Structural Complexity, Sonic Texture, Tempo Variance, Tonal Brightness, Dynamic Range, Genre Fusion, Experimental Index, and Emotional Density.*
 - **Similarity Matching:** Uses Euclidean distance and cosine similarity via `pgvector` to find users with overlapping sonic fingerprints.
 - **Coherence Index:** A geometric measurement of your signal's internal consistency and musical complexity.
+- **DNA Refinement:** An intelligent recommendation engine that suggests new artists based on your unique sonic vector, excluding already synced signals.
 
 ### 🤝 Matching & Bridge System
 - **Soulmate Feed:** A real-time list of users sorted by matching percentage.
@@ -60,7 +61,9 @@ app/
 │   ├── match/           # Interest registration and bridge creation
 │   └── spotify/         # Public playlist scanner
 └── components/
-    └── Navbar.tsx       # Dynamic navigation based on DNA availability
+    ├── Navbar.tsx       # Dynamic navigation based on DNA availability
+    ├── UnifiedArtistCard.tsx # Artist profile with playback and sync
+    └── MinimalArtistCard.tsx # Sleek discovery-focused card
 ```
 
 ---
@@ -147,5 +150,5 @@ pnpm dev
 ---
 
 ## 📄 License
-© 2026 Arman Ayva. All rights reserved. [dna.armanayva.com](https://dna.armanayva.com/)
+© 2026 rights reserved by [armanayva.com](https://armanayva.com)
 MIT License for protocol implementation.

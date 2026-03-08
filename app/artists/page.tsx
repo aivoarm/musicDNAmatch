@@ -245,7 +245,7 @@ export default function MusicalTribe() {
                             {matches.length > 0 ? (
                                 <>
                                     {matches.map((artist, idx) => (
-                                        <UnifiedArtistCard key={artist.id} artist={artist} index={idx} hasDna={!!myDna} forceEmbed={true} />
+                                        <UnifiedArtistCard key={artist.id} artist={artist} index={idx} hasDna={!!myDna} forceEmbed={true} hideSync={true} hideLabel={true} />
                                     ))}
 
                                     {/* Pagination */}

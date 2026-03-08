@@ -5,13 +5,14 @@ import { motion } from "framer-motion";
 import {
     Waves, Users, ArrowRight, Brain, User, CheckCircle2,
     ChevronRight, Activity, ExternalLink, Play, RefreshCw,
-    Mail, X, MapPin
+    Mail, X, MapPin, Loader2, Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
+import MinimalArtistCard from "@/components/MinimalArtistCard";
 
 
 function AxisBar({ label, value, idx }: { label: string; value: number; idx: number }) {
@@ -101,6 +102,8 @@ export default function ProfilePage() {
     const [deleting, setDeleting] = useState(false);
     const [verifyPopup, setVerifyPopup] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -125,7 +128,40 @@ export default function ProfilePage() {
             } catch { }
             finally { setLoading(false); }
         })();
+
+        const listener = () => {
+            // Re-fetch profile data
+            fetch("/api/dna/profile/me")
+                .then(r => r.json())
+                .then(d => {
+                    if (d.found) setProfile(d.dna);
+                })
+                .catch(console.error);
+        };
+        window.addEventListener("profile-updated", listener);
+        return () => window.removeEventListener("profile-updated", listener);
     }, [router]);
+
+    useEffect(() => {
+        if (profile) {
+            fetchSuggestions();
+        }
+    }, [profile]);
+
+    const fetchSuggestions = async () => {
+        setLoadingSuggestions(true);
+        try {
+            const r = await fetch("/api/artists/suggest");
+            const d = await r.json();
+            if (d.success) {
+                setSuggestions(d.artists || []);
+            }
+        } catch (e) {
+            console.error("Failed to fetch suggestions:", e);
+        } finally {
+            setLoadingSuggestions(false);
+        }
+    };
 
     // Send magic link for email verification (WorkOS)
     const handleSendVerification = async () => {
@@ -497,6 +533,40 @@ export default function ProfilePage() {
                                         </a>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Artist Suggestions */}
+                        {(suggestions.length > 0 || loadingSuggestions) && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between px-2">
+                                    <div>
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                            <Sparkles className="h-5 w-5 text-[#FF0000]" />
+                                            DNA <span className="text-[#FF0000]">Refinement</span>
+                                        </h3>
+                                        <p className="mono text-[9px] text-white/50 uppercase tracking-[0.2em]">Suggested signals to strengthen your profile</p>
+                                    </div>
+                                    <Link href="/artists" className="mono text-[9px] text-[#FF0000] uppercase tracking-widest font-black border-b border-[#FF0000]/30 hover:border-[#FF0000] transition-all">
+                                        Explore More
+                                    </Link>
+                                </div>
+                                {loadingSuggestions ? (
+                                    <div className="flex flex-col items-center justify-center p-12 glass rounded-2xl border border-white/5">
+                                        <Loader2 className="h-6 w-6 text-[#FF0000] animate-spin mb-3" />
+                                        <p className="mono text-[9px] text-white/40 uppercase tracking-widest">Scanning DNA Network...</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
+                                        {suggestions.map((artist, idx) => (
+                                            <MinimalArtistCard
+                                                key={artist.id}
+                                                artist={artist}
+                                                index={idx}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
                     </motion.div>
