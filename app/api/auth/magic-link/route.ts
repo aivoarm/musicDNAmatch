@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         const { error } = await supabaseAdmin.auth.signInWithOtp({
             email: cleanEmail,
             options: {
-                emailRedirectTo: `${siteUrl}/api/auth/confirm`,
+                emailRedirectTo: `${siteUrl}/auth/callback`,
                 shouldCreateUser: true,
             },
         });
