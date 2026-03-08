@@ -252,27 +252,29 @@ export default function ProfilePage() {
                                         <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Secure Your <span className="text-[#FF0000]">Sonic Legacy</span></h3>
                                         <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email to receive a verification link and save your profile permanently.</p>
 
-                                        <form onSubmit={handleEmailSubmit} className="space-y-3">
-                                            <div className="flex flex-col sm:flex-row gap-3">
+                                        <div className="flex flex-col gap-4">
+                                            <div className="relative group">
+                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#FF0000] opacity-50 group-focus-within:opacity-100 transition-opacity" />
                                                 <input
                                                     type="email"
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
-                                                    placeholder="ENTER YOUR EMAIL"
+                                                    placeholder="VERIFY YOUR EMAIL"
                                                     required
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-4 text-xs font-black text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
                                                 />
                                             </div>
                                             {verifyError && (
-                                                <p className="text-red-400 mono text-[9px] uppercase tracking-widest">{verifyError}</p>
+                                                <p className="text-red-400 mono text-[9px] uppercase tracking-widest bg-red-400/10 p-2 rounded-lg">{verifyError}</p>
                                             )}
                                             <button
-                                                disabled={saving}
-                                                className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                                onClick={handleEmailSubmit}
+                                                disabled={saving || !email.includes("@")}
+                                                className="w-full bg-white text-black font-black text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 shadow-[0_10px_30px_rgba(255,255,255,0.05)]"
                                             >
-                                                {saving ? "SENDING LINK..." : "VERIFY & SECURE"}
+                                                {saving ? <Activity className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> Verify Identity</>}
                                             </button>
-                                        </form>
+                                        </div>
                                     </>
                                 </div>
                             </motion.div>

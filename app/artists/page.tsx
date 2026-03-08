@@ -231,8 +231,8 @@ export default function MusicalTribe() {
                                         key={g}
                                         onClick={() => setGenreFilter(g)}
                                         className={`px-6 py-3 rounded-2xl border font-black italic text-[10px] uppercase tracking-widest transition-all ${genreFilter === g
-                                                ? "bg-[#FF0000] border-[#FF0000] text-white shadow-[0_0_20px_rgba(255,0,0,0.3)]"
-                                                : "bg-white/5 border-white/10 text-white/40 hover:border-white/20 hover:text-white"
+                                            ? "bg-[#FF0000] border-[#FF0000] text-white shadow-[0_0_20px_rgba(255,0,0,0.3)]"
+                                            : "bg-white/5 border-white/10 text-white/40 hover:border-white/20 hover:text-white"
                                             }`}
                                     >
                                         {g || "All Signals"}
@@ -364,10 +364,29 @@ export default function MusicalTribe() {
                                         <div className="h-20 w-20 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-8"><Mail className="h-10 w-10 text-blue-400" /></div>
                                         <h2 className="text-4xl font-black uppercase italic mb-4 text-white">Verification <span className="text-blue-400">Queue</span></h2>
                                         <p className="text-white/60 mb-10 font-medium italic whitespace-normal">Establishing uplink for <span className="text-white font-black">{selectedArtist.name}</span>. Enter your professional email for identity confirmation.</p>
-                                        <input autoFocus type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleVerificationSubmit()} placeholder="artist@label.com" className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 text-center text-xl font-black italic text-white mb-8 outline-none" />
-                                        <div className="flex gap-4">
-                                            <button onClick={() => setRegistrationStep("select")} className="flex-1 bg-white/5 text-white/40 font-black py-5 rounded-2xl text-[10px] uppercase border border-white/10">Go Back</button>
-                                            <button onClick={handleVerificationSubmit} disabled={submitting || !contactEmail.includes("@")} className="flex-2 bg-blue-600 text-white font-black py-5 px-10 rounded-2xl text-[10px] uppercase shadow-lg shadow-blue-600/20 hover:scale-105 transition-all">Submit Request</button>
+                                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-6">
+                                            <div className="relative">
+                                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-blue-400 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    type="email"
+                                                    value={contactEmail}
+                                                    onChange={(e) => setContactEmail(e.target.value)}
+                                                    onKeyDown={(e) => e.key === "Enter" && handleVerificationSubmit()}
+                                                    placeholder="artist@label.com"
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl py-6 pl-16 pr-6 text-xl font-black italic text-white outline-none focus:border-blue-400/50 transition-all uppercase placeholder:text-white/20"
+                                                />
+                                            </div>
+                                            <div className="flex gap-4">
+                                                <button onClick={() => setRegistrationStep("select")} className="flex-1 bg-white/5 text-white/40 font-black py-5 rounded-2xl text-[10px] uppercase border border-white/10">Go Back</button>
+                                                <button
+                                                    onClick={() => window.location.href = `/login?email=${encodeURIComponent(contactEmail)}`}
+                                                    disabled={submitting || !contactEmail.includes("@")}
+                                                    className="flex-2 bg-blue-600 text-white font-black py-5 px-10 rounded-2xl text-[10px] uppercase shadow-lg shadow-blue-600/20 hover:scale-105 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <Mail className="h-4 w-4" /> Verify Identity
+                                                </button>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}

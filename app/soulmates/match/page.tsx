@@ -15,6 +15,7 @@ export default function MatchPage() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [userDna, setUserDna] = useState<any>(null);
+    const [isVerified, setIsVerified] = useState(false);
 
     const router = useRouter();
 
@@ -26,6 +27,13 @@ export default function MatchPage() {
                 if (profileRes.ok) {
                     const profileData = await profileRes.json();
                     setUserDna(profileData.dna);
+
+                    // Check for verified session
+                    const authEmail = document.cookie.split(";").find(c => c.trim().startsWith("auth_email="));
+                    if (authEmail) {
+                        setIsVerified(true);
+                        setEmail(profileData.dna.email || "");
+                    }
                 }
 
                 const res = await fetch("/api/dna/match");
@@ -382,32 +390,52 @@ export default function MatchPage() {
                                     </div>
 
                                     <form onSubmit={handleEmailSubmit} className="space-y-6">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Your Communications Email</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
-                                                <input
-                                                    type="email"
-                                                    required
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    placeholder="you@ecosystem.com"
-                                                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-12 pr-6 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
-                                                />
+                                        {!isVerified ? (
+                                            <div className="bg-primary/5 border border-primary/20 rounded-2xl p-8 text-center space-y-6">
+                                                <div className="relative group">
+                                                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-primary opacity-50 group-focus-within:opacity-100 transition-opacity" />
+                                                    <input
+                                                        type="email"
+                                                        value={email}
+                                                        onChange={e => setEmail(e.target.value)}
+                                                        placeholder="YOUR@EMAIL.COM"
+                                                        className="w-full bg-white/5 border border-white/10 rounded-xl py-6 pl-16 pr-6 text-xl font-black italic text-white outline-none focus:border-primary/50 transition-all uppercase placeholder:text-white/20"
+                                                    />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.location.href = `/login?email=${encodeURIComponent(email)}`}
+                                                    className="w-full bg-white text-black font-black py-4 rounded-xl flex items-center justify-center gap-3 hover:scale-[1.02] transition-all text-xs uppercase tracking-[0.2em]"
+                                                >
+                                                    <Mail className="h-4 w-4" /> Verify Identity
+                                                </button>
                                             </div>
-                                        </div>
-
-                                        <p className="text-xs text-muted-foreground leading-relaxed italic">
-                                            "Entering your email will initialize a private contact group. Interaction protocols will be established once both vectors confirm the link."
-                                        </p>
-
-                                        <button
-                                            disabled={submitting}
-                                            type="submit"
-                                            className="w-full bg-primary text-primary-foreground font-black py-5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all glow-primary"
-                                        >
-                                            {submitting ? <Activity className="h-5 w-5 animate-spin" /> : "Deploy Signal"}
-                                        </button>
+                                        ) : (
+                                            <>
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">Your Communications Email (Verified)</label>
+                                                    <div className="relative">
+                                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white/50" />
+                                                        <input
+                                                            type="email"
+                                                            readOnly
+                                                            value={email}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-2xl py-5 pl-12 pr-6 focus:outline-none transition-all font-medium opacity-60 cursor-not-allowed"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground leading-relaxed italic">
+                                                    "Your email will be revealed ONLY once both signals cross successfully."
+                                                </p>
+                                                <button
+                                                    disabled={submitting}
+                                                    type="submit"
+                                                    className="w-full bg-primary text-primary-foreground font-black py-5 rounded-2xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_20px_40px_rgba(255,0,0,0.2)]"
+                                                >
+                                                    {submitting ? <Activity className="h-5 w-5 animate-spin" /> : "Deploy Signal"}
+                                                </button>
+                                            </>
+                                        )}
                                     </form>
                                 </>
                             )}

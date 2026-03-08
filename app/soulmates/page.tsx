@@ -113,6 +113,7 @@ export default function SoulmatesPage() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [userDna, setUserDna] = useState<any>(null);
+    const [isVerified, setIsVerified] = useState(false);
     const [showEmailPrompt, setShowEmailPrompt] = useState(false);
     const [tempCity, setTempCity] = useState("");
     const router = useRouter();
@@ -131,8 +132,17 @@ export default function SoulmatesPage() {
                     if (pd.found) {
                         foundDna = true;
                         setUserDna(pd.dna);
-                        if (pd.dna.email) setEmail(pd.dna.email);
-                        else setShowEmailPrompt(true);
+
+                        // Check for verified email cookie
+                        const authEmail = document.cookie.split(";").find(c => c.trim().startsWith("auth_email="));
+                        if (authEmail) {
+                            setIsVerified(true);
+                            if (pd.dna.email) setEmail(pd.dna.email);
+                        } else {
+                            if (pd.dna.email) setEmail(pd.dna.email);
+                            else setShowEmailPrompt(true);
+                        }
+
                         if (pd.dna.city) setTempCity(pd.dna.city);
                     }
                 }
@@ -210,24 +220,17 @@ export default function SoulmatesPage() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            const r = await fetch("/api/dna/profile/save", {
+            // First save the city/meta choice
+            await fetch("/api/dna/profile/save", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email.trim(), city: tempCity.trim() }),
             });
-            if (r.ok) {
-                setShowEmailPrompt(false);
-                // Refresh profile data
-                const profileRes = await fetch("/api/dna/profile/me");
-                const pd = await profileRes.json();
-                if (pd.found) setUserDna(pd.dna);
-            } else {
-                const d = await r.json();
-                alert(d.error || "Failed to secure DNA");
-            }
+
+            // Then redirect to WorkOS for verification
+            window.location.href = `/login?email=${encodeURIComponent(email.trim())}`;
         } catch {
             alert("Network error. Please try again.");
-        } finally {
             setSubmitting(false);
         }
     };
@@ -708,22 +711,38 @@ export default function SoulmatesPage() {
                                         </div>
                                     </div>
                                     <form onSubmit={handleInterest} className="space-y-4">
-                                        <div>
-                                            <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-1.5 ml-1">Your Email</label>
-                                            <div className="relative">
-                                                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/60" />
-                                                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                                                    placeholder="you@example.com"
-                                                    className="w-full bg-white/8 border border-white/20 rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:border-[#FF0000]/60 transition-all mono text-xs text-white placeholder:text-white/30" />
+                                        {!isVerified ? (
+                                            <div className="bg-[#FF0000]/5 border border-[#FF0000]/20 rounded-xl p-5 text-center">
+                                                <p className="mono text-[9px] text-white/70 uppercase tracking-widest leading-relaxed mb-4">
+                                                    Authentication Required to Send Signals
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => window.location.href = `/login?email=${encodeURIComponent(email)}`}
+                                                    className="w-full bg-white text-black font-black py-3 rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-all text-[10px] uppercase tracking-widest"
+                                                >
+                                                    <Mail className="h-3.5 w-3.5" /> Verify Identity
+                                                </button>
                                             </div>
-                                        </div>
-                                        <p className="mono text-[8px] text-white/50 leading-relaxed font-bold">
-                                            Your email will only be shared if the interest is mutual. A DNA Bridge will be created automatically.
-                                        </p>
-                                        <button type="submit" disabled={submitting}
-                                            className="w-full bg-[#FF0000] text-white font-black py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
-                                            {submitting ? <Activity className="h-3.5 w-3.5 animate-spin" /> : <>Send Signal <ChevronRight className="h-3.5 w-3.5" /></>}
-                                        </button>
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-1.5 ml-1">Your Email (Verified)</label>
+                                                    <div className="relative">
+                                                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/60" />
+                                                        <input type="email" readOnly value={email}
+                                                            className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 focus:outline-none transition-all mono text-xs text-white/60 cursor-not-allowed" />
+                                                    </div>
+                                                </div>
+                                                <p className="mono text-[8px] text-white/50 leading-relaxed font-bold">
+                                                    Your email will only be shared if the interest is mutual. A DNA Bridge will be created automatically.
+                                                </p>
+                                                <button type="submit" disabled={submitting}
+                                                    className="w-full bg-[#FF0000] text-white font-black py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-xs uppercase tracking-widest disabled:opacity-50">
+                                                    {submitting ? <Activity className="h-3.5 w-3.5 animate-spin" /> : <>Send Signal <ChevronRight className="h-3.5 w-3.5" /></>}
+                                                </button>
+                                            </>
+                                        )}
                                     </form>
                                 </>
                             )}
