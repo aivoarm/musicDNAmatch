@@ -3,18 +3,17 @@ import { SpotifyPublicFetcher } from "@/lib/spotify";
 
 /**
  * POST /api/spotify/scan
- * Body: { spotify_user_id, playlist_ids?: string[], playlist_id?: string, limit?, offset? }
+ * Body: { spotify_user_id, playlist_ids?: string[], playlist_id?: string, track_ids?: string[], artist_genres?: string[], limit?, offset? }
  * 
  * New: accepts playlist_ids (array, max 5) to scan multiple playlists.
- * Fetches up to 10 tracks per playlist + audio features for all.
- * Falls back to legacy single-playlist / user-listing mode.
+ * Also accepts direct track_ids for syncing specific tracks.
  */
 export async function POST(req: Request) {
     const body = await req.json();
-    const { spotify_user_id, playlist_ids, playlist_id, limit = 5, offset = 0 } = body;
+    const { spotify_user_id, playlist_ids, playlist_id, track_ids, artist_genres, limit = 5, offset = 0 } = body;
 
-    if (!spotify_user_id && !playlist_ids?.length) {
-        return NextResponse.json({ error: "No Spotify ID or playlist IDs provided" }, { status: 400 });
+    if (!spotify_user_id && !playlist_ids?.length && !track_ids?.length) {
+        return NextResponse.json({ error: "No Spotify ID, playlist IDs, or track IDs provided" }, { status: 400 });
     }
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
@@ -24,37 +23,50 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Admin credentials missing on server" }, { status: 500 });
     }
 
-    let resolvedSpotifyId = spotify_user_id;
-
-    if (spotify_user_id && spotify_user_id.startsWith("playlist:")) {
-        const pId = spotify_user_id.replace("playlist:", "");
-        try {
-            const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
-            const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
-                method: "POST",
-                headers: {
-                    Authorization: `Basic ${authStr}`,
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: "grant_type=client_credentials",
-            });
-            if (tokenRes.ok) {
-                const { access_token } = await tokenRes.json();
-                const plRes = await fetch(`https://api.spotify.com/v1/playlists/${pId}`, {
-                    headers: { Authorization: `Bearer ${access_token}` }
-                });
-                if (plRes.ok) {
-                    const plData = await plRes.json();
-                    if (plData.owner?.id) resolvedSpotifyId = plData.owner.id;
-                }
-            }
-        } catch (e) {
-            console.error("Failed to parse playlist owner ID", e);
-        }
-    }
-
     try {
         const fetcher = new SpotifyPublicFetcher(clientId, clientSecret);
+
+        // ── Direct track scan mode ────────────────────
+        if (track_ids && Array.isArray(track_ids) && track_ids.length > 0) {
+            const audioFeatures = await fetchAudioFeatures(track_ids, clientId, clientSecret);
+            const resolvedArtistGenres = artist_genres || [];
+
+            return NextResponse.json({
+                tracks: [], // Caller might already have these
+                audioFeatures,
+                artistGenres: resolvedArtistGenres,
+                count: track_ids.length,
+            });
+        }
+
+        let resolvedSpotifyId = spotify_user_id;
+
+        if (spotify_user_id && spotify_user_id.startsWith("playlist:")) {
+            const pId = spotify_user_id.replace("playlist:", "");
+            try {
+                const authStr = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+                const tokenRes = await fetch("https://accounts.spotify.com/api/token", {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Basic ${authStr}`,
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: "grant_type=client_credentials",
+                });
+                if (tokenRes.ok) {
+                    const { access_token } = await tokenRes.json();
+                    const plRes = await fetch(`https://api.spotify.com/v1/playlists/${pId}`, {
+                        headers: { Authorization: `Bearer ${access_token}` }
+                    });
+                    if (plRes.ok) {
+                        const plData = await plRes.json();
+                        if (plData.owner?.id) resolvedSpotifyId = plData.owner.id;
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse playlist owner ID", e);
+            }
+        }
 
         // ── Multi-playlist scan mode ────────────────────
         if (playlist_ids && Array.isArray(playlist_ids) && playlist_ids.length > 0) {

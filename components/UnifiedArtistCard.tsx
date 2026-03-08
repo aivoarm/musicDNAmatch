@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Play, Pause, Zap, CheckCircle2, Activity, Fingerprint, ArrowRight, Share2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface UnifiedArtistCardProps {
     artist: any;
@@ -46,35 +47,29 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
         }
     };
 
-    const handleSync = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (isSyncing || isDone) return;
-        setIsSyncing(true);
-
-        try {
-            const res = await fetch("/api/dna/sync-artist", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ artist })
-            });
-            const data = await res.json();
-            if (data.success) {
-                setIsDone(true);
-                if (onSynced) onSynced();
-                // If we're on the artists page, we might need a custom event too
-                window.dispatchEvent(new CustomEvent("profile-updated"));
-            }
-        } catch (e) {
-            console.error("Sync failed", e);
-        } finally {
-            setIsSyncing(false);
-        }
-    };
+    const router = useRouter();
 
     // Extract Spotify ID for embed
     const spotifyId = artist.is_db
         ? artist.spotify_url?.split('/').pop()?.split('?')[0]
         : artist.id;
+
+    const handleSync = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (isSyncing || isDone) return;
+        setIsSyncing(true);
+
+        if (spotifyId) {
+            router.push(`/?sync_artist=${spotifyId}`);
+        } else {
+            setIsSyncing(false);
+        }
+    };
+
+    // Ensure we have a valid external URL
+    const fullSpotifyUrl = artist.spotify_url?.startsWith('http')
+        ? artist.spotify_url
+        : `https://open.spotify.com/artist/${spotifyId}`;
 
     return (
         <motion.div
@@ -224,7 +219,7 @@ export default function UnifiedArtistCard({ artist, index, hasDna, onSynced, for
 
                     <div className="flex gap-2">
                         <a
-                            href={artist.spotify_url}
+                            href={fullSpotifyUrl}
                             target="_blank"
                             rel="noreferrer"
                             className="h-16 w-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/20 transition-all group/link shrink-0"

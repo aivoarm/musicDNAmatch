@@ -1058,7 +1058,13 @@ function HomeContent() {
     const [progress, setProgress] = useState(0);
 
     const [dna, setDna] = useState<any>(null);
-    const [fetchedSources, setFetchedSources] = useState<any>(null);
+    const [fetchedSources, setFetchedSources] = useState<{
+        spotifyTracks?: any[];
+        audioFeatures?: any[];
+        artistGenres?: string[];
+        youtubeVideos?: any[];
+        youtubeTracks?: any[];
+    } | null>(null);
     const [clash, setClash] = useState<any>(null);
     const [checkingEmail, setCheckingEmail] = useState(false);
 
@@ -1069,7 +1075,101 @@ function HomeContent() {
         if (searchParams.get("resume") === "1") {
             setStage("resume_capture");
         }
+        const syncArtistId = searchParams.get("sync_artist");
+        if (syncArtistId) {
+            handleSyncArtistSource(syncArtistId);
+        }
     }, [searchParams]);
+
+    const handleSyncArtistSource = async (artistId: string) => {
+        setStage("analyzing");
+        setProgress(10);
+        try {
+            // 1. Fetch top 5 tracks for this artist
+            const res = await fetch(`/api/artists/top-tracks?id=${artistId}`);
+            const data = await res.json();
+            if (!data.success || !data.tracks) {
+                setStage("landing");
+                return;
+            }
+
+            const tracks = data.tracks;
+            setProgress(40);
+
+            // 2. Fetch audio features for these tracks
+            const scanRes = await fetch("/api/spotify/scan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    track_ids: tracks.map((t: any) => t.id),
+                    artist_genres: [] // We'll get some from the tracks later if needed
+                })
+            });
+            const scanData = await scanRes.json();
+
+            // 3. Merge with existing sources
+            let combinedTracks: any[] = [];
+            let combinedFeatures: any[] = [];
+            let combinedGenres: string[] = [];
+
+            setFetchedSources((prev) => {
+                const existingTracks = prev?.spotifyTracks || existing?.recent_tracks || [];
+                const existingFeatures = prev?.audioFeatures || [];
+                const existingArtistGenres = prev?.artistGenres || existing?.top_genres || [];
+
+                // Filter out duplicates
+                const newTracks = tracks.filter((t: any) => !existingTracks.some((et: any) => et.id === t.id));
+                combinedTracks = [...existingTracks, ...newTracks];
+
+                const newFeatures = (scanData.audioFeatures || []).filter((f: any) => !existingFeatures.some((ef: any) => ef.id === f.id));
+                combinedFeatures = [...existingFeatures, ...newFeatures];
+
+                combinedGenres = Array.from(new Set([...existingArtistGenres, ...(scanData.artistGenres || [])]));
+
+                return {
+                    spotifyTracks: combinedTracks,
+                    audioFeatures: combinedFeatures,
+                    artistGenres: combinedGenres,
+                    youtubeVideos: prev?.youtubeVideos || [],
+                    youtubeTracks: prev?.youtubeTracks || []
+                };
+            });
+
+            setProgress(80);
+
+            // 4. Run dry-run to get suggested genres based on CUMULATIVE data
+            const dryRes = await fetch("/api/dna/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    genres: [],
+                    audioFeatures: combinedFeatures,
+                    spotifyTracks: combinedTracks,
+                    dry_run: true
+                })
+            });
+            const dryData = await dryRes.json();
+            if (dryData.success && dryData.suggested_genres) {
+                const preselected: string[] = [];
+                for (const sg of dryData.suggested_genres) {
+                    const match = GENRES.find(g => g.toLowerCase().replace(/[^a-z0-9]/g, "") === sg.toLowerCase().replace(/[^a-z0-9]/g, ""));
+                    if (match && !preselected.includes(match)) preselected.push(match);
+                }
+                setGenres(preselected);
+            }
+
+            setProgress(100);
+            setTimeout(() => {
+                setStage("review_songs");
+                setProgress(0);
+            }, 600);
+
+        } catch (e) {
+            console.error("Artist Sync error:", e);
+            setStage("landing");
+        }
+    };
+
 
     const refreshProfile = useCallback(async () => {
         try {
@@ -1417,7 +1517,31 @@ function HomeContent() {
         setProgress(90);
 
         const ytFormattedTracks = ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail, url: t.url }));
-        setFetchedSources({ audioFeatures, artistGenres, spotifyTracks, youtubeVideos, youtubeTracks: ytFormattedTracks });
+        // Merge with existing sources (if any)
+        setFetchedSources((prev) => {
+            const existingTracks = prev?.spotifyTracks || existing?.recent_tracks || [];
+            const existingFeatures = prev?.audioFeatures || [];
+            const existingArtistGenres = prev?.artistGenres || existing?.top_genres || [];
+
+            // Combine tracks without duplicates
+            const newTracks = spotifyTracks.filter((t: any) => !existingTracks.some((et: any) => et.id === t.id));
+            const combinedTracks = [...existingTracks, ...newTracks];
+
+            // Combine audio features without duplicates (if present)
+            const newFeatures = (audioFeatures || []).filter((f: any) => !existingFeatures.some((ef: any) => ef.id === f.id));
+            const combinedFeatures = [...existingFeatures, ...newFeatures];
+
+            // Combine genres
+            const combinedGenres = Array.from(new Set([...existingArtistGenres, ...(artistGenres || [])]));
+
+            return {
+                spotifyTracks: combinedTracks,
+                audioFeatures: combinedFeatures,
+                artistGenres: combinedGenres,
+                youtubeVideos: prev?.youtubeVideos || youtubeVideos,
+                youtubeTracks: prev?.youtubeTracks || ytFormattedTracks
+            };
+        });
 
         // Step 3: Fast dry_run DNA to get suggested genres based on the signals
         try {

@@ -18,6 +18,10 @@ export async function GET(req: Request) {
             .select('*');
 
         if (query) dbQuery = dbQuery.ilike("name", `%${query}%`);
+        if (genre) {
+            // Filter by style OR check if genre exists in tags or genres JSONB arrays
+            dbQuery = dbQuery.or(`style.ilike.%${genre}%,tags.cs.["${genre}"],genres.cs.["${genre}"]`);
+        }
 
         const { data: artists, error } = await dbQuery;
 

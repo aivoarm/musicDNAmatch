@@ -74,7 +74,8 @@ MusicDNA/
 │   │   │   └── synthesize/route.ts
 │   │   ├── artists/                    # Artist discovery & verification
 │   │   │   ├── route.ts                # Main community feed (paginated)
-│   │   │   └── search/route.ts         # Spotify-linked artist search
+│   │   │   ├── search/route.ts         # Spotify-linked artist search
+│   │   │   └── top-tracks/route.ts     # Fetch artist's top 5 Spotify tracks
 │   │   ├── dna/                        # DNA profile management
 │   │   │   ├── generate/route.ts       # Core DNA calculation
 │   │   │   ├── invite/route.ts
@@ -306,6 +307,26 @@ Create/Update artist profile for verification.
 
 #### `GET /api/artists/search`
 Proxy Spotify search to find and link official artist profiles.
+
+#### `GET /api/artists/top-tracks`
+Fetch an artist's top 5 tracks from Spotify for DNA syncing.
+
+**Query Parameters**:
+- `id`: Spotify artist ID (required)
+
+**Response**:
+```typescript
+{
+  success: boolean,
+  tracks: SpotifyTrack[],     // Top 5 tracks
+  count: number
+}
+```
+
+**Logic**:
+1. Uses `SpotifyPublicFetcher.getArtistTopTracks()` with market=US
+2. Returns formatted track objects (id, title, artist, thumbnail, url, preview_url)
+3. Limited to 5 tracks for focused DNA calculation
 
 ---
 
@@ -541,9 +562,11 @@ Analyze Spotify profile and extract tracks + audio features.
 **Request Body**:
 ```typescript
 {
-  spotify_user_id: string,
+  spotify_user_id?: string,
   playlist_ids?: string[],             // Multi-playlist mode (max 5)
   playlist_id?: string,                // Single playlist mode
+  track_ids?: string[],                // Direct track IDs (for artist sync)
+  artist_genres?: string[],            // Explicit genres from artist
   limit?: number,
   offset?: number
 }
@@ -560,10 +583,11 @@ Analyze Spotify profile and extract tracks + audio features.
 ```
 
 **Logic**:
-1. Supports both multi-playlist and legacy single-playlist modes
-2. Deduplicates by track ID
-3. Fetches audio features batch API
-4. Extracts artist textual genres
+1. Supports three modes: `track_ids` (direct), multi-playlist, and legacy single-playlist
+2. When `track_ids` provided, fetches audio features directly (no playlist scan needed)
+3. Deduplicates by track ID
+4. Fetches audio features batch API
+5. Extracts artist textual genres
 
 ---
 
@@ -696,18 +720,25 @@ Fetch or send messages within a bridge conversation.
 - **Smart Landing**: Detects returning users and updates CTA to "Enter Profile Bridge"
 - **Resume Capture**: Secure "Neural Handshake" (email-based portal) to recover profiles on new devices
 - **Multi-stage onboarding**: `landing` → `intro` → `welcome` → `sources` → `review` → `analyzing` → `complete`
+- **Artist DNA Sync**: Handles `?sync_artist=<spotifyId>` URL param to auto-fetch top tracks and begin DNA flow
+- **Cumulative Track Merging**: Each artist sync _adds_ tracks to the existing list (de-duplicated), building a richer DNA profile over multiple syncs
 - Radar chart visualization for real-time DNA feedback.
 
 **Implementation Details**:
 - Wrapped in **Suspense** to support reactive `useSearchParams` across all entry points.
 - Shared logic for "Resume Existing Signal" across onboarding and email clash states.
+- `fetchedSources` state uses typed interface (`spotifyTracks`, `audioFeatures`, `artistGenres`, `youtubeVideos`, `youtubeTracks`) and merges cumulatively.
 
 **Key State**:
 - `stage`: Current onboarding stage
+- `fetchedSources`: Cumulative collection of tracks, audio features, and genres from all sources
 - `selectedGenres`: User-picked genres
-- `spotifyData`: Fetched Spotify tracks/features
-- `youtubeData`: Fetched YouTube videos
 - `generatedDNA`: Final 12D vector
+
+**Key Functions**:
+- `handleSyncArtistSource(artistId)`: Orchestrates the artist sync flow — fetches top tracks, scans audio features, merges with existing sources, runs dry-run for genre suggestions, and transitions to `review_songs`
+- `fetchSourcesAndPreselect()`: Standard Spotify/YouTube scan flow, also merges cumulatively
+- `runAnalysis()`: Final DNA generation using all accumulated `fetchedSources`
 
 **Components Used**:
 - `DNAHelix`: Animated canvas animation
@@ -823,6 +854,31 @@ Fetch or send messages within a bridge conversation.
 - Persists acceptance in localStorage
 - Animated entrance/exit (Framer Motion)
 - Accept & close buttons
+
+---
+
+### `components/UnifiedArtistCard.tsx`
+
+**Purpose**: Multi-mode artist profile card with playback, embedding, and DNA sync.
+
+**Key Features**:
+- Audio preview playback (30s clips)
+- Spotify embed toggle ("Neural View")
+- **"Sync into DNA" action**: Redirects to `/?sync_artist=<spotifyId>` to begin the artist DNA sync flow
+- External link to Spotify profile
+- Share button
+- Animated entrance with Framer Motion
+
+**Key Props**:
+- `artist`: Artist data object (from DB or Spotify search)
+- `index`: Animation delay index
+- `hasDna`: Whether user has existing DNA profile
+- `onSynced?`: Callback after sync
+- `forceEmbed?`: Start with Spotify embed visible
+
+**Key Logic**:
+- `spotifyId` extracted from `artist.spotify_url` (DB artists) or `artist.id` (Spotify search results)
+- `handleSync`: Uses `useRouter` to navigate to `/?sync_artist=${spotifyId}` instead of calling the old sync-artist API directly
 
 ---
 
@@ -1041,6 +1097,46 @@ POST /api/dna/profile/save
 
 ---
 
+### 8. Artist DNA Sync Flow (Cumulative)
+
+```
+User clicks "Sync into DNA" on artist card
+    ↓
+UnifiedArtistCard extracts Spotify artist ID
+    ↓
+Redirect to /?sync_artist=<artistId>
+    ↓
+app/page.tsx detects sync_artist param
+    ↓
+handleSyncArtistSource(artistId):
+  1. GET /api/artists/top-tracks?id=<artistId>
+     → Returns top 5 tracks
+  2. POST /api/spotify/scan { track_ids: [...] }
+     → Returns audio features for those tracks
+  3. Merge with existing fetchedSources:
+     - De-duplicate tracks by ID
+     - De-duplicate audio features by ID
+     - Merge genre arrays (Set union)
+  4. POST /api/dna/generate { dry_run: true }
+     → Returns suggested genres from CUMULATIVE data
+  5. Pre-select matching genres
+    ↓
+Stage: review_songs (shows ALL accumulated tracks)
+    ↓
+Stage: genre_selection (with suggested genres highlighted)
+    ↓
+User can:
+  a) Confirm → runAnalysis() with all cumulative data
+  b) Go back to artists → Sync another artist
+     → Tracks ACCUMULATE (not replaced)
+    ↓
+Final DNA generated from full cumulative song list
+    ↓
+All tracks stored in metadata.recent_tracks
+```
+
+---
+
 ### 4. Data Flow: Genre → Vector
 
 ```
@@ -1230,4 +1326,4 @@ pnpm lint
 ---
 
 **Last Updated**: March 7, 2026  
-**Documentation Version**: 1.2
+**Documentation Version**: 1.3
