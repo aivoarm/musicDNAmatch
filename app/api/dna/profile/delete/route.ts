@@ -1,5 +1,5 @@
-export const runtime = "nodejs"; // Changed to nodejs for WorkOS SDK compatibility
-import { supabase, toUUID } from "@/lib/supabase";
+export const runtime = "nodejs";
+import { supabaseAdmin, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { workos } from "@/lib/workos";
@@ -13,39 +13,53 @@ export async function POST() {
             return NextResponse.json({ error: "No session found" }, { status: 401 });
         }
 
-        const userId = toUUID(guestId);
+        let profile: any = null;
 
-        // 0. Get auth info before deletion
-        const { data: profile } = await supabase
-            .from("dna_profiles")
-            .select("auth_user_id, email")
-            .eq("user_id", userId)
-            .maybeSingle();
+        // Search by guestId primarily
+        if (guestId) {
+            const userId = toUUID(guestId);
+            const { data } = await supabaseAdmin
+                .from("dna_profiles")
+                .select("auth_user_id, email, user_id")
+                .eq("user_id", userId)
+                .maybeSingle();
+            profile = data;
+        }
 
-        // 1. Delete match interests (both directions)
-        await supabase.from("match_interests").delete().or(`user_id.eq.${guestId},target_id.eq.${guestId}`);
+        if (!profile) {
+            return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+        }
+
+        const actualGuestId = profile.user_id;
+
+        // 1. Delete match interests (both directions) using admin client
+        await supabaseAdmin.from("match_interests").delete().or(`user_id.eq.${actualGuestId},target_id.eq.${actualGuestId}`);
 
         // 2. Find and delete bridges (bridge_messages CASCADE by DB)
-        // Note: Based on setup.sql, bridges uses TEXT for user_a/user_b which matches guestId string
-        await supabase.from("bridges").delete().or(`user_a.eq.${guestId},user_b.eq.${guestId}`);
+        await supabaseAdmin.from("bridges").delete().or(`user_a.eq.${actualGuestId},user_b.eq.${actualGuestId}`);
 
         // 3. Delete DNA profile
-        const { error } = await supabase
+        const { error: deleteError } = await supabaseAdmin
             .from("dna_profiles")
             .delete()
-            .eq("user_id", userId);
+            .eq("user_id", actualGuestId);
 
-        if (error) throw error;
+        if (deleteError) throw deleteError;
 
         // 4. Delete from WorkOS if linked and NOT admin
         const adminEmail = "AAYVAZY@GMAIL.COM";
-        if (profile?.auth_user_id && profile.email?.toUpperCase() !== adminEmail) {
+        const emailToMatch = profile.email?.trim().toUpperCase();
+
+        // Use the WorkOS ID from the profile record
+        const workosIdToDelete = profile.auth_user_id;
+
+        if (workosIdToDelete && emailToMatch !== adminEmail) {
             try {
-                await workos.userManagement.deleteUser(profile.auth_user_id);
-                console.log(`WorkOS user ${profile.auth_user_id} deleted.`);
-            } catch (workosErr) {
+                await workos.userManagement.deleteUser(workosIdToDelete);
+                console.log(`WorkOS user ${workosIdToDelete} deleted.`);
+            } catch (workosErr: any) {
                 console.error("Failed to delete WorkOS user:", workosErr);
-                // We don't throw here to ensure local state is cleared anyway
+                // We continue clearing local state even if WorkOS deletion fails
             }
         }
 
