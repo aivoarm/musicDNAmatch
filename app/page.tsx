@@ -12,10 +12,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
+import OnboardingModal from "@/components/OnboardingModal";
+import OnboardingBanner from "@/components/OnboardingBanner";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "landing" | "entry_choice" | "resume_capture" | "intro" | "welcome_name" | "welcome_story" | "sources" | "review_songs" | "genre_selection" | "analyzing" | "complete" | "email_capture";
+type Stage = "landing" | "intro" | "welcome_name" | "welcome_story" | "sources" | "review_songs" | "genre_selection" | "analyzing" | "complete" | "email_capture";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -156,15 +158,13 @@ function DnaBar({ label, value, red = true }: { label: string; value: number; re
 // CONVERSATIONAL ONBOARDING
 // ═══════════════════════════════════════════════════════════════════════════
 
-type ChatStep = "greeting" | "name_input" | "city_input" | "story_jack" | "story_jane" | "story_match" | "story_result" | "cta";
+type ChatStep = "greeting" | "story_jack" | "story_jane" | "story_match" | "story_result" | "cta";
 
 interface ConversationalOnboardingProps {
     existing: any;
     checking: boolean;
     displayName: string;
-    setDisplayName: (n: string) => void;
     city: string;
-    setCity: (c: string) => void;
     onResume: () => void;
     onBegin: () => void;
 }
@@ -603,158 +603,12 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
     );
 }
 
-function EntryChoice({ onNew, onResume, onBack }: { onNew: () => void, onResume: () => void, onBack: () => void }) {
-    return (
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-            className="min-h-screen flex items-center justify-center p-6 text-center relative z-10 bg-[#080808]">
-            <div className="max-w-2xl w-full">
-                <Brain className="h-16 w-16 text-[#FF0000] mx-auto mb-10 drop-shadow-[0_0_20px_rgba(255,0,0,0.3)]" />
-                <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter italic mb-4 text-white">
-                    Protocol <br /><span className="text-[#FF0000]">Selection</span>
-                </h2>
-                <p className="text-white/40 font-bold mb-14 uppercase tracking-[0.4em] text-[10px] mono">Identification required for signal access</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <button onClick={onNew} className="glass p-12 rounded-[2.5rem] border border-white/10 hover:border-[#FF0000]/40 transition-all group flex flex-col items-center gap-6">
-                        <div className="h-20 w-20 rounded-[2rem] bg-white/5 flex items-center justify-center group-hover:bg-[#FF0000]/10 transition-colors">
-                            <Sparkles className="h-10 w-10 text-white/50 group-hover:text-[#FF0000] transition-colors" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-black text-white italic uppercase mb-2">New Soul</h3>
-                            <p className="text-[10px] text-white/30 mono uppercase tracking-widest leading-relaxed">Init discovery sequence<br />generate new DNA</p>
-                        </div>
-                    </button>
-
-                    <button onClick={onResume} className="glass p-12 rounded-[2.5rem] border border-white/10 hover:border-blue-500/40 transition-all group flex flex-col items-center gap-6">
-                        <div className="h-20 w-20 rounded-[2rem] bg-white/5 flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
-                            <Fingerprint className="h-10 w-10 text-white/50 group-hover:text-blue-400 transition-colors" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-black text-white italic uppercase mb-2">Returning</h3>
-                            <p className="text-[10px] text-white/30 mono uppercase tracking-widest leading-relaxed">Restore prior handshake<br />access secure matches</p>
-                        </div>
-                    </button>
-                </div>
-
-                <div className="mt-16">
-                    <button onClick={onBack} className="mono text-[10px] text-white/30 hover:text-white transition-all uppercase tracking-[0.5em] font-black underline underline-offset-8">← Back to landing</button>
-                </div>
-            </div>
-        </motion.div>
-    );
-}
-
-function ResumeCapture({ email, setEmail, checkingEmail, onSubmit, onBack, clash, handleResumeExisting, setClash }: any) {
-    const [sending, setSending] = useState(false);
-    const [magicError, setMagicError] = useState<string | null>(null);
-
-    const handleRestore = async () => {
-        if (!email.trim() || !email.includes("@")) return;
-        setSending(true);
-        setMagicError(null);
-
-        try {
-            // Check if a profile exists with this email
-            const checkRes = await fetch("/api/dna/profile/check-email", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const checkData = await checkRes.json() as any;
-
-            if (checkData.exists) {
-                // Profile found — show clash UI for instant restore
-                setClash(checkData.profile);
-                setSending(false);
-                return;
-            }
-
-            // No profile found — redirect to WorkOS hosted auth with email hint
-            window.location.href = `/login?email=${encodeURIComponent(email)}`;
-        } catch (e: any) {
-            setMagicError(e.message || "Network error");
-            setSending(false);
-        }
-    };
-
-    return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-            className="min-h-screen flex items-center justify-center p-6 text-center relative z-10 bg-[#080808]">
-            <div className="max-w-lg w-full">
-                {!clash ? (
-                    /* ─── EMAIL ENTRY → CHECK OR AUTH ─── */
-                    <>
-                        <div className="h-24 w-24 rounded-[2.5rem] bg-blue-500/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_80px_rgba(59,130,246,0.1)] border border-blue-500/20">
-                            <Fingerprint className="h-12 w-12 text-blue-400" />
-                        </div>
-                        <h2 className="text-5xl md:text-6xl font-black text-white italic tracking-tighter mb-4 uppercase">Restore Signal</h2>
-                        <p className="text-white/60 mono text-[10px] uppercase tracking-[0.4em] mb-12 font-bold max-w-sm mx-auto leading-relaxed">
-                            Enter your email to check for an existing DNA profile or verify your identity.
-                        </p>
-
-                        <div className="flex flex-col gap-4">
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                onKeyDown={e => e.key === "Enter" && handleRestore()}
-                                placeholder="your@email.com"
-                                autoFocus
-                                className="w-full bg-white/8 border border-white/20 rounded-3xl py-7 px-8 focus:outline-none focus:border-blue-500/60 transition-all text-center text-3xl font-black text-white placeholder:text-white/20 tracking-tight"
-                            />
-                            {magicError && (
-                                <p className="text-red-400 mono text-[10px] uppercase tracking-widest">{magicError}</p>
-                            )}
-                            <button
-                                onClick={handleRestore}
-                                disabled={sending || !email.trim() || !email.includes("@")}
-                                className="w-full px-16 flex items-center justify-center gap-3 bg-blue-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_60px_rgba(59,130,246,0.4)] mt-4 border border-blue-400/30"
-                            >
-                                {sending ? <Loader2 className="h-6 w-6 animate-spin" /> : "Verify Identity"} <ArrowRight className="h-5 w-5" />
-                            </button>
-                        </div>
-                    </>
-                ) : (
-                    /* ─── PROFILE FOUND (CLASH) STATE ─── */
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="glass p-12 rounded-[3.5rem] border border-blue-500/40 bg-blue-500/10 backdrop-blur-3xl shadow-[0_0_150px_rgba(59,130,246,0.2)]">
-                        <div className="h-24 w-24 rounded-full bg-blue-500/20 flex items-center justify-center mx-auto mb-10 border border-blue-500/30">
-                            <CheckCircle2 className="h-12 w-12 text-blue-400" />
-                        </div>
-                        <h3 className="text-4xl font-black text-white italic mb-4 uppercase tracking-tighter">Profile Found</h3>
-                        <p className="text-white/80 text-base mb-12 leading-relaxed font-bold">
-                            Welcome back, <span className="text-blue-400 font-black">{clash.display_name}</span>. <br /><span className="opacity-60 text-sm">Your neural handshake is ready for deployment.</span>
-                        </p>
-                        <button
-                            onClick={handleResumeExisting}
-                            className="w-full bg-blue-600 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.3em] hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_50px_rgba(59,130,246,0.5)] border border-blue-400/40"
-                        >
-                            Open My Profile
-                        </button>
-                        <button
-                            onClick={() => { setClash(null); setEmail(""); }}
-                            className="w-full mt-6 bg-white/5 border border-white/10 text-white/40 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"
-                        >
-                            Try different email
-                        </button>
-                    </motion.div>
-                )}
-                <div className="mt-16">
-                    <button onClick={onBack} className="mono text-[10px] text-white/30 hover:text-white transition-all uppercase tracking-[0.5em] font-black underline underline-offset-8">← Back to start</button>
-                </div>
-            </div>
-        </motion.div>
-    );
-}
-
-function ConversationalOnboarding({ existing, checking, displayName, setDisplayName, city, setCity, onResume, onBegin }: ConversationalOnboardingProps) {
+function ConversationalOnboarding({ existing, checking, displayName, city, onResume, onBegin }: ConversationalOnboardingProps) {
     const [step, setStep] = useState<ChatStep>("greeting");
-    const [nameInput, setNameInput] = useState(displayName || "");
-    const [cityInput, setCityInput] = useState(city || "");
     const [typing, setTyping] = useState(false);
     const [visibleMessages, setVisibleMessages] = useState(1);
     const bottomRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const cityInputRef = useRef<HTMLInputElement>(null);
 
     // Auto-scroll to bottom whenever messages change
     useEffect(() => {
@@ -767,45 +621,22 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
         setTimeout(() => { setTyping(false); then(); }, afterMs);
     };
 
-    // On mount: show greeting, then after a beat show the name prompt
+    // On mount: show greeting, then go to CTA
     useEffect(() => {
         if (existing) {
             setStep("cta");
             setVisibleMessages(5);
             return;
         }
-        revealWithDelay(900, () => setVisibleMessages(2));
+
+        // Skip name/city prompts - go straight to CTA
+        revealWithDelay(1200, () => {
+            setStep("cta");
+            setVisibleMessages(1);
+        });
     }, [existing]);
 
-    const handleNameSubmit = () => {
-        const name = nameInput.trim();
-        if (!name) return;
-        setDisplayName(name);
-        document.cookie = `display_name=${encodeURIComponent(name)};max-age=31536000;path=/`;
-        // Go to city input step
-        setStep("city_input");
-        setVisibleMessages(0);
-        revealWithDelay(600, () => {
-            setVisibleMessages(1);
-            setTimeout(() => cityInputRef.current?.focus(), 200);
-        });
-    };
 
-    const handleCitySubmit = () => {
-        const c = cityInput.trim();
-        if (!c) return;
-        setCity(c);
-        document.cookie = `city=${encodeURIComponent(c)};max-age=31536000;path=/`;
-        setStep("cta");
-        setVisibleMessages(0);
-        // Cascade messages
-        revealWithDelay(800, () => {
-            setVisibleMessages(1);
-        });
-    };
-
-    const firstName = (nameInput.trim() || displayName || "").split(" ")[0] || "you";
-    const cityName = cityInput.trim() || city || "";
 
     return (
         <motion.div
@@ -845,109 +676,18 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                             Hey there 👋 Welcome to <span className="text-white font-black">musicDNAmatch</span>.
                         </SystemBubble>
 
-                        {visibleMessages >= 2 && !typing && (
-                            <SystemBubble delay={0}>
-                                Before we map your sound — what should we call you?
-                            </SystemBubble>
-                        )}
-
-                        {typing && <TypingIndicator />}
-
-                        {visibleMessages >= 2 && !typing && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex gap-2 mt-2"
-                            >
-                                <input
-                                    ref={inputRef}
-                                    autoFocus
-                                    type="text"
-                                    value={nameInput}
-                                    onChange={e => setNameInput(e.target.value)}
-                                    onKeyDown={e => e.key === "Enter" && nameInput.trim() && handleNameSubmit()}
-                                    placeholder="Your first name…"
-                                    className="flex-1 bg-white/5 border border-white/12 rounded-2xl px-5 py-4 text-white font-bold text-base focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
-                                />
-                                <button
-                                    onClick={handleNameSubmit}
-                                    disabled={!nameInput.trim()}
-                                    className="bg-[#FF0000] text-white font-black px-6 py-4 rounded-2xl hover:bg-red-500 active:scale-95 transition-all disabled:opacity-25 flex items-center gap-2 text-sm uppercase tracking-wide shadow-[0_0_24px_rgba(255,0,0,0.3)]"
-                                >
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
-                            </motion.div>
-                        )}
-
-                        {/* Resume option */}
-                        {existing && !checking && visibleMessages >= 2 && !typing && (
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
-                                className="flex justify-center pt-2">
-                                <button onClick={onResume} className="flex items-center gap-2 mono text-[10px] text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest border border-white/8 px-5 py-2.5 rounded-full hover:border-white/15">
-                                    <CheckCircle2 className="h-3 w-3 text-[#FF0000]" />Resume my previous signal
-                                </button>
-                            </motion.div>
-                        )}
-                    </div>
-                )}
-
-                {/* ── CITY INPUT step ── */}
-                {step === "city_input" && (
-                    <div className="flex flex-col gap-4 flex-1">
-                        {/* User replied with name */}
-                        <UserBubble delay={0}>{firstName}</UserBubble>
-
-                        {typing && <TypingIndicator />}
-
-                        {visibleMessages >= 1 && !typing && (
-                            <SystemBubble delay={0}>
-                                Nice, <span className="text-white font-black">{firstName}</span>! And where are you from? 🌍
-                            </SystemBubble>
-                        )}
-
-                        {visibleMessages >= 1 && !typing && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="flex gap-2.5 items-center justify-end"
-                            >
-                                <input
-                                    ref={cityInputRef}
-                                    autoFocus
-                                    type="text"
-                                    value={cityInput}
-                                    onChange={e => setCityInput(e.target.value)}
-                                    onKeyDown={e => e.key === "Enter" && cityInput.trim() && handleCitySubmit()}
-                                    placeholder="Your city…"
-                                    className="flex-1 bg-white/5 border border-white/12 rounded-2xl px-5 py-4 text-white font-bold text-base focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
-                                />
-                                <button
-                                    onClick={handleCitySubmit}
-                                    disabled={!cityInput.trim()}
-                                    className="bg-[#FF0000] text-white font-black px-6 py-4 rounded-2xl hover:bg-red-500 active:scale-95 transition-all disabled:opacity-25 flex items-center gap-2 text-sm uppercase tracking-wide shadow-[0_0_24px_rgba(255,0,0,0.3)]"
-                                >
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
-                            </motion.div>
-                        )}
                     </div>
                 )}
 
                 {/* ── STORY/CTA step ── */}
                 {(step === "story_jack" || step === "story_jane" || step === "story_match" || step === "story_result" || step === "cta") && (
                     <div className="flex flex-col gap-4 flex-1">
-                        {/* User replied with name and city */}
-                        <UserBubble delay={0}>{firstName}</UserBubble>
-
-                        {cityName && <UserBubble delay={0.1}>{cityName}</UserBubble>}
 
                         {visibleMessages >= 1 && (
                             <SystemBubble delay={0}>
-                                {cityName
-                                    ? <>Hey <span className="text-white font-black">{firstName}</span> from <span className="text-white font-black">{cityName}</span> 🎵 Perfect, let's map your DNA.</>
-                                    : <>Nice to meet you, <span className="text-white font-black">{firstName}</span> 🎵 Let's map your DNA.</>}
+                                {displayName
+                                    ? <>Hey <span className="text-white font-black">{displayName}</span> 🎵 Let's map your DNA.</>
+                                    : <>Ready to map your unique sound? 🎵 let's go.</>}
                             </SystemBubble>
                         )}
 
@@ -960,7 +700,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                 className="mt-4 space-y-3"
                             >
                                 <SystemBubble delay={0.2}>
-                                    <span className="text-white font-black">Your story is waiting to be written, {firstName}.</span> Who shares your sound?
+                                    <span className="text-white font-black">Your story is waiting to be written.</span> Who shares your sound?
                                 </SystemBubble>
 
                                 <motion.div
@@ -990,7 +730,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                             <Activity className="h-4 w-4" />
-                                            See My Matches, {firstName}
+                                            See My Matches, {displayName || "you"}
                                         </button>
                                     ) : (
                                         <button
@@ -999,7 +739,7 @@ function ConversationalOnboarding({ existing, checking, displayName, setDisplayN
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />
                                             <Play className="h-4 w-4 fill-white" />
-                                            Start My Journey, {firstName}
+                                            Start My Journey, {displayName || "you"}
                                         </button>
                                     )}
 
@@ -1090,7 +830,23 @@ function HomeContent() {
     const [emailVerifySent, setEmailVerifySent] = useState(false);
     const [emailVerifyError, setEmailVerifyError] = useState<string | null>(null);
 
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showBanner, setShowBanner] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [skippedOnboarding, setSkippedOnboarding] = useState(false);
+    const [onboardedToast, setOnboardedToast] = useState(false);
+
     const searchParams = useSearchParams();
+
+    // Onboarded check
+    useEffect(() => {
+        if (searchParams.get("onboarded") === "true") {
+            setOnboardedToast(true);
+            setTimeout(() => setOnboardedToast(false), 5000);
+            // Clear param
+            window.history.replaceState({}, '', '/');
+        }
+    }, [searchParams]);
 
     // ── Email Verify (WorkOS Magic Auth) ────────────────────────────────
     const handleEmailVerify = async (forceConfirm = false) => {
@@ -1153,104 +909,7 @@ function HomeContent() {
     };
 
     // ── Init ──────────────────────────────────────────────────────────────
-    useEffect(() => {
-        if (searchParams.get("resume") === "1") {
-            setStage("resume_capture");
-        }
-        const syncArtistId = searchParams.get("sync_artist");
-        if (syncArtistId) {
-            handleSyncArtistSource(syncArtistId);
-        }
-    }, [searchParams]);
 
-    const handleSyncArtistSource = async (artistId: string) => {
-        setStage("analyzing");
-        setProgress(10);
-        try {
-            // 1. Fetch top 5 tracks for this artist
-            const res = await fetch(`/api/artists/top-tracks?id=${artistId}`);
-            const data = await res.json() as any;
-            if (!data.success || !data.tracks) {
-                setStage("landing");
-                return;
-            }
-
-            const tracks = data.tracks;
-            setProgress(40);
-
-            // 2. Fetch audio features for these tracks
-            const scanRes = await fetch("/api/spotify/scan", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    track_ids: tracks.map((t: any) => t.id),
-                    artist_genres: [] // We'll get some from the tracks later if needed
-                })
-            });
-            const scanData = await scanRes.json() as any;
-
-            // 3. Merge with existing sources
-            let combinedTracks: any[] = [];
-            let combinedFeatures: any[] = [];
-            let combinedGenres: string[] = [];
-
-            setFetchedSources((prev) => {
-                const existingTracks = prev?.spotifyTracks || existing?.recent_tracks || [];
-                const existingFeatures = prev?.audioFeatures || [];
-                const existingArtistGenres = prev?.artistGenres || existing?.top_genres || [];
-
-                // Filter out duplicates
-                const newTracks = tracks.filter((t: any) => !existingTracks.some((et: any) => et.id === t.id));
-                combinedTracks = [...existingTracks, ...newTracks];
-
-                const newFeatures = (scanData.audioFeatures || []).filter((f: any) => !existingFeatures.some((ef: any) => ef.id === f.id));
-                combinedFeatures = [...existingFeatures, ...newFeatures];
-
-                combinedGenres = Array.from(new Set([...existingArtistGenres, ...(scanData.artistGenres || [])]));
-
-                return {
-                    spotifyTracks: combinedTracks,
-                    audioFeatures: combinedFeatures,
-                    artistGenres: combinedGenres,
-                    youtubeVideos: prev?.youtubeVideos || [],
-                    youtubeTracks: prev?.youtubeTracks || []
-                };
-            });
-
-            setProgress(80);
-
-            // 4. Run dry-run to get suggested genres based on CUMULATIVE data
-            const dryRes = await fetch("/api/dna/generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    genres: [],
-                    audioFeatures: combinedFeatures,
-                    spotifyTracks: combinedTracks,
-                    dry_run: true
-                })
-            });
-            const dryData = await dryRes.json() as any;
-            if (dryData.success && dryData.suggested_genres) {
-                const preselected: string[] = [];
-                for (const sg of dryData.suggested_genres) {
-                    const match = GENRES.find(g => g.toLowerCase().replace(/[^a-z0-9]/g, "") === sg.toLowerCase().replace(/[^a-z0-9]/g, ""));
-                    if (match && !preselected.includes(match)) preselected.push(match);
-                }
-                setGenres(preselected);
-            }
-
-            setProgress(100);
-            setTimeout(() => {
-                setStage("review_songs");
-                setProgress(0);
-            }, 600);
-
-        } catch (e) {
-            console.error("Artist Sync error:", e);
-            setStage("landing");
-        }
-    };
 
 
     const refreshProfile = useCallback(async () => {
@@ -1272,6 +931,15 @@ function HomeContent() {
 
     useEffect(() => {
         refreshProfile();
+
+        // Check WorkOS Auth
+        fetch("/api/auth/me").then(r => r.json()).then((d: any) => {
+            if (d.user) setIsAuthenticated(true);
+        }).catch(() => { });
+
+        // Check if skipped
+        const skipped = sessionStorage.getItem("dna_skipped_onboarding");
+        if (skipped) setSkippedOnboarding(true);
 
         const saved = getCookie("last_spotify_url");
         if (saved) setSpotifyUrl(decodeURIComponent(saved));
@@ -1295,6 +963,16 @@ function HomeContent() {
         const timer = setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 350);
         return () => clearTimeout(timer);
     }, [stage]);
+
+    // ── Onboarding Trigger ──
+    useEffect(() => {
+        if (stage === "complete" && dna && !isAuthenticated && !skippedOnboarding) {
+            const timer = setTimeout(() => {
+                setShowOnboarding(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [stage, dna, isAuthenticated, skippedOnboarding]);
 
     // ── Spotify ───────────────────────────────────────────────────────────
     const extractId = (raw: string) => {
@@ -1354,10 +1032,6 @@ function HomeContent() {
                 const d = await res.json() as any;
                 if (d.exists) {
                     setClash(d.profile);
-                    setCheckingEmail(false);
-                    return;
-                } else if (stage === "resume_capture") {
-                    alert("No DNA profile found for this email. Check for typos or try a different one.");
                     setCheckingEmail(false);
                     return;
                 }
@@ -1748,6 +1422,21 @@ function HomeContent() {
     const ytOk = ytTracks.filter(t => t.status === "ok");
     const hasYt = ytOk.length > 0;
 
+    const handleOnboardingSuccess = (profile: any) => {
+        setShowOnboarding(false);
+        setExisting(profile);
+        if (profile.metadata?.display_name) setDisplayName(profile.metadata.display_name);
+        if (profile.email) setEmail(profile.email);
+        if (profile.city) setCity(profile.city);
+    };
+
+    const handleOnboardingSkip = () => {
+        setShowOnboarding(false);
+        setSkippedOnboarding(true);
+        setShowBanner(true);
+        sessionStorage.setItem("dna_skipped_onboarding", "true");
+    };
+
     // ─────────────────────────────────────────────────────────────────────
     return (
         <div className="relative min-h-screen bg-[#080808] overflow-x-hidden">
@@ -1771,33 +1460,13 @@ function HomeContent() {
                 {/* ═══════════════════════════════════════════════════════ */}
                 {stage === "landing" && (
                     <Landing
-                        onChoice={() => setStage("entry_choice")}
+                        onChoice={() => setStage("intro")}
                         onArtist={() => { window.location.href = "/artists" }}
                         existing={existing}
                         refreshProfile={refreshProfile}
                     />
                 )}
 
-                {stage === "entry_choice" && (
-                    <EntryChoice
-                        onNew={() => setStage("intro")}
-                        onResume={() => setStage("resume_capture")}
-                        onBack={() => setStage("landing")}
-                    />
-                )}
-
-                {stage === "resume_capture" && (
-                    <ResumeCapture
-                        email={email}
-                        setEmail={setEmail}
-                        checkingEmail={checkingEmail}
-                        onSubmit={handleFinalSubmit}
-                        onBack={() => setStage("landing")}
-                        clash={clash}
-                        handleResumeExisting={handleResumeExisting}
-                        setClash={setClash}
-                    />
-                )}
 
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* CONVERSATIONAL ONBOARDING                               */}
@@ -1807,9 +1476,7 @@ function HomeContent() {
                         existing={existing}
                         checking={checking}
                         displayName={displayName}
-                        setDisplayName={setDisplayName}
                         city={city}
-                        setCity={setCity}
                         onResume={() => { setDna(existing); setStage("complete"); }}
                         onBegin={() => setStage("sources")}
                     />
@@ -1818,7 +1485,7 @@ function HomeContent() {
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* INNER STAGES                                            */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && stage !== "landing" && stage !== "entry_choice" && stage !== "resume_capture" && (
+                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && stage !== "landing" && (
                     <motion.div key="inner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen">
 
 
@@ -2292,9 +1959,11 @@ function HomeContent() {
                                                         }).catch(console.error);
 
                                                         if (!email) {
-                                                            setStage("email_capture");
+                                                            setShowOnboarding(true);
+                                                        } else if (!isAuthenticated) {
+                                                            window.location.href = `/login?email=${encodeURIComponent(email)}`;
                                                         } else {
-                                                            window.location.href = "/soulmates?genres=" + genres.join(",");
+                                                            window.location.href = "/soulmates?genres=" + encodeURIComponent(genres.join(","));
                                                         }
                                                     }}
                                                     className="relative flex items-center justify-between w-full bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
@@ -2492,6 +2161,44 @@ function HomeContent() {
                     </motion.div>
                 )}
 
+            </AnimatePresence>
+
+            <OnboardingModal
+                isOpen={showOnboarding}
+                dnaResult={{
+                    genres,
+                    displayName,
+                    email,
+                    city,
+                    audioFeatures: fetchedSources?.audioFeatures || [],
+                    youtubeVideos: fetchedSources?.youtubeVideos || [],
+                    artistGenres: fetchedSources?.artistGenres || [],
+                    spotifyTracks: fetchedSources?.spotifyTracks || [],
+                    youtubeTracks: fetchedSources?.youtubeTracks || [],
+                }}
+                guestId={getCookie("guest_id") || ""}
+                onSuccess={handleOnboardingSuccess}
+                onSkip={handleOnboardingSkip}
+            />
+
+            <OnboardingBanner
+                visible={showBanner && !isAuthenticated}
+                onActivate={() => setShowOnboarding(true)}
+                onDismiss={() => setShowBanner(false)}
+            />
+
+            <AnimatePresence>
+                {onboardedToast && (
+                    <motion.div
+                        initial={{ y: 50, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 50, opacity: 0 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] bg-green-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-green-900/40"
+                    >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Signal Secured & Identity Linked
+                    </motion.div>
+                )}
             </AnimatePresence>
         </div>
     );

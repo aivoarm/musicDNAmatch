@@ -37,8 +37,11 @@ export default function AuthCompletePage() {
                     return acc;
                 }, {});
 
-                const guestId = cookies['guest_id'];
-                const profileId = cookies['profile_id'];
+                const pendingLinkStr = sessionStorage.getItem('dna_pending_link');
+                const pendingLink = pendingLinkStr ? JSON.parse(pendingLinkStr) : null;
+
+                const guestId = pendingLink?.guestId || cookies['guest_id'];
+                const profileId = pendingLink?.profileId || cookies['profile_id'];
 
                 // 1. Standardize to UPPERCASE to match DNA engine and DB triggers
                 const storageEmail = user.email!.trim().toUpperCase();
@@ -71,10 +74,13 @@ export default function AuthCompletePage() {
                     // Always store normalized email for UI persistence
                     document.cookie = `auth_email=${storageEmail};max-age=31536000;path=/;SameSite=Lax`;
 
+                    // Clear pending link
+                    sessionStorage.removeItem('dna_pending_link');
+
                     let redirectUrl = "/profile?auth=success";
 
-                    if (data.metadata?.intent === "find_soulmates") {
-                        redirectUrl = "/soulmates?auth=onboard";
+                    if (data.metadata?.intent === "find_soulmates" || pendingLink) {
+                        redirectUrl = "/?onboarded=true";
                     }
 
                     setMessage("Identity verified! Redirecting...");
