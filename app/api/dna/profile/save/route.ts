@@ -65,7 +65,7 @@ export async function POST(req: Request) {
         // Fetch existing columns to preserve fields not being updated
         const { data: existing } = await supabase
             .from("dna_profiles")
-            .select("metadata, email, city")
+            .select("metadata, email, city, broadcasting")
             .eq("user_id", userId)
             .single();
 
@@ -99,7 +99,7 @@ export async function POST(req: Request) {
                 email: uppercasedEmail,
                 city: uppercasedCity,
                 metadata: newMetadata,
-                broadcasting: broadcasting && !!uppercasedEmail
+                broadcasting: (broadcasting !== undefined) ? (broadcasting && !!uppercasedEmail) : (!!uppercasedEmail || (existing as any)?.broadcasting)
             })
             .eq("user_id", userId);
 

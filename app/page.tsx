@@ -1257,11 +1257,16 @@ function HomeContent() {
         try {
             const r = await fetch("/api/dna/profile/me");
             const d = await r.json() as any;
-            if (d.found) {
+            if (d.found && d.dna) {
                 setExisting(d.dna);
+                if (d.dna.display_name) setDisplayName(d.dna.display_name);
+                if (d.dna.email) setEmail(d.dna.email);
+                if (d.dna.city) setCity(d.dna.city);
             }
         } catch (e) {
             console.error("Failed to refresh profile", e);
+        } finally {
+            setChecking(false);
         }
     }, []);
 
@@ -1398,7 +1403,8 @@ function HomeContent() {
             body: JSON.stringify({ intent: 'find_soulmates' })
         }).catch(console.error);
 
-        window.location.href = "/soulmates?genres=" + genres.join(",");
+        // ALWAYS redirect to /login to ensure WorkOS identity linkage
+        window.location.href = `/login?email=${encodeURIComponent(email)}`;
     };
 
     // ── YouTube ───────────────────────────────────────────────────────────
@@ -2278,13 +2284,18 @@ function HomeContent() {
                                                     </div>
                                                 </div>
                                                 <button
-                                                    onClick={() => {
-                                                        fetch('/api/dna/intent', {
+                                                    onClick={async () => {
+                                                        await fetch('/api/dna/intent', {
                                                             method: 'POST',
                                                             headers: { 'Content-Type': 'application/json' },
                                                             body: JSON.stringify({ intent: 'find_soulmates' })
                                                         }).catch(console.error);
-                                                        window.location.href = "/soulmates?genres=" + genres.join(",");
+
+                                                        if (!email) {
+                                                            setStage("email_capture");
+                                                        } else {
+                                                            window.location.href = "/soulmates?genres=" + genres.join(",");
+                                                        }
                                                     }}
                                                     className="relative flex items-center justify-between w-full bg-[#FF0000] p-6 rounded-[2rem] font-black text-white uppercase tracking-[0.2em] text-lg hover:scale-[1.01] active:scale-95 transition-all shadow-[0_14px_50px_rgba(255,0,0,0.4)] overflow-hidden group">
                                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full shimmer pointer-events-none" />

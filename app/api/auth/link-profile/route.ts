@@ -84,14 +84,28 @@ export async function POST(req: Request) {
                 return { success: !!updated, guestId: updated?.user_id };
             });
 
-            const updateResults = await Promise.all(updatePromises);
+            const updateResults = await Promise.all(updatePromises.map(async (p, i) => {
+                const res = await p;
+                if (res.success) {
+                    // Fetch the metadata of the profile we just updated
+                    const { data } = await supabaseAdmin
+                        .from("dna_profiles")
+                        .select("metadata")
+                        .eq("id", allMatches[i].id)
+                        .single();
+                    return { ...res, metadata: data?.metadata };
+                }
+                return res;
+            }));
+
             const successfulUpdates = updateResults.filter(r => r.success);
 
             if (successfulUpdates.length > 0) {
                 console.log(`Successfully linked ${successfulUpdates.length} row(s) to WorkOS ${authUserId}`);
                 return NextResponse.json({
                     success: true,
-                    guestId: successfulUpdates[0].guestId,
+                    guestId: (successfulUpdates[0] as any).guestId,
+                    metadata: (successfulUpdates[0] as any).metadata,
                     linked: true,
                     count: successfulUpdates.length
                 });

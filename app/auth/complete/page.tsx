@@ -71,11 +71,17 @@ export default function AuthCompletePage() {
                     // Always store normalized email for UI persistence
                     document.cookie = `auth_email=${storageEmail};max-age=31536000;path=/;SameSite=Lax`;
 
+                    let redirectUrl = "/profile?auth=success";
+
+                    if (data.metadata?.intent === "find_soulmates") {
+                        redirectUrl = "/soulmates?auth=onboard";
+                    }
+
                     setMessage("Identity verified! Redirecting...");
                     setStatus("success");
 
                     setTimeout(() => {
-                        window.location.href = "/profile?auth=success";
+                        window.location.href = redirectUrl;
                     }, 1000);
 
                     return;
