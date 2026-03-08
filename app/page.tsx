@@ -1146,8 +1146,80 @@ function HomeContent() {
     } | null>(null);
     const [clash, setClash] = useState<any>(null);
     const [checkingEmail, setCheckingEmail] = useState(false);
+    const [emailVerifySent, setEmailVerifySent] = useState(false);
+    const [emailVerifyError, setEmailVerifyError] = useState<string | null>(null);
 
     const searchParams = useSearchParams();
+
+    // ── Email Verify (Magic Link) ─────────────────────────────────────────
+    const handleEmailVerify = async () => {
+        if (!email.trim() || !email.includes("@")) return;
+        setCheckingEmail(true);
+        setEmailVerifyError(null);
+
+        try {
+            // First check for email clash
+            const checkRes = await fetch("/api/dna/profile/check-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const checkData = await checkRes.json();
+
+            if (checkData.exists) {
+                setClash(checkData.profile);
+                setCheckingEmail(false);
+                return;
+            }
+
+            // Save the DNA profile first (without email — it gets linked after verification)
+            const payload = {
+                genres,
+                displayName,
+                email: "", // Don't attach email until verified
+                city,
+                audioFeatures: fetchedSources?.audioFeatures || [],
+                youtubeVideos: fetchedSources?.youtubeVideos || [],
+                artistGenres: fetchedSources?.artistGenres || [],
+                spotifyTracks: fetchedSources?.spotifyTracks || [],
+                youtubeTracks: fetchedSources?.youtubeTracks || [],
+                dry_run: false,
+            };
+
+            const genRes = await fetch("/api/dna/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!genRes.ok) {
+                const errData = await genRes.json();
+                setEmailVerifyError(errData.error || "Failed to generate DNA");
+                setCheckingEmail(false);
+                return;
+            }
+
+            // Now send the magic link
+            const res = await fetch("/api/auth/magic-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                setEmailVerifyError(data.error || "Failed to send verification link");
+                setCheckingEmail(false);
+                return;
+            }
+
+            setEmailVerifySent(true);
+        } catch (e: any) {
+            setEmailVerifyError(e.message || "Network error");
+        } finally {
+            setCheckingEmail(false);
+        }
+    };
 
     // ── Init ──────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -2167,13 +2239,13 @@ function HomeContent() {
                                         </p>
                                         <div className="space-y-3 text-left max-w-[260px] mx-auto">
                                             {[
-                                                { l: "Genre vector computed", d: progress > 10 },
-                                                { l: <><a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-colors">Spotify</a> features extracted</>, d: progress > 40, skip: selPlaylists.length === 0 },
-                                                { l: <><a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors">YouTube</a> signals processed</>, d: progress > 65, skip: ytOk.length === 0 },
-                                                { l: "Combining signals", d: progress > 80 },
-                                                { l: "Generating narrative", d: progress >= 100 },
-                                            ].map(({ l, d, skip }) => skip ? null : (
-                                                <div key={typeof l === 'string' ? l : 'source-' + d} className={`flex items-center gap-3 transition-all duration-500 ${d ? "opacity-100" : "opacity-40"}`}>
+                                                { l: "Genre vector computed", d: progress > 10, k: "genre" },
+                                                { l: <><a href="https://spotify.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#1DB954] transition-colors">Spotify</a> features extracted</>, d: progress > 40, skip: selPlaylists.length === 0, k: "spotify" },
+                                                { l: <><a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-[#FF0000] transition-colors">YouTube</a> signals processed</>, d: progress > 65, skip: ytOk.length === 0, k: "youtube" },
+                                                { l: "Combining signals", d: progress > 80, k: "combine" },
+                                                { l: "Generating narrative", d: progress >= 100, k: "narrative" },
+                                            ].map(({ l, d, skip, k }) => skip ? null : (
+                                                <div key={k} className={`flex items-center gap-3 transition-all duration-500 ${d ? "opacity-100" : "opacity-40"}`}>
                                                     <div className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${d ? "border-[#FF0000] bg-[#FF0000]/25" : "border-white/30"}`}>
                                                         {d && <Check className="h-2.5 w-2.5 text-[#FF0000]" />}
                                                     </div>
@@ -2373,19 +2445,49 @@ function HomeContent() {
                                 )}
 
 
-                                {/* ── EMAIL CAPTURE ── */}
+                                {/* ── EMAIL CAPTURE (Magic Link) ── */}
                                 {stage === "email_capture" && (
                                     <motion.div key="ec" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
                                         className="text-center max-w-lg mx-auto pb-20">
 
-                                        {!clash ? (
+                                        {emailVerifySent ? (
+                                            /* ─── CHECK YOUR INBOX ─── */
+                                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+                                                <motion.div
+                                                    animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }}
+                                                    transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                                                    className="h-20 w-20 rounded-[2rem] bg-green-500/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_60px_rgba(34,197,94,0.15)] border border-green-500/20"
+                                                >
+                                                    <Mail className="h-10 w-10 text-green-400" />
+                                                </motion.div>
+                                                <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4">Check Your Inbox</h2>
+                                                <p className="text-white/60 mono text-[9px] uppercase tracking-[0.4em] mb-4">
+                                                    A verification link has been sent to
+                                                </p>
+                                                <p className="text-green-400 font-black text-lg mb-8 tracking-tight">{email}</p>
+                                                <div className="glass p-6 rounded-[2rem] border border-white/10 max-w-sm mx-auto mb-8">
+                                                    <p className="text-white/50 text-xs leading-relaxed">
+                                                        Click the link in your email to verify and permanently secure your DNA profile. Your signal will be linked to your verified identity.
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-col gap-3 items-center">
+                                                    <button
+                                                        onClick={() => setEmailVerifySent(false)}
+                                                        className="mono text-[10px] text-white/40 hover:text-white transition-all uppercase tracking-widest font-black"
+                                                    >
+                                                        ← Use different email
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        ) : !clash ? (
+                                            /* ─── EMAIL ENTRY ─── */
                                             <>
                                                 <div className="h-20 w-20 rounded-[2rem] bg-[#FF0000]/10 flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(255,0,0,0.1)]">
                                                     <Search className="h-10 w-10 text-[#FF0000]" />
                                                 </div>
                                                 <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4">Secure your Signal</h2>
                                                 <p className="text-white/80 mono text-[9px] uppercase tracking-[0.4em] mb-12">
-                                                    Link your DNA to find soulmates in the network.
+                                                    Verify your email to permanently link your DNA and find soulmates.
                                                 </p>
 
                                                 <div className="flex flex-col gap-4">
@@ -2393,21 +2495,25 @@ function HomeContent() {
                                                         type="email"
                                                         value={email}
                                                         onChange={e => setEmail(e.target.value)}
-                                                        onKeyDown={e => e.key === "Enter" && handleFinalSubmit()}
+                                                        onKeyDown={e => e.key === "Enter" && handleEmailVerify()}
                                                         placeholder="your@email.com"
                                                         autoFocus
                                                         className="w-full bg-white/10 border border-white/25 rounded-2xl py-6 px-8 focus:outline-none focus:border-[#FF0000]/60 transition-all text-center text-2xl font-bold text-white placeholder:text-white/40"
                                                     />
+                                                    {emailVerifyError && (
+                                                        <p className="text-red-400 mono text-[10px] uppercase tracking-widest">{emailVerifyError}</p>
+                                                    )}
                                                     <button
-                                                        onClick={() => handleFinalSubmit()}
+                                                        onClick={handleEmailVerify}
                                                         disabled={checkingEmail || !email.trim() || !email.includes("@")}
                                                         className="w-full sm:w-auto px-16 flex items-center justify-center gap-3 bg-[#FF0000] text-white py-6 rounded-2xl font-black text-sm uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-[0_0_40px_rgba(255,0,0,0.3)] mt-2"
                                                     >
-                                                        {checkingEmail ? <Loader2 className="h-5 w-5 animate-spin" /> : "Find Connections"} <ArrowRight className="h-4 w-4" />
+                                                        {checkingEmail ? <Loader2 className="h-5 w-5 animate-spin" /> : "Verify & Secure"} <ArrowRight className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </>
                                         ) : (
+                                            /* ─── CLASH / OVERWRITE ─── */
                                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass p-10 rounded-[3rem] border border-[#FF0000]/30 bg-[#FF0000]/5 backdrop-blur-3xl shadow-[0_0_120px_rgba(255,0,0,0.2)]">
                                                 <div className="h-20 w-20 rounded-full bg-[#FF0000]/20 flex items-center justify-center mx-auto mb-8">
                                                     <AlertCircle className="h-10 w-10 text-[#FF0000]" />
@@ -2442,7 +2548,7 @@ function HomeContent() {
                                         )}
 
                                         <div className="flex justify-center mt-12">
-                                            <button onClick={() => { setClash(null); setStage("complete") }} className="mono text-[10px] text-white/80 hover:text-white transition-all uppercase tracking-[0.3em]">← Restore View</button>
+                                            <button onClick={() => { setClash(null); setEmailVerifySent(false); setStage("complete") }} className="mono text-[10px] text-white/80 hover:text-white transition-all uppercase tracking-[0.3em]">← Restore View</button>
                                         </div>
                                     </motion.div>
                                 )}
