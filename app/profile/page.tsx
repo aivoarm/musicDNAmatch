@@ -100,7 +100,6 @@ export default function ProfilePage() {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [verifyPopup, setVerifyPopup] = useState(false);
-    const [verifySent, setVerifySent] = useState(false);
     const [verifyError, setVerifyError] = useState<string | null>(null);
     const router = useRouter();
 
@@ -128,7 +127,7 @@ export default function ProfilePage() {
         })();
     }, [router]);
 
-    // Send magic link for email verification
+    // Send magic link for email verification (WorkOS)
     const handleSendVerification = async () => {
         const targetEmail = email.trim();
         if (!targetEmail || !targetEmail.includes("@")) return;
@@ -137,23 +136,10 @@ export default function ProfilePage() {
         setVerifyError(null);
 
         try {
-            const res = await fetch("/api/auth/magic-link", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: targetEmail }),
-            });
-            const data = await res.json();
-
-            if (!res.ok || !data.success) {
-                setVerifyError(data.error || "Failed to send verification link");
-                setSaving(false);
-                return;
-            }
-
-            setVerifySent(true);
+            // Redirect to WorkOS hosted Magic Auth with email hint
+            window.location.href = `/login?email=${encodeURIComponent(targetEmail)}`;
         } catch (err: any) {
             setVerifyError(err.message || "Network error");
-        } finally {
             setSaving(false);
         }
     };
@@ -261,55 +247,33 @@ export default function ProfilePage() {
                             >
                                 <div className="absolute top-0 right-0 p-8 opacity-5"><Mail className="h-24 w-24 text-[#FF0000]" /></div>
                                 <div className="relative z-10">
-                                    {verifySent ? (
-                                        /* ── Check Inbox ── */
-                                        <div className="text-center py-4">
-                                            <motion.div
-                                                animate={{ scale: [1, 1.05, 1] }}
-                                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                                className="h-16 w-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-6 border border-green-500/20"
-                                            >
-                                                <Mail className="h-8 w-8 text-green-400" />
-                                            </motion.div>
-                                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Check Your Inbox</h3>
-                                            <p className="text-green-400 font-bold text-sm mb-2">{email}</p>
-                                            <p className="text-white/50 text-xs mb-6">Click the magic link to verify and secure your DNA profile.</p>
-                                            <button
-                                                onClick={() => { setVerifySent(false); setEmail(""); }}
-                                                className="mono text-[10px] text-white/40 hover:text-white transition-all uppercase tracking-widest font-black"
-                                            >
-                                                ← Use different email
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        /* ── Email Entry ── */
-                                        <>
-                                            <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Secure Your <span className="text-[#FF0000]">Sonic Legacy</span></h3>
-                                            <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email to receive a verification link and save your profile permanently.</p>
+                                    {/* ── Email Entry ── */}
+                                    <>
+                                        <h3 className="text-xl font-black text-white italic uppercase tracking-tighter mb-2">Secure Your <span className="text-[#FF0000]">Sonic Legacy</span></h3>
+                                        <p className="text-white/70 text-xs font-bold mb-6 max-w-md">Your DNA is currently anonymous. Enter your email to receive a verification link and save your profile permanently.</p>
 
-                                            <form onSubmit={handleEmailSubmit} className="space-y-3">
-                                                <div className="flex flex-col sm:flex-row gap-3">
-                                                    <input
-                                                        type="email"
-                                                        value={email}
-                                                        onChange={(e) => setEmail(e.target.value)}
-                                                        placeholder="ENTER YOUR EMAIL"
-                                                        required
-                                                        className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
-                                                    />
-                                                </div>
-                                                {verifyError && (
-                                                    <p className="text-red-400 mono text-[9px] uppercase tracking-widest">{verifyError}</p>
-                                                )}
-                                                <button
-                                                    disabled={saving}
-                                                    className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-                                                >
-                                                    {saving ? "SENDING LINK..." : "VERIFY & SECURE"}
-                                                </button>
-                                            </form>
-                                        </>
-                                    )}
+                                        <form onSubmit={handleEmailSubmit} className="space-y-3">
+                                            <div className="flex flex-col sm:flex-row gap-3">
+                                                <input
+                                                    type="email"
+                                                    value={email}
+                                                    onChange={(e) => setEmail(e.target.value)}
+                                                    placeholder="ENTER YOUR EMAIL"
+                                                    required
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase tracking-widest focus:outline-none focus:border-[#FF0000]/50 transition-all placeholder:text-white/20"
+                                                />
+                                            </div>
+                                            {verifyError && (
+                                                <p className="text-red-400 mono text-[9px] uppercase tracking-widest">{verifyError}</p>
+                                            )}
+                                            <button
+                                                disabled={saving}
+                                                className="bg-white text-black font-black text-[10px] uppercase tracking-widest px-6 py-3 rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                            >
+                                                {saving ? "SENDING LINK..." : "VERIFY & SECURE"}
+                                            </button>
+                                        </form>
+                                    </>
                                 </div>
                             </motion.div>
                         )}
@@ -326,58 +290,36 @@ export default function ProfilePage() {
                                     animate={{ scale: 1, opacity: 1 }}
                                     className="glass rounded-[2.5rem] p-10 border border-blue-500/30 bg-blue-500/5 max-w-md w-full text-center shadow-[0_0_100px_rgba(59,130,246,0.15)]"
                                 >
-                                    {verifySent ? (
-                                        /* ── Check Inbox ── */
-                                        <>
-                                            <motion.div
-                                                animate={{ scale: [1, 1.05, 1] }}
-                                                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-                                                className="h-16 w-16 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-6 border border-green-500/20"
+                                    {/* ── Confirm Prompt ── */}
+                                    <>
+                                        <div className="h-16 w-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
+                                            <Mail className="h-8 w-8 text-blue-400" />
+                                        </div>
+                                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Confirm Your Email</h3>
+                                        <p className="text-white/60 text-xs mb-2">Your profile is linked to</p>
+                                        <p className="text-blue-400 font-black text-sm mb-6">{profile.email}</p>
+                                        <p className="text-white/50 text-xs mb-8 leading-relaxed">
+                                            For your security, we'll send a verification link to confirm ownership of this email address.
+                                        </p>
+                                        {verifyError && (
+                                            <p className="text-red-400 mono text-[9px] uppercase tracking-widest mb-4">{verifyError}</p>
+                                        )}
+                                        <div className="flex flex-col gap-3">
+                                            <button
+                                                onClick={handleSendVerification}
+                                                disabled={saving}
+                                                className="w-full bg-blue-600 text-white font-black text-[10px] uppercase tracking-widest py-4 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
                                             >
-                                                <Mail className="h-8 w-8 text-green-400" />
-                                            </motion.div>
-                                            <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Check Your Inbox</h3>
-                                            <p className="text-green-400 font-bold text-sm mb-2">{profile.email}</p>
-                                            <p className="text-white/50 text-xs mb-8">Click the link in your email to confirm your identity. This will permanently secure your DNA profile.</p>
+                                                {saving ? "SENDING..." : "SEND VERIFICATION LINK"}
+                                            </button>
                                             <button
                                                 onClick={() => setVerifyPopup(false)}
-                                                className="mono text-[10px] text-white/40 hover:text-white transition-all uppercase tracking-widest font-black"
+                                                className="w-full text-white/40 font-black text-[10px] uppercase tracking-widest py-2 hover:text-white transition-all"
                                             >
-                                                Close
+                                                MAYBE LATER
                                             </button>
-                                        </>
-                                    ) : (
-                                        /* ── Confirm Prompt ── */
-                                        <>
-                                            <div className="h-16 w-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
-                                                <Mail className="h-8 w-8 text-blue-400" />
-                                            </div>
-                                            <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Confirm Your Email</h3>
-                                            <p className="text-white/60 text-xs mb-2">Your profile is linked to</p>
-                                            <p className="text-blue-400 font-black text-sm mb-6">{profile.email}</p>
-                                            <p className="text-white/50 text-xs mb-8 leading-relaxed">
-                                                For your security, we'll send a verification link to confirm ownership of this email address.
-                                            </p>
-                                            {verifyError && (
-                                                <p className="text-red-400 mono text-[9px] uppercase tracking-widest mb-4">{verifyError}</p>
-                                            )}
-                                            <div className="flex flex-col gap-3">
-                                                <button
-                                                    onClick={handleSendVerification}
-                                                    disabled={saving}
-                                                    className="w-full bg-blue-600 text-white py-4 rounded-xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_0_40px_rgba(59,130,246,0.3)] border border-blue-400/30 disabled:opacity-50"
-                                                >
-                                                    {saving ? "SENDING..." : "SEND VERIFICATION LINK"}
-                                                </button>
-                                                <button
-                                                    onClick={() => setVerifyPopup(false)}
-                                                    className="w-full bg-white/5 border border-white/10 text-white/40 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all hover:text-white"
-                                                >
-                                                    Later
-                                                </button>
-                                            </div>
-                                        </>
-                                    )}
+                                        </div>
+                                    </>
                                 </motion.div>
                             </motion.div>
                         )}

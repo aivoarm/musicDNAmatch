@@ -45,7 +45,7 @@ musicDNAmatch is a **web application** that:
 | **Styling** | Tailwind CSS, Framer Motion (animations) |
 | **Backend** | Next.js API Routes, Node.js |
 | **Database** | Supabase (PostgreSQL), pgvector extension |
-| **Auth** | Guest IDs (cookies), Google OAuth (future) |
+| **Auth** | WorkOS AuthKit (Magic Auth), Guest IDs (cookies) |
 | **External APIs** | Spotify API, YouTube API |
 
 ### Key Concepts
@@ -63,9 +63,15 @@ musicDNAmatch is a **web application** that:
 ```
 MusicDNA/
 ├── app/                                 # Next.js App Router
-│   ├── api/                            # API routes
-│   │   ├── auth/me/route.ts            # Get current user session info
-│   │   ├── bridge/                     # Messaging & synthesis
+├── callback/                            # WorkOS Auth Callback
+├── login/                               # WorkOS Auth Initiation
+├── auth/
+│   └── complete/                        # Post-auth profile linking
+├── api/                                 # API routes
+│   ├── auth/
+│   │   ├── me/route.ts                 # Get current user session info
+│   │   └── link-profile/route.ts       # Link guest DNA to verified email
+│   ├── bridge/                         # Messaging & synthesis
 │   │   │   ├── create/route.ts
 │   │   │   ├── info/route.ts
 │   │   │   ├── consent/route.ts
@@ -330,19 +336,36 @@ Fetch an artist's top 5 tracks from Spotify for DNA syncing.
 
 ---
 
-### Authentication
+### Authentication (WorkOS AuthKit)
 
-#### `GET /api/auth/me`
-Fetch current session user information.
+MusicDNA uses **WorkOS AuthKit** for secure, passwordless authentication ("Magic Auth"). This replaces the legacy guest-only system while maintaining backward compatibility via `guest_id` cookies.
 
-**Response**:
+#### `GET /login`
+Initiates the WorkOS AuthKit flow. Redirects the user to the hosted authentication page.
+**Query Parameters**:
+- `email`: (Optional) Pre-fills the email field on the hosted UI for a smoother experience.
+
+#### `GET /callback`
+The standard WorkOS redirect handler. Exchanges the authorization code for a session and sets the appropriate cookies.
+
+#### `POST /api/auth/link-profile`
+Links a verified WorkOS user to an existing DNA profile.
+**Request Body**:
 ```typescript
 {
-  id: string (UUID),
-  display_name: string,
-  email: string | null
+  authUserId: string,  // WorkOS User ID
+  email: string,       // Verified Email
+  guestId?: string     // (Optional) Local guest_id to link
 }
 ```
+**Logic**:
+1. Checks for an existing profile by verified email.
+2. If found, links `auth_user_id` to that profile.
+3. If not found but `guestId` is provided, updates the anonymous profile with the verified email and `auth_user_id`.
+4. Returns the `guestId` (user_id) to be persisted in the browser cookie.
+
+#### `GET /api/auth/me`
+Fetch current session user information from WorkOS.
 
 ---
 
@@ -1230,8 +1253,11 @@ SPOTIFY_CLIENT_SECRET=xxx
 # YouTube
 YOUTUBE_API_KEY=xxx
 
-# Optional: Google OAuth (future)
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=xxx
+# WorkOS AuthKit
+WORKOS_API_KEY=sk_test_...
+WORKOS_CLIENT_ID=client_...
+WORKOS_COOKIE_PASSWORD=...
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/callback
 ```
 
 ### Build & Run

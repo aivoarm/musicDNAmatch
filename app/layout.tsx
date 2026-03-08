@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
 
 
 const syne = Syne({
@@ -64,10 +65,12 @@ export default function RootLayout({
     return (
         <html lang="en" className={`dark ${syne.variable} ${dmMono.variable}`}>
             <body className="bg-[#080808] text-white antialiased min-h-screen overflow-x-hidden">
-                <Navbar />
-                {children}
-                <Footer />
-                <CookieConsent />
+                <AuthKitProvider>
+                    <Navbar />
+                    {children}
+                    <Footer />
+                    <CookieConsent />
+                </AuthKitProvider>
             </body>
 
         </html>

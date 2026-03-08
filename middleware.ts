@@ -1,41 +1,46 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authkitMiddleware } from "@workos-inc/authkit-nextjs";
 
 /**
- * Middleware: ensures every visitor gets a persistent guest_id cookie.
- * This runs on every request before the page/API handler.
+ * Middleware: WorkOS AuthKit session management + persistent guest_id cookie.
  */
-export async function middleware(request: NextRequest) {
-    const response = NextResponse.next();
-    const { pathname, searchParams } = request.nextUrl;
+const workosMiddleware = authkitMiddleware();
 
-    // Skip static files, _next, and favicon
+export async function middleware(request: NextRequest) {
+    const { pathname } = request.nextUrl;
+
+    // Fast-path for static assets
     if (
         pathname.startsWith("/_next") ||
         pathname.startsWith("/favicon") ||
-        pathname.startsWith("/icon") ||
         pathname.match(/\.(ico|png|jpg|svg|webp|woff2?|css|js|map)$/)
     ) {
-        return response;
+        return NextResponse.next();
     }
 
-    const guestIdCookie = request.cookies.get("guest_id");
-    const hasDnaCookie = request.cookies.get("has_dna");
-    const isRestart = searchParams.has("restart");
+    // 1. Run WorkOS logic
+    // We pass {} as any to satisfy TypeScript for the second argument (options)
+    const workosResponse = await workosMiddleware(request, {} as any);
 
-    // Simplified middleware: persistent guest_id only. 
-    // Manual entry on landing page handles existing users.
+    // 2. Handle redirects (e.g. login required if it was enforced)
+    if (workosResponse && workosResponse.status >= 300 && workosResponse.status < 400) {
+        return workosResponse;
+    }
 
-    // 2. If no guest_id cookie and no google auth, set one
-    if (!guestIdCookie && !request.cookies.get("google_access_token")) {
+    // 3. Create/Augment the response
+    // If workosResponse is provided, it's already a "pass-through" response with WorkOS headers
+    const response = workosResponse || NextResponse.next();
+
+    // 4. Persistence logic: guest_id for anonymous identification
+    // Only set if not already present and no other auth exists
+    if (!request.cookies.get("guest_id") && !request.cookies.get("google_access_token")) {
         const guestId = crypto.randomUUID();
-        response.cookies.set("guest_id", guestId, {
-            maxAge: 60 * 60 * 24 * 365, // 1 year
-            path: "/",
-            httpOnly: false,
-            sameSite: "lax",
-        });
+        // Use Headers.append to ensure compatibility even if response is a standard Response
+        response.headers.append(
+            'Set-Cookie',
+            `guest_id=${guestId}; Max-Age=31536000; Path=/; SameSite=Lax`
+        );
     }
 
     return response;
@@ -43,12 +48,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico
-         */
         "/((?!_next/static|_next/image|favicon.ico).*)",
     ],
 };

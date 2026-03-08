@@ -37,7 +37,8 @@ Music DNA Match is a high-fidelity musical discovery engine that strips away cul
 | **Styling** | Vanilla CSS + Tailwind CSS (High-Contrast Premium Look) |
 | **Animations** | Framer Motion (Smooth stage transitions & micro-interactions) |
 | **Database** | Supabase (PostgreSQL + `pgvector`) |
-| **Identification** | Cookie-based Guest Session + Optional Email Identity |
+| **Auth** | WorkOS AuthKit (Magic Auth) |
+| **Identification** | Cookie-based Guest Session |
 | **Icons** | Lucide React |
 
 ---
@@ -50,7 +51,11 @@ app/
 ├── profile/page.tsx     # 12-dimensional DNA visualization & identity management
 ├── soulmates/page.tsx   # Discovery feed for finding sonic matches
 ├── bridge/[id]/         # Mutual match connection rooms
+├── login/               # WorkOS Auth initiation
+├── callback/            # WorkOS Auth callback
+├── auth/complete/       # Post-auth profile linking
 ├── api/
+│   ├── auth/            # Session and profile linking
 │   ├── dna/             # Generation, profile retrieval, and matching logic
 │   ├── match/           # Interest registration and bridge creation
 │   └── spotify/         # Public playlist scanner
@@ -77,6 +82,12 @@ SPOTIFY_CLIENT_SECRET=...
 
 # Site Config
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# WorkOS AuthKit
+WORKOS_API_KEY=...
+WORKOS_CLIENT_ID=...
+WORKOS_COOKIE_PASSWORD=...
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/callback
 ```
 
 ### 2. Database Schema
