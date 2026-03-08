@@ -11,6 +11,8 @@ export default function Navbar() {
     const [hasDna, setHasDna] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userEmail, setUserEmail] = useState<string | null>(null);
     const [notifications, setNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -20,6 +22,15 @@ export default function Navbar() {
             const r = await fetch("/api/dna/profile/me");
             const d = await r.json() as any;
             setHasDna(d.found);
+
+            // Check Auth status
+            const ar = await fetch("/api/auth/me");
+            const ad = await ar.json() as any;
+            if (ar.ok && ad.id && ad.email) {
+                setIsAuthenticated(true);
+                setUserEmail(ad.email);
+            }
+
             if (d.found) {
                 // If we found DNA, also check for notifications
                 const nr = await fetch("/api/match/notifications");
@@ -50,8 +61,9 @@ export default function Navbar() {
     const navLinks = [
         { href: "/", label: "Discovery", icon: Search, show: true },
         { href: "/soulmates", label: "Soulmates", icon: Users, show: hasDna },
-        { href: hasDna ? "/profile" : "/?resume=1", label: "Profile", icon: User, show: true },
+        { href: hasDna ? "/profile" : "/?resume=1", label: "Profile", icon: User, show: hasDna || isAuthenticated },
         { href: "/artists", label: "I'm Artist", icon: Waves, show: true },
+        { href: "/login", label: "Login", icon: User, show: !isAuthenticated },
     ];
 
     return (
