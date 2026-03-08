@@ -21,50 +21,53 @@ export async function POST(req: Request) {
         const storageEmail = email.trim().toUpperCase();
 
         // 🔍 Strategy A: Search by verified email
-        const { data: byEmail, error: errA } = await supabaseAdmin
+        const { data: byEmail } = await supabaseAdmin
             .from("dna_profiles")
-            .select("id, user_id, auth_user_id, email")
+            .select("id, user_id, auth_user_id, email, metadata")
             .ilike("email", storageEmail);
 
-        if (errA) console.error("Search by email error:", errA);
-
         // 🔍 Strategy B: Search by guest identifier (user_id field)
-        const { data: byGuest, error: errB } = guestId
-            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email").eq("user_id", guestId)
-            : { data: null, error: null };
+        const { data: byGuest } = guestId
+            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email, metadata").eq("user_id", guestId)
+            : { data: null };
 
-        if (errB) console.error("Search by user_id error:", errB);
-
-        // 🔍 Strategy C: Search by primary key (id field) - handles cases where guestId passed was actually profileId
-        const { data: byId, error: errC } = (guestId && guestId.length === 36) // UUID length
-            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email").eq("id", guestId)
-            : { data: null, error: null };
-
-        if (errC) console.error("Search by primary key error:", errC);
+        // 🔍 Strategy C: Search by primary key (id field) 
+        const { data: byId } = (guestId && guestId.length === 36)
+            ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email, metadata").eq("id", guestId)
+            : { data: null };
 
         // 🔍 Strategy D: Search in metadata JSONB (legacy fallback)
-        const { data: byMetadata, error: errD } = await supabaseAdmin
+        const { data: byMetaLower } = await supabaseAdmin
             .from("dna_profiles")
-            .select("id, user_id, auth_user_id, email")
+            .select("id, user_id, auth_user_id, email, metadata")
             .contains('metadata', { email: email.trim().toLowerCase() });
 
-        if (errD) console.error("Search by metadata error:", errD);
+        const { data: byMetaUpper } = await supabaseAdmin
+            .from("dna_profiles")
+            .select("id, user_id, auth_user_id, email, metadata")
+            .contains('metadata', { email: email.trim().toUpperCase() });
+
+        // 🔍 Strategy E: Search by WorkOS ID (sync if already linked)
+        const { data: byAuthId } = await supabaseAdmin
+            .from("dna_profiles")
+            .select("id, user_id, auth_user_id, email, metadata")
+            .eq("auth_user_id", authUserId);
 
         // 🔗 Combine all candidates
         const allMatches = [
             ...(byEmail || []),
             ...(byGuest || []),
             ...(byId || []),
-            ...(byMetadata || [])
-        ].filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
+            ...(byMetaLower || []),
+            ...(byMetaUpper || []),
+            ...(byAuthId || [])
+        ].filter((v, i, a) => v && v.id && a.findIndex(t => t.id === v.id) === i);
 
         console.log(`Matching process found ${allMatches.length} profiles for ${storageEmail} / ${guestId}. IDs: ${allMatches.map(m => m.id).join(', ')}`);
 
         if (allMatches.length > 0) {
-            console.log(`Updating ${allMatches.length} profiles with authUserId: ${authUserId}`);
-            // Update every matching record to ensure consistent state
+            // Update every matching record
             const updatePromises = allMatches.map(async (profile) => {
-                console.log(`Updating profile ${profile.id}...`);
                 const { data: updated, error: updateError } = await supabaseAdmin
                     .from("dna_profiles")
                     .update({
@@ -78,34 +81,20 @@ export async function POST(req: Request) {
 
                 if (updateError) {
                     console.error(`Update failed for profile ${profile.id}:`, updateError);
-                    return { success: false };
+                    return { success: false, id: profile.id };
                 }
-                console.log(`Successfully updated profile ${profile.id}. New auth_user_id: ${updated?.auth_user_id}`);
-                return { success: !!updated, guestId: updated?.user_id };
+                return { success: !!updated, guestId: updated?.user_id, metadata: updated?.metadata, id: profile.id };
             });
 
-            const updateResults = await Promise.all(updatePromises.map(async (p, i) => {
-                const res = await p;
-                if (res.success) {
-                    // Fetch the metadata of the profile we just updated
-                    const { data } = await supabaseAdmin
-                        .from("dna_profiles")
-                        .select("metadata")
-                        .eq("id", allMatches[i].id)
-                        .single();
-                    return { ...res, metadata: data?.metadata };
-                }
-                return res;
-            }));
-
+            const updateResults = await Promise.all(updatePromises);
             const successfulUpdates = updateResults.filter(r => r.success);
 
             if (successfulUpdates.length > 0) {
-                console.log(`Successfully linked ${successfulUpdates.length} row(s) to WorkOS ${authUserId}`);
+                const first = successfulUpdates[0] as any;
                 return NextResponse.json({
                     success: true,
-                    guestId: (successfulUpdates[0] as any).guestId,
-                    metadata: (successfulUpdates[0] as any).metadata,
+                    guestId: first.guestId,
+                    metadata: first.metadata || allMatches.find(m => m.id === first.id)?.metadata,
                     linked: true,
                     count: successfulUpdates.length
                 });

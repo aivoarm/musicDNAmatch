@@ -7,23 +7,37 @@ import { AXIS_LABELS, calculateCoherence } from "@/lib/dna";
 export async function GET() {
     const cookieStore = await cookies();
     const guestId = cookieStore.get("guest_id")?.value;
+    const authEmail = cookieStore.get("auth_email")?.value;
 
     try {
-        if (!guestId) {
-            return NextResponse.json({ found: false });
+        let profile = null;
+        let userId = guestId ? toUUID(guestId) : null;
+
+        if (guestId) {
+            const { data } = await supabase
+                .from("dna_profiles")
+                .select("id, sonic_embedding, metadata, email, city, created_at, user_id, auth_user_id")
+                .eq("user_id", userId)
+                .maybeSingle();
+            profile = data;
         }
 
-        const userId = toUUID(guestId);
+        // If not found by guestId, try by auth_email cookie if available
+        if (!profile && authEmail) {
+            const { data } = await supabase
+                .from("dna_profiles")
+                .select("id, sonic_embedding, metadata, email, city, created_at, user_id, auth_user_id")
+                .ilike("email", authEmail.trim().toUpperCase())
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            profile = data;
+            if (profile) {
+                userId = profile.user_id;
+            }
+        }
 
-
-        const { data: profile, error } = await supabase
-            .from("dna_profiles")
-            .select("id, sonic_embedding, metadata, email, city, created_at")
-            .eq("user_id", userId)
-            .single();
-
-
-        if (error || !profile) {
+        if (!profile) {
             return NextResponse.json({ found: false });
         }
 
@@ -71,6 +85,9 @@ export async function GET() {
             dna: dnaObject
         });
 
+        if (userId) {
+            response.cookies.set("guest_id", userId, { maxAge: 60 * 60 * 24 * 365, path: "/" });
+        }
         response.cookies.set("has_dna", "true", { maxAge: 60 * 60 * 24 * 365, path: "/" });
         return response;
 
