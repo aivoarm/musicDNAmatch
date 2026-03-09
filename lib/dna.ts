@@ -201,15 +201,58 @@ export function calculateCoherence(vector: number[], confidence: number[] = []):
     return round4(Math.max(0, Math.min(1, 1.0 - Math.sqrt(variance) / 0.5)));
 }
 
-export function generateInterpretation(vector: number[]) {
+/**
+ * Enhanced: Generate profile interpretation and suggested genres.
+ * Now weights direct tag matches from metadata.
+ */
+export function generateInterpretation(vector: number[], metaTags: string[] = []) {
     if (!vector.length) return { characteristics: [], genreMatches: [] };
+
+    // 1. Identify primary characteristics from vector axes
     const characteristics = vector.map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
         .sort((a, b) => b.value - a.value).slice(0, 5)
         .map(axis => AXIS_DESCRIPTIONS[axis.label] || axis.label.replace(/_/g, " "));
-    const genreMatches = Object.entries(GENRE_VECTORS)
-        .map(([name, genreVec]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), score: euclideanDistance(vector, genreVec) }))
-        .sort((a, b) => a.score - b.score).slice(0, 5).map(g => g.name);
-    return { characteristics, genreMatches };
+
+    // 2. Compute genre matches from vector proximity
+    const vectorMatches = Object.entries(GENRE_VECTORS)
+        .map(([name, genreVec]) => ({
+            name: name.charAt(0).toUpperCase() + name.slice(1),
+            score: euclideanSimilarityScore(vector, genreVec) // 0 to 1 scale
+        }));
+
+    // 3. Compute direct tag matches
+    const tagMatches: Record<string, number> = {};
+    const normalizedMetaTags = metaTags.map(t => t.toLowerCase().replace(/[^a-z0-9]/g, ""));
+
+    Object.keys(GENRE_VECTORS).forEach(genre => {
+        const gn = genre.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (normalizedMetaTags.includes(gn)) {
+            tagMatches[genre] = 1.0; // Perfect match
+        }
+    });
+
+    // 4. Combine: (Vector Weight: 0.7, Tag Weight: 0.3)
+    const finalMatches = vectorMatches.map(m => {
+        const genreKey = m.name.toLowerCase();
+        const tagScore = tagMatches[genreKey] || 0;
+        return {
+            name: m.name,
+            score: (m.score * 0.7) + (tagScore * 0.3)
+        };
+    }).sort((a, b) => b.score - a.score).slice(0, 8); // Return top 8
+
+    return {
+        characteristics,
+        genreMatches: finalMatches.map(g => g.name)
+    };
+}
+
+/**
+ * Helper: Normalized similarity score (1.0 = identical, 0.0 = opposite)
+ */
+function euclideanSimilarityScore(a: number[], b: number[]): number {
+    const dist = euclideanDistance(a, b);
+    return Math.max(0, 1 - (dist / 2.0)); // Adjusted for our 12D space range
 }
 
 export function computeGenreVector(selectedGenres: string[]): DNAVector {

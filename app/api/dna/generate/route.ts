@@ -6,12 +6,16 @@ import {
     computeGenreVector,
     computeSpotifyVector,
     computeYouTubeVector,
+    computeLastFMVector,
+    computeMusicBrainzVector,
     combineDNA,
     AXIS_LABELS,
     generateInterpretation
 } from "@/lib/dna";
 import { isEmailDomainValid } from "@/lib/server/dns-check";
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { MusicBrainzClient } from "@/lib/musicbrainz";
+import { LastFMClient } from "@/lib/lastfm";
 
 /**
  * POST /api/dna/generate
@@ -68,12 +72,46 @@ export async function POST(req: Request) {
         const { user: workosUser } = await withAuth();
         const authUserId = workosUser?.id || null;
 
-        // ── Compute DNA ────────────────────────────────
+        // ── Compute Core Vectors ───────────────────────
         const genreDNA = computeGenreVector(genres);
         const hasSpots = audioFeatures.length > 0 || artistGenres.length > 0;
         const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres) : null;
         const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
-        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, null, null); // Last.fm and MusicBrainz not yet in request body
+
+        // ── Enrich with Last.fm & MusicBrainz (v2.4 Full Pass) ─────
+        const mbClient = new MusicBrainzClient();
+        const lfClient = new LastFMClient();
+
+        // Unique artists from all sources
+        const uniqueArtists = new Set<string>();
+        spotifyTracks.slice(0, 10).forEach((t: any) => {
+            const a = typeof t.artist === 'string' ? t.artist : (t.artists?.[0]?.name || t.artists?.[0] || "");
+            if (a) uniqueArtists.add(a);
+        });
+        youtubeTracks.slice(0, 10).forEach((t: any) => {
+            if (t.artist) uniqueArtists.add(t.artist);
+        });
+
+        const artistsToScan = Array.from(uniqueArtists).slice(0, 5); // Limit to top 5 to avoid timeouts/rate-limits
+
+        let allLfmTags: { name: string, count: number }[] = [];
+        let allMbTags: { name: string, count: number }[] = [];
+        let mbArtistType: string | undefined;
+
+        await Promise.all(artistsToScan.map(async (name) => {
+            const [lfmTags, mbData] = await Promise.all([
+                lfClient.getArtistTags(name),
+                mbClient.searchArtist(name)
+            ]);
+            if (lfmTags) allLfmTags.push(...lfmTags);
+            if (mbData?.tags) allMbTags.push(...mbData.tags);
+            if (mbData?.type && !mbArtistType) mbArtistType = mbData.type;
+        }));
+
+        const lastfmDNA = allLfmTags.length > 0 ? computeLastFMVector(allLfmTags) : null;
+        const musicbrainzDNA = allMbTags.length > 0 ? computeMusicBrainzVector(allMbTags, mbArtistType) : null;
+
+        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, lastfmDNA, musicbrainzDNA);
 
         // ── Build descriptive summary (no AI) ──────────
         const topAxes = finalDNA.vector
@@ -85,12 +123,13 @@ export async function POST(req: Request) {
             .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
             .sort((a, b) => a.value - b.value)[0];
 
-        const lCount = 0; // Placeholder for now
+        const lCount = allLfmTags.length;
+        const mCount = allMbTags.length;
         const narrative = [
             `Your Musical DNA reveals a unique sonic fingerprint with a coherence index of ${(finalDNA.coherence_index * 100).toFixed(1)}%.`,
             `Your strongest dimensions are ${topAxes.map(a => a.label.replace(/_/g, " ")).join(", ")}.`,
             `Your discovery frontier lies in ${lowestAxis.label.replace(/_/g, " ")} — exploring this axis could unlock new sonic territories.`,
-            `Based on ${genres.length} genre selections, ${audioFeatures.length} Spotify tracks, ${youtubeVideos.length} YouTube signals, and ${lCount} Last.fm tags.`,
+            `Based on ${genres.length} genre selections, ${audioFeatures.length} Spotify tracks, ${youtubeVideos.length} YouTube signals, ${lCount} Last.fm tags, and ${mCount} MusicBrainz entries.`,
         ].join(" ");
 
         // ── Save to Supabase ───────────────────────────
@@ -112,10 +151,14 @@ export async function POST(req: Request) {
             source: finalDNA.source,
             source_signals: finalDNA.metadata,
             narrative,
+            suggested_genres: [] as string[], // Will be filled below
             updated_at: new Date().toISOString(),
         };
 
-        const interpretation = generateInterpretation(finalDNA.vector);
+        // ── Interpretation & Suggestions ──────────────
+        const allTags = [...allLfmTags, ...allMbTags].map(t => t.name);
+        const interpretation = generateInterpretation(finalDNA.vector, allTags);
+        metadata.suggested_genres = interpretation.genreMatches;
 
         if (dry_run) {
             return NextResponse.json({
@@ -126,7 +169,8 @@ export async function POST(req: Request) {
                 axes: [...AXIS_LABELS],
                 narrative,
                 metadata,
-                suggested_genres: interpretation.genreMatches
+                suggested_genres: interpretation.genreMatches,
+                characteristics: interpretation.characteristics
             });
         }
 

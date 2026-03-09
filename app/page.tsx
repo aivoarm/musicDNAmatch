@@ -786,6 +786,7 @@ const getCookie = (name: string) => {
 function HomeContent() {
     const [stage, setStage] = useState<Stage>("landing");
     const [genres, setGenres] = useState<string[]>([]);
+    const [matchedGenres, setMatchedGenres] = useState<string[]>([]);
     const [existing, setExisting] = useState<any>(null);
     const [checking, setChecking] = useState(true);
 
@@ -1339,6 +1340,7 @@ function HomeContent() {
                 }
                 if (preselected.length > 0) {
                     setGenres(preselected);
+                    setMatchedGenres(preselected);
                 }
             }
         } catch { }
@@ -1527,7 +1529,7 @@ function HomeContent() {
                                                                 </div>
                                                             </div>
                                                         ))}
-                                                        {(!fetchedSources?.spotifyTracks?.length && !fetchedSources?.youtubeTracks?.length) && (
+                                                        {((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0) && (
                                                             <div className="text-center py-10">
                                                                 <AlertCircle className="w-8 h-8 text-white/20 mx-auto mb-3" />
                                                                 <p className="text-white/40 mono text-[10px] uppercase">No tracks could be found from your sources</p>
@@ -1540,7 +1542,7 @@ function HomeContent() {
                                                 <div className="glass p-7 rounded-[2rem] border border-[#FF0000]/20 bg-[#FF0000]/5 flex flex-col gap-5">
                                                     <div className="flex items-center justify-between">
                                                         <span className="text-xs font-black uppercase tracking-[0.3em] text-[#FF0000]">Extracted Tracks</span>
-                                                        <span className="mono text-[10px] text-white/60">{(fetchedSources?.spotifyTracks?.length || 0) + (fetchedSources?.youtubeTracks?.length || 0)} total</span>
+                                                        <span className="mono text-[10px] text-white/60">{(fetchedSources?.spotifyTracks?.length ?? 0) + (fetchedSources?.youtubeTracks?.length ?? 0)} total</span>
                                                     </div>
                                                     <p className="text-[10px] text-white/60 leading-relaxed font-bold">
                                                         These are the tracks we found from your connected sources. We will prioritize these to compute your DNA.
@@ -1571,15 +1573,70 @@ function HomeContent() {
                                                     <div className="flex flex-wrap gap-2.5">
                                                         {GENRES.map(g => {
                                                             const on = genres.includes(g);
+                                                            const matched = matchedGenres.includes(g);
                                                             return (
                                                                 <button key={g} onClick={() => setGenres(p => p.includes(g) ? p.filter(x => x !== g) : [...p, g])}
-                                                                    className={`rounded-full border font-black uppercase text-[10px] py-2.5 px-5 tracking-widest transition-all duration-150 ${on ? "bg-[#FF0000] text-white border-[#FF0000] shadow-[0_0_18px_rgba(255,0,0,0.35)]" : "bg-white/10 border-white/20 text-white/80 hover:border-[#FF0000]/60 hover:text-white"}`}>
+                                                                    className={`rounded-full border font-black uppercase text-[10px] py-2.5 px-5 tracking-widest transition-all duration-150 relative ${on ? "bg-[#FF0000] text-white border-[#FF0000] shadow-[0_0_18px_rgba(255,0,0,0.35)]" : "bg-white/10 border-white/20 text-white/80 hover:border-[#FF0000]/60 hover:text-white"}`}>
                                                                     {g}
+                                                                    {matched && !on && (
+                                                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#FF0000] rounded-full border-2 border-[#121212]" />
+                                                                    )}
                                                                 </button>
                                                             );
                                                         })}
                                                     </div>
                                                 </div>
+
+                                                {/* FETCHED RESULTS (SONGS) */}
+                                                {((fetchedSources?.spotifyTracks?.length ?? 0) > 0 || (fetchedSources?.youtubeTracks?.length ?? 0) > 0) && (
+                                                    <div className="space-y-4">
+                                                        <div className="flex items-center justify-between px-2">
+                                                            <h3 className="mono text-[10px] text-white/40 uppercase tracking-[0.3em]">Extracted Signals (Top Tracks)</h3>
+                                                        </div>
+                                                        <div className="glass p-6 rounded-[2rem] border border-white/10 bg-white/5">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto sb pr-2">
+                                                                {fetchedSources?.spotifyTracks?.slice(0, 5).map((t: any, i: number) => (
+                                                                    <div key={`gs-sp-${i}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
+                                                                        {t.thumbnail ? <img src={t.thumbnail} className="w-8 h-8 object-cover rounded-lg" /> : <div className="w-8 h-8 bg-[#1DB954]/20 rounded-lg flex items-center justify-center"><Music2 className="w-3.5 h-3.5 text-[#1DB954]" /></div>}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-white text-[10px] font-bold truncate">{t.title}</p>
+                                                                            <p className="text-white/40 mono text-[8px] truncate">{t.artist}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                                {fetchedSources?.youtubeTracks?.slice(0, 5).map((t: any, i: number) => (
+                                                                    <div key={`gs-yt-${i}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
+                                                                        {t.thumbnail ? <img src={t.thumbnail} className="w-8 h-8 object-cover rounded-lg" /> : <div className="w-8 h-8 bg-[#FF0000]/20 rounded-lg flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-[#FF0000]" /></div>}
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <p className="text-white text-[10px] font-bold truncate" dangerouslySetInnerHTML={{ __html: t.title }}></p>
+                                                                            <p className="text-white/40 mono text-[8px] truncate">{t.artist}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* FETCHED GENRES (INSIGHTS) */}
+                                                {matchedGenres.length > 0 && (
+                                                    <div className="pt-4 border-t border-white/10 space-y-4">
+                                                        <div className="flex items-center justify-between px-2">
+                                                            <h3 className="mono text-[10px] text-white/40 uppercase tracking-[0.3em]">Insights — Automatically Matched Genres</h3>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {matchedGenres.map(g => (
+                                                                <div key={`matched-${g}`} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF0000]/10 border border-[#FF0000]/30 text-white text-[10px] font-black uppercase tracking-widest">
+                                                                    <div className="w-1.5 h-1.5 rounded-full bg-[#FF0000] animate-pulse" />
+                                                                    {g}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        <p className="text-[10px] text-white/40 font-bold italic px-2 leading-relaxed">
+                                                            The signals above suggest these genres align with your current library metadata.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="lg:col-span-4 sticky top-24">
                                                 <div className="glass p-7 rounded-[2rem] border border-[#FF0000]/20 bg-[#FF0000]/5 flex flex-col gap-5">

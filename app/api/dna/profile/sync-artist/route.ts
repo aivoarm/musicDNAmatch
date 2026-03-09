@@ -3,7 +3,10 @@ import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { SpotifyPublicFetcher } from "@/lib/spotify";
-import { computeSpotifyVector, computeGenreVector, combineDNA, DNAVector } from "@/lib/dna";
+import { computeSpotifyVector, computeGenreVector, computeLastFMVector, computeMusicBrainzVector, combineDNA, DNAVector } from "@/lib/dna";
+import { MusicBrainzClient } from "@/lib/musicbrainz";
+import { LastFMClient } from "@/lib/lastfm";
+import { SpotifyAudioFeatures } from "@/lib/dna";
 
 export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
@@ -70,18 +73,27 @@ export async function POST(request: NextRequest) {
         const combinedTracks = [...existingTracks, ...newTracks];
         const combinedFeatures = [...existingFeatures, ...newFeatures];
 
-        // We could also try to extract artist genres if we had the artist object
-        // For now, we'll stick to track-based analysis as per existing flow
+        // 4. Enrichment (v2.4 Pass)
+        const mbClient = new MusicBrainzClient();
+        const lfClient = new LastFMClient();
 
-        // 4. Re-calculate DNA
-        // Note: The DNA engine uses combineDNA which takes genreDNA, spotifyDNA, and youtubeDNA.
-        // We'll preserve the existing genre-based DNA and re-calculate the spotify segment.
+        // Use top track's artist name for lookup
+        const artistName = topTracks[0]?.artist || "";
 
+        const [lfmTags, mbData] = await Promise.all([
+            lfClient.getArtistTags(artistName),
+            mbClient.searchArtist(artistName)
+        ]);
+
+        const lastfmDNA = lfmTags.length > 0 ? computeLastFMVector(lfmTags) : null;
+        const musicbrainzDNA = (mbData?.tags && mbData.tags.length > 0) ? computeMusicBrainzVector(mbData.tags, mbData.type) : null;
+
+        // 5. Re-calculate DNA
         const genreDNA = computeGenreVector(existingGenres);
-        const spotifyDNA = computeSpotifyVector(combinedFeatures, []); // Empty genres for now
-        // We don't have youtube data here, but we can preserve the existing youtube contribution if we wanted.
-        // Simplest: just use genre + updated spotify
-        const updatedDna = combineDNA(genreDNA, spotifyDNA, null);
+        const spotifyDNA = computeSpotifyVector(combinedFeatures, []);
+
+        // Combine all 5 pillars
+        const updatedDna = combineDNA(genreDNA, spotifyDNA, null, lastfmDNA, musicbrainzDNA);
 
         // 5. Update DB
         const { error: updateErr } = await supabase
