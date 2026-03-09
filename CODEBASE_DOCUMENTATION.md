@@ -1041,13 +1041,13 @@ Fetch or send messages within a bridge conversation.
 #### `dna_profiles`
 ```sql
 id                UUID PRIMARY KEY DEFAULT gen_random_uuid()
-user_id           TEXT UNIQUE NOT NULL
-auth_user_id      TEXT        -- WorkOS User ID (user_...)
-sonic_embedding   vector(12)  -- pgvector type
-metadata          JSONB       -- Flexible schema
-email             TEXT UNIQUE
-city              TEXT
-broadcasting      BOOLEAN DEFAULT false
+user_id           TEXT UNIQUE NOT NULL  -- Temporary guest ID
+auth_user_id      TEXT UNIQUE          -- WorkOS User ID (user_...)
+sonic_embedding   vector(12)            -- pgvector type
+metadata          JSONB                 -- Flexible schema
+email             TEXT UNIQUE           -- Verified Email (UPPERCASE)
+city              TEXT                  -- Active City (UPPERCASE)
+broadcasting      BOOLEAN DEFAULT false -- Requires auth_user_id
 created_at        TIMESTAMP DEFAULT now()
 updated_at        TIMESTAMP DEFAULT now()
 ```
@@ -1103,43 +1103,34 @@ Uses pgvector `<->` operator to find top N similar profiles.
 
 ## Key Flows
 
-### 1. User Onboarding → DNA Generation
+### 1. User Onboarding Flow (Deferred Persist)
 
 ```
-User visits home
+User lands on /
     ↓
 Middleware assigns guest_id cookie
     ↓
-Stage 1: Landing screen (Detects existing ? → "Calculate my DNA")
+Phase 1: Discovery & Collection
+  - User Paste Spotify/YouTube URLs
+  - User selects Genres
     ↓
-Stage 2: Entry Choice (New Scan vs. Restore Signal)
+Phase 2: Calculation (Cache only)
+  - runAnalysis() calls POST /api/dna/generate { dry_run: true }
+  - DNA vector + narrative calculated server-side
+  - Result stored in React state (Not saved to DB)
+  - Radar chart dynamic render
     ↓
-[If Restore Selected]
-  Stage 3: Resume Capture (Neural Handshake)
-  Verify email → Load existing profile → Redirect to /profile
+Phase 3: Persistence (Neural Handshake)
+  - User clicks "Secure Signal" or "Broadcast"
+  - User provides Email
+  - POST /api/dna/generate { dry_run: false }
+  - Record created in dna_profiles linked to email
     ↓
-Stage 4: Intro / Guided tour
-    ↓
-Stage 5: Welcome (name entry)
-    ↓
-Stage 6: Story (optional context)
-    ↓
-Stage 7: Source selection (Spotify/YouTube/Genre)
-    ↓
-[Sources Flow as before]
-    ↓
-Stage 8: Analyzing screen (Ticker animation)
-    ↓
-POST /api/dna/generate
-  - Identity tagging (NAME-SIGNAL)
-    ↓
-Stage 9: Complete (Discovery Card)
-    ↓
-Stage 10: Email capture (Secure Signature)
-    ↓
-Set cookies: has_dna=true, profile_id
-    ↓
-Redirect to Soulmates or Profile
+Phase 4: Identity Verification
+  - Redirect to WorkOS (Magic Auth)
+  - /callback exchanges code for session
+  - /auth/complete links auth_user_id to profile
+  - broadcasting set to true ONLY after link
 ```
 
 ---
@@ -1204,7 +1195,25 @@ User can:
 POST /api/dna/profile/save
   - Resolve email conflicts
   - Update metadata
-  - Set broadcasting flag
+  - auth_user_id verification:
+    - Only sets broadcasting=true if user is authenticated via WorkOS
+```
+
+---
+
+### 3. Session & Logout Flow
+
+```
+User clicks "Logout" in Navbar
+    ↓
+GET /api/api/auth/logout
+    ↓
+1. Clear application cookies:
+   - guest_id, profile_id, has_dna, auth_email, last_spotify_url
+2. WorkOS signOut():
+   - Terminates auth session cookies
+    ↓
+Redirect to / (Fresh start)
 ```
 
 ---
@@ -1291,15 +1300,16 @@ Result: 12D vector from Spotify
 genreDNA   = computeGenreVector(selectedGenres)       [has data]
 spotifyDNA = computeSpotifyVector(features)           [maybe null]
 youtubeDNA = computeYouTubeVector(videos)             [maybe null]
+lastfmDNA  = computeLastFMVector(tags)                [maybe null]
     ↓
-combineDNA(genreDNA, spotifyDNA, youtubeDNA)
+combineDNA(genreDNA, spotifyDNA, youtubeDNA, lastfmDNA)
   - Check what data is available
-  - Adjust weights dynamically:
-    - If all 3: 50% genre, 25% Spotify, 25% YouTube
-    - If genre + Spotify: 50% genre, 50% Spotify
+  - Adjust weights dynamically (v2.3):
+    - If all 4: 40% genre, 20% Spotify, 20% YouTube, 20% Last.fm
+    - If no Last.fm: 50% genre, 25% Spotify, 25% YouTube
     - If genre only: 100% genre
     ↓
-Final vector = weighted blend across all 3 sources
+Final vector = weighted blend across all 4 potential sources
 ```
 
 ---
@@ -1440,5 +1450,5 @@ pnpm lint
 
 ---
 
-**Last Updated**: March 8, 2026  
-**Documentation Version**: 1.4
+**Last Updated**: March 9, 2026  
+**Documentation Version**: 1.5

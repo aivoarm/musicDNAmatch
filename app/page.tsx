@@ -447,8 +447,8 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
                         </p>
                         <ul className="space-y-4 text-left inline-block md:block mb-8">
                             {[
-                                "Connect Spotify or YouTube",
-                                "Deep scan of 50 top tracks",
+                                "Connect Spotify, YouTube or Last.fm",
+                                "Deep scan of top tracks & tags",
                                 "Extract underlying audio features",
                                 "Generate your 12D vector map",
                             ].map((text, i) => (
@@ -581,7 +581,7 @@ function Landing({ onChoice, onArtist, existing, refreshProfile }: { onChoice: (
                         <div className="absolute inset-0 bg-white/20 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
                         <span className="relative z-10 flex items-center justify-center gap-3">
                             <Play className="h-4 w-4 fill-white" />
-                            {existing ? "Calculate my DNA" : "Join The Signal"}
+                            Calculate my DNA
                         </span>
                     </button>
 
@@ -1565,7 +1565,7 @@ function HomeContent() {
                                             <div className="lg:col-span-8 space-y-6">
                                                 <div>
                                                     <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-1">Sonic <span className="text-[#FF0000]">Library</span></h2>
-                                                    <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Select genres — 50% of your DNA weight</p>
+                                                    <p className="mono text-[10px] text-white/55 uppercase tracking-[0.4em]">Select genres — 40% of your DNA weight</p>
                                                 </div>
                                                 <div className="glass p-7 rounded-[2.5rem] border border-white/14">
                                                     <div className="flex flex-wrap gap-2.5">

@@ -24,7 +24,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
  *   youtubeTracks?: any[],
  * }
  * 
- * Computes DNA vector = 50% genre + 25% Spotify + 25% YouTube
+ * Computes DNA vector = 40% genre + 20% Spotify + 20% YouTube + 20% Last.fm
  * Saves to dna_profiles table
  * Returns: { profileId, vector, coherence_index, confidence, axes, metadata }
  */
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const hasSpots = audioFeatures.length > 0 || artistGenres.length > 0;
         const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres) : null;
         const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
-        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA);
+        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, null); // Last.fm not yet in request body
 
         // ── Build descriptive summary (no AI) ──────────
         const topAxes = finalDNA.vector
@@ -85,11 +85,12 @@ export async function POST(req: Request) {
             .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
             .sort((a, b) => a.value - b.value)[0];
 
+        const lCount = 0; // Placeholder for now
         const narrative = [
             `Your Musical DNA reveals a unique sonic fingerprint with a coherence index of ${(finalDNA.coherence_index * 100).toFixed(1)}%.`,
             `Your strongest dimensions are ${topAxes.map(a => a.label.replace(/_/g, " ")).join(", ")}.`,
             `Your discovery frontier lies in ${lowestAxis.label.replace(/_/g, " ")} — exploring this axis could unlock new sonic territories.`,
-            `Based on ${genres.length} genre preferences, ${audioFeatures.length} Spotify tracks, and ${youtubeVideos.length} YouTube songs.`,
+            `Based on ${genres.length} genre selections, ${audioFeatures.length} Spotify tracks, ${youtubeVideos.length} YouTube signals, and ${lCount} Last.fm tags.`,
         ].join(" ");
 
         // ── Save to Supabase ───────────────────────────

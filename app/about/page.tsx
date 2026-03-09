@@ -57,7 +57,7 @@ export default function AboutPage() {
                         <Activity className="h-6 w-6 text-[#FF0000]" /> 2. The 12-Dimensional Vector Space
                     </h2>
                     <p className="text-base sm:text-lg">
-                        We map human musical taste into a mathematical space consisting of 12 distinct axes. When you provide public Spotify playlists and YouTube videos, our engine extracts the core metadata, genres, and audio features (such as acousticness, valence, danceability, tempo, and energy) of up to 50 tracks.
+                        We map human musical taste into a mathematical space consisting of 12 distinct axes. When you provide public Spotify playlists, YouTube videos, or Last.fm profiles, our engine extracts the core metadata, genres, and audio features (such as acousticness, valence, danceability, tempo, and energy) of up to 50 tracks.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
@@ -76,7 +76,7 @@ export default function AboutPage() {
                                 <Network className="h-5 w-5" /> Semantic Genre Analysis
                             </h3>
                             <p className="text-base text-white/90 leading-relaxed font-medium">
-                                We utilize natural language processing (NLP) to cluster the countless specific sub-genres associated with your tracks into broader, comparable categories across our global pool.
+                                We utilize natural language processing (NLP) to cluster the countless specific sub-genres associated with your tracks, combined with social tag data from Last.fm, into broader, comparable categories across our global pool.
                             </p>
                         </div>
                     </div>
