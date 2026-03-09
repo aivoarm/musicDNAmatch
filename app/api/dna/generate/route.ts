@@ -73,7 +73,7 @@ export async function POST(req: Request) {
         const hasSpots = audioFeatures.length > 0 || artistGenres.length > 0;
         const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres) : null;
         const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
-        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, null); // Last.fm not yet in request body
+        const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, null, null); // Last.fm and MusicBrainz not yet in request body
 
         // ── Build descriptive summary (no AI) ──────────
         const topAxes = finalDNA.vector

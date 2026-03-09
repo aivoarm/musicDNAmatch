@@ -1301,15 +1301,15 @@ genreDNA   = computeGenreVector(selectedGenres)       [has data]
 spotifyDNA = computeSpotifyVector(features)           [maybe null]
 youtubeDNA = computeYouTubeVector(videos)             [maybe null]
 lastfmDNA  = computeLastFMVector(tags)                [maybe null]
+mbDNA      = computeMusicBrainzVector(tags)           [maybe null]
     ↓
-combineDNA(genreDNA, spotifyDNA, youtubeDNA, lastfmDNA)
+combineDNA(genreDNA, spotifyDNA, youtubeDNA, lastfmDNA, mbDNA)
   - Check what data is available
-  - Adjust weights dynamically (v2.3):
-    - If all 4: 40% genre, 20% Spotify, 20% YouTube, 20% Last.fm
-    - If no Last.fm: 50% genre, 25% Spotify, 25% YouTube
-    - If genre only: 100% genre
+  - Adjust weights dynamically (v2.4 - 5 Pillars):
+    - Full Blend: 30% Genre, 15% Spotify, 15% YouTube, 20% Last.fm, 20% MusicBrainz
+    - Priority given to "Human Curation" sources (MB/Last.fm)
     ↓
-Final vector = weighted blend across all 4 potential sources
+Final vector = weighted blend across all 5 potential sources
 ```
 
 ---

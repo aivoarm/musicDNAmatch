@@ -1,5 +1,5 @@
 /**
- * musicDNAmatch — TypeScript DNA Engine (v2.3)
+ * musicDNAmatch — TypeScript DNA Engine (v2.4)
  * Full Implementation: All Exports Restored & Logic Enhanced.
  */
 
@@ -329,39 +329,80 @@ export function computeLastFMVector(tags: { name: string; count: number }[]): DN
 }
 
 /**
- * REBALANCED: Combine Genre (40%) + Spotify (20%) + YouTube (20%) + Last.fm (20%)
+ * NEW: Compute DNA from MusicBrainz metadata.
+ * Processes editor-vetted tags and artist types.
+ */
+export function computeMusicBrainzVector(tags: { name: string; count: number }[], artistType?: string): DNAVector {
+    if (tags.length === 0) {
+        return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "musicbrainz", { tag_count: 0 });
+    }
+
+    const genreVecs: number[][] = [];
+    tags.forEach(tag => {
+        const normalized = tag.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const vector = GENRE_VECTORS[normalized];
+        if (vector) genreVecs.push(vector);
+    });
+
+    const baseVector = genreVecs.length > 0
+        ? Array(12).fill(0).map((_, i) => genreVecs.reduce((sum, v) => sum + v[i], 0) / genreVecs.length)
+        : Array(12).fill(0.5);
+
+    // Adjust for artist type (e.g., Groups often show higher Rhythmic Drive/Spectral Energy)
+    if (artistType === "Group") {
+        baseVector[0] = Math.min(baseVector[0] + 0.05, 1.0); // Spectral Energy boost
+        baseVector[1] = Math.min(baseVector[1] + 0.05, 1.0); // Rhythmic Drive boost
+    }
+
+    // MusicBrainz represents the highest editorial confidence
+    return makeDNA(baseVector, Array(12).fill(0.9), "musicbrainz", { tag_count: tags.length, type: artistType });
+}
+
+/**
+ * REBALANCED v2.4: Blend Genre (30%) + Spotify (15%) + YouTube (15%) + Last.fm (20%) + MusicBrainz (20%)
  */
 export function combineDNA(
     genreDNA: DNAVector,
     spotifyDNA: DNAVector | null,
     youtubeDNA: DNAVector | null,
-    lastfmDNA?: DNAVector | null
+    lastfmDNA?: DNAVector | null,
+    musicbrainzDNA?: DNAVector | null
 ): DNAVector {
-    const gCount = (genreDNA.metadata.genres || []).length;
     const sCount = spotifyDNA?.metadata.track_count || 0;
     const yCount = youtubeDNA?.metadata.track_count || 0;
     const lCount = lastfmDNA?.metadata.tag_count || 0;
+    const mCount = musicbrainzDNA?.metadata.tag_count || 0;
 
-    // Weight Logic: Genre (Intent) remains strongest, others balance by volume
-    let wg = 0.4, ws = 0.2, wy = 0.2, wl = 0.2;
+    // Weight Logic: MusicBrainz and Last.fm (Human Curation) are weighted slightly higher than raw source logs
+    let wg = 0.3, ws = 0.15, wy = 0.15, wl = 0.2, wm = 0.2;
 
-    // Dynamic adjustment if a source is missing
-    if (!lastfmDNA || lCount === 0) {
-        wl = 0;
-        wg = 0.5; ws = 0.25; wy = 0.25; // Revert to v2.1 weights
-    }
+    // Dynamic adjustment if sources are missing
+    if (!lastfmDNA || lCount === 0) { wl = 0; }
+    if (!musicbrainzDNA || mCount === 0) { wm = 0; }
+    if (!spotifyDNA || sCount === 0) { ws = 0; }
+    if (!youtubeDNA || yCount === 0) { wy = 0; }
+
+    const activeWeightTotal = wg + ws + wy + wl + wm;
+    // Normalize weights to 1.0
+    const nwg = wg / activeWeightTotal;
+    const nws = ws / activeWeightTotal;
+    const nwy = wy / activeWeightTotal;
+    const nwl = wl / activeWeightTotal;
+    const nwm = wm / activeWeightTotal;
 
     const vector = Array(12).fill(0).map((_, i) =>
-        (wg * genreDNA.vector[i]) +
-        (ws * (spotifyDNA?.vector[i] ?? genreDNA.vector[i])) +
-        (wy * (youtubeDNA?.vector[i] ?? genreDNA.vector[i])) +
-        (wl * (lastfmDNA?.vector[i] ?? genreDNA.vector[i]))
+        (nwg * genreDNA.vector[i]) +
+        (nws * (spotifyDNA?.vector[i] ?? genreDNA.vector[i])) +
+        (nwy * (youtubeDNA?.vector[i] ?? genreDNA.vector[i])) +
+        (nwl * (lastfmDNA?.vector[i] ?? genreDNA.vector[i])) +
+        (nwm * (musicbrainzDNA?.vector[i] ?? genreDNA.vector[i]))
     );
 
-    return makeDNA(vector, Array(12).fill(1.0), "combined-plus", {
+    return makeDNA(vector, Array(12).fill(1.0), "combined-plus-mb", {
         spotify_tracks: sCount,
         youtube_tracks: yCount,
         lastfm_tags: lCount,
+        musicbrainz_tags: mCount,
         genres: genreDNA.metadata.genres,
     });
 }
