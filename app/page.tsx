@@ -1370,10 +1370,8 @@ function HomeContent() {
                     city: city?.trim() || null,
                     audioFeatures,
                     youtubeVideos,
-                    spotifyTracks,
-                    youtubeTracks,
                     artistGenres,
-                    dry_run: false
+                    dry_run: true
                 })
             });
             const d = await r.json() as any;
@@ -1417,6 +1415,7 @@ function HomeContent() {
         const newIds = [...scannedIds, ...selPlaylists.map(p => p.id)];
         setScannedIds(newIds);
         setStage("complete");
+        // We set a temporary 'saving' state if we want, or just wait for they to click 'Secure Signal'
     };
 
     const ytOk = ytTracks.filter(t => t.status === "ok");
