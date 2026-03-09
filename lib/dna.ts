@@ -144,15 +144,22 @@ const YT_CATEGORY_GENRE: Record<string, string> = {
 
 // YouTube Title/Tag → Genre Keywords
 const YT_GENRE_KEYWORDS: Record<string, string[]> = {
+    "jazz": ["jazz", "miles davis", "coltrane", "sax", "trumpet", "smooth", "herbie hancock", "brubeck", "us3", "cantaloop", "blue note", "nina simone", "laurence mason"],
+    "funk": ["funk", "groove", "james brown", "parliament", "funkadelic", "vulfpeck", "khruangbin", "the meters"],
+    "soul": ["soul", "aretha", "marvin gaye", "james brown", "motown", "bill withers"],
+    "hiphop": ["hiphop", "rap", "trap", "drill", "eminem", "drake", "kendrick", "beats", "us3", "wu tang"],
+    "rnb": ["rnb", "motown", "frank ocean", "sZA", "alicia keys"],
     "rock": ["rock", "queen", "nirvana", "sting", "police", "led zeppelin", "pink floyd", "arctic monkeys", "radiohead", "guitar", "live aide"],
     "metal": ["metal", "metallica", "slayer", "megadeth", "iron maiden", "hardcore", "heavy"],
-    "hiphop": ["hiphop", "rap", "trap", "drill", "eminem", "drake", "kendrick", "beats"],
     "electronic": ["electronic", "techno", "house", "edm", "synth", "mix", "remix", "dj"],
-    "jazz": ["jazz", "miles davis", "coltrane", "sax", "trumpet", "smooth"],
-    "rnb": ["rnb", "soul", "motown", "blues", "frank ocean", "sZA"],
     "classical": ["classical", "bach", "beethoven", "mozart", "orchestra", "piano", "violin"],
     "pop": ["pop", "taylor swift", "bieber", "top hits", "chart", "billboard"],
     "ambient": ["ambient", "drone", "meditation", "sleep", "calm", "lofi"],
+    "reggae": ["reggae", "bob marley", "dub", "roots", "dancehall", "riddim"],
+    "latin": ["latin", "salsa", "reggaeton", "bossa nova", "brazil", "tango"],
+    "disco": ["disco", "chic", "bee gees", "70s dance", "studio 54"],
+    "synthpop": ["synthpop", "depeche mode", "new order", "80s synth"],
+    "blues": ["blues", "b.b. king", "muddy waters", "delta blues"],
 };
 
 // ── Types ───────────────────────────────────────────
@@ -332,11 +339,12 @@ export function computeYouTubeVector(videos: { categoryId?: string; title?: stri
     for (const v of videos) {
         const title = (v.title || "").toLowerCase();
         const tags = (v.tags || []).map(t => t.toLowerCase());
+        const channel = ((v as any).channelTitle || "").toLowerCase();
 
-        // Find best genre match via title/tags keywords
+        // Find best genre match via title/tags/channel keywords
         let detectedGenre: string | null = null;
         for (const [genre, keywords] of Object.entries(YT_GENRE_KEYWORDS)) {
-            if (keywords.some(k => title.includes(k) || tags.some(t => t.includes(k)))) {
+            if (keywords.some(k => title.includes(k) || tags.some(t => t.includes(k)) || channel.includes(k))) {
                 detectedGenre = genre;
                 break;
             }

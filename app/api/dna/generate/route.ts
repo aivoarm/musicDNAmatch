@@ -11,6 +11,7 @@ import {
     generateInterpretation
 } from "@/lib/dna";
 import { isEmailDomainValid } from "@/lib/server/dns-check";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
 /**
  * POST /api/dna/generate
@@ -63,6 +64,9 @@ export async function POST(req: Request) {
 
         const userId = toUUID(rawUserId);
 
+        // ── Check for WorkOS session ───────────────────
+        const { user: workosUser } = await withAuth();
+        const authUserId = workosUser?.id || null;
 
         // ── Compute DNA ────────────────────────────────
         const genreDNA = computeGenreVector(genres);
@@ -144,8 +148,8 @@ export async function POST(req: Request) {
                 metadata: cleanMetadata,
                 email: uppercasedEmail,
                 city: uppercasedCity,
-                broadcasting: !!uppercasedEmail,
-                auth_user_id: existing?.auth_user_id // Preserve the WorkOS identity link
+                broadcasting: !!(authUserId || existing?.auth_user_id),
+                auth_user_id: authUserId || existing?.auth_user_id // Use session ID or preserve existing
             }, { onConflict: "user_id" })
             .select()
             .single();

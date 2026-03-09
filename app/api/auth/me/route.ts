@@ -12,7 +12,7 @@ export async function GET() {
         try {
             const { data: profile } = await supabase
                 .from("dna_profiles")
-                .select("metadata, email, user_id")
+                .select("metadata, email, user_id, auth_user_id")
                 .ilike("email", authEmail.trim().toUpperCase())
                 .order('created_at', { ascending: false })
                 .limit(1)
@@ -27,6 +27,7 @@ export async function GET() {
                     id: profile.user_id,
                     display_name: finalDisplayName,
                     email: finalEmail,
+                    auth_user_id: profile.auth_user_id,
                     authenticated: true
                 });
             } else {

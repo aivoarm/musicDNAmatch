@@ -3,6 +3,7 @@ import { supabase, toUUID } from "@/lib/supabase";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isEmailDomainValid } from "@/lib/server/dns-check";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
 export async function POST(req: Request) {
     try {
@@ -11,6 +12,9 @@ export async function POST(req: Request) {
 
         const cookieStore = await cookies();
         const guestId = cookieStore.get("guest_id")?.value;
+
+        const { user: workosUser } = await withAuth();
+        const authUserId = workosUser?.id || null;
 
         if (!guestId) {
             return NextResponse.json({ error: "No guest session found" }, { status: 401 });
@@ -99,7 +103,8 @@ export async function POST(req: Request) {
                 email: uppercasedEmail,
                 city: uppercasedCity,
                 metadata: newMetadata,
-                broadcasting: (broadcasting !== undefined) ? (broadcasting && !!uppercasedEmail) : (!!uppercasedEmail || (existing as any)?.broadcasting)
+                auth_user_id: authUserId, // Populate verified ID
+                broadcasting: (broadcasting !== undefined) ? (broadcasting && !!authUserId) : (!!authUserId || (existing as any)?.broadcasting)
             })
             .eq("user_id", userId);
 

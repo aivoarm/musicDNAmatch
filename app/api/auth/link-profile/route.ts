@@ -2,6 +2,7 @@
 export const runtime = "nodejs";
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
 interface LinkProfileRequest {
     authUserId: string;
@@ -11,7 +12,12 @@ interface LinkProfileRequest {
 
 export async function POST(req: Request) {
     try {
-        const { authUserId, email, guestId } = await req.json() as LinkProfileRequest;
+        const { authUserId: providedAuthUserId, email, guestId } = await req.json() as LinkProfileRequest;
+
+        // Use verified ID from session if available, fallback to provided one
+        const { user: workosUser } = await withAuth();
+        const authUserId = workosUser?.id || providedAuthUserId;
+
         console.log("Link Profile Request:", { authUserId, email, guestId });
 
         if (!authUserId || !email) {
@@ -32,7 +38,8 @@ export async function POST(req: Request) {
             : { data: null };
 
         // 🔍 Strategy C: Search by primary key (id field) 
-        const { data: byId } = (guestId && guestId.length === 36)
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(guestId || "");
+        const { data: byId } = (guestId && isUUID)
             ? await supabaseAdmin.from("dna_profiles").select("id, user_id, auth_user_id, email, metadata").eq("id", guestId)
             : { data: null };
 

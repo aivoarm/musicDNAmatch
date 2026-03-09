@@ -1042,6 +1042,7 @@ Fetch or send messages within a bridge conversation.
 ```sql
 id                UUID PRIMARY KEY DEFAULT gen_random_uuid()
 user_id           TEXT UNIQUE NOT NULL
+auth_user_id      TEXT        -- WorkOS User ID (user_...)
 sonic_embedding   vector(12)  -- pgvector type
 metadata          JSONB       -- Flexible schema
 email             TEXT UNIQUE
