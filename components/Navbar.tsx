@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Waves, User, Users, Search, Info, Menu, X, Bell } from "lucide-react";
+import { Waves, User, Users, Search, Info, Menu, X, Bell, LogOut } from "lucide-react";
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -64,6 +64,7 @@ export default function Navbar() {
         { href: hasDna ? "/profile" : "/?resume=1", label: "Profile", icon: User, show: hasDna || isAuthenticated },
         { href: "/artists", label: "I'm Artist", icon: Waves, show: true },
         { href: "/login", label: "Login", icon: User, show: !isAuthenticated },
+        { href: "/api/auth/logout", label: "Logout", icon: LogOut, show: isAuthenticated, external: true },
     ];
 
     return (
@@ -91,7 +92,7 @@ export default function Navbar() {
                         );
                         const className = `mono text-[10px] uppercase tracking-widest flex items-center gap-1.5 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`;
 
-                        if (isExternal) {
+                        if (isExternal || link.external) {
                             return (
                                 <a key={link.href} href={link.href} className={className}>
                                     {content}
@@ -220,7 +221,7 @@ export default function Navbar() {
                             );
                             const className = `mono text-xs uppercase tracking-widest flex items-center gap-3 transition-colors ${pathname === link.href ? "text-[#FF0000]" : "text-white/90 hover:text-white"}`;
 
-                            if (isExternal) {
+                            if (isExternal || link.external) {
                                 return (
                                     <a key={link.href} href={link.href} className={className}>
                                         {content}
