@@ -14,6 +14,8 @@ import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 import ShareDNACard from "@/components/ShareDNACard";
 import OnboardingModal from "@/components/OnboardingModal";
 import OnboardingBanner from "@/components/OnboardingBanner";
+import { decodeHtml } from "@/lib/utils";
+
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
@@ -1523,7 +1525,8 @@ function HomeContent() {
                                                             <div key={`yt-${i}`} className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5">
                                                                 {t.thumbnail ? <img src={t.thumbnail} className="w-10 h-10 object-cover rounded-lg" /> : <div className="w-10 h-10 bg-[#FF0000]/20 rounded-lg flex items-center justify-center"><Youtube className="w-4 h-4 text-[#FF0000]" /></div>}
                                                                 <div className="flex-1 min-w-0">
-                                                                    <p className="text-white text-xs font-bold truncate mb-0.5" dangerouslySetInnerHTML={{ __html: t.title }}></p>
+                                                                    <p className="text-white text-xs font-bold truncate mb-0.5">{decodeHtml(t.title)}</p>
+
                                                                     <p className="text-white/40 mono text-[9px] truncate">{t.artist}</p>
                                                                 </div>
                                                                 <div className="w-6 h-6 rounded-full bg-[#FF0000]/20 flex items-center justify-center shrink-0">
@@ -1610,7 +1613,8 @@ function HomeContent() {
                                                                     <div key={`gs-yt-${i}`} className="flex items-center gap-3 p-2.5 rounded-xl bg-white/5 border border-white/5">
                                                                         {t.thumbnail ? <img src={t.thumbnail} className="w-8 h-8 object-cover rounded-lg" /> : <div className="w-8 h-8 bg-[#FF0000]/20 rounded-lg flex items-center justify-center"><Youtube className="w-3.5 h-3.5 text-[#FF0000]" /></div>}
                                                                         <div className="flex-1 min-w-0">
-                                                                            <p className="text-white text-[10px] font-bold truncate" dangerouslySetInnerHTML={{ __html: t.title }}></p>
+                                                                            <p className="text-white text-[10px] font-bold truncate">{decodeHtml(t.title)}</p>
+
                                                                             <p className="text-white/40 mono text-[8px] truncate">{t.artist}</p>
                                                                         </div>
                                                                     </div>
@@ -1799,7 +1803,8 @@ function HomeContent() {
                                                                                 <button onClick={() => !alreadyAdded && addYtSearchResult(v)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
                                                                                     <img src={v.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
                                                                                     <div className="flex-1 min-w-0">
-                                                                                        <p className="text-white text-[11px] font-bold truncate mb-1" dangerouslySetInnerHTML={{ __html: v.title }}></p>
+                                                                                        <p className="text-white text-[11px] font-bold truncate mb-1">{decodeHtml(v.title)}</p>
+
                                                                                         <p className="text-white/40 mono text-[9px] truncate">{v.channelTitle}</p>
                                                                                     </div>
                                                                                 </button>
@@ -1843,7 +1848,8 @@ function HomeContent() {
                                                                     </div>
                                                                 ) : tr.status === "ok" ? (
                                                                     <>
-                                                                        <p className="text-white text-xs font-bold truncate mb-0.5" dangerouslySetInnerHTML={{ __html: tr.title || "Unknown" }}></p>
+                                                                        <p className="text-white text-xs font-bold truncate mb-0.5">{decodeHtml(tr.title || "Unknown")}</p>
+
                                                                         <p className="text-white/40 mono text-[9px] truncate">{tr.channel || "YouTube"}</p>
                                                                     </>
                                                                 ) : tr.status === "error" ? (
@@ -2108,7 +2114,10 @@ function HomeContent() {
                                                                 {tr.thumbnail ? <img src={tr.thumbnail} alt="" className="h-full w-full object-cover grayscale opacity-55 group-hover:grayscale-0 group-hover:opacity-100 transition-all" /> : <Music2 className="h-5 w-5 opacity-30 m-auto mt-3" />}
                                                             </div>
                                                             <div className="flex-1 min-w-0">
-                                                                <p className="text-xs font-black truncate text-white/70 group-hover:text-white transition-colors" dangerouslySetInnerHTML={{ __html: tr.title || "Unknown" }} />
+                                                                <p className="text-xs font-black truncate text-white/70 group-hover:text-white transition-colors">
+                                                                    {decodeHtml(tr.title || "Unknown")}
+                                                                </p>
+
                                                                 <p className="mono text-[9px] text-white/55 uppercase truncate">{tr.artist || tr.channelTitle}</p>
                                                             </div>
                                                             <ExternalLink className="h-3.5 w-3.5 text-white/10 group-hover:text-[#FF0000] transition-all shrink-0" />

@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { decodeHtml } from "@/lib/utils";
+
 
 function BroadcastContent() {
     const [analyzing, setAnalyzing] = useState(false);
@@ -573,9 +575,12 @@ function BroadcastContent() {
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0 pr-4">
-                                                    <div className="text-sm font-bold truncate mb-0.5 group-hover:text-primary transition-colors text-white" dangerouslySetInnerHTML={{ __html: track.title }} />
+                                                    <div className="text-sm font-bold truncate mb-0.5 group-hover:text-primary transition-colors text-white">
+                                                        {decodeHtml(track.title)}
+                                                    </div>
                                                     <div className="text-[10px] text-white/40 font-mono uppercase truncate tracking-wider font-black">{track.artist || track.channelTitle}</div>
                                                 </div>
+
                                                 <ExternalLink className="h-4 w-4 text-white/20 group-hover:text-primary transition-colors" />
                                             </motion.a>
                                         ))}

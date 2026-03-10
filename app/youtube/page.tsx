@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Youtube, Activity, ArrowLeft, ChevronRight, Zap, Music2, CheckCircle2, Scan, Brain, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { decodeHtml } from "@/lib/utils";
+
 
 export default function YouTubeAnalyzer() {
     const [query, setQuery] = useState("");
@@ -169,8 +171,11 @@ export default function YouTubeAnalyzer() {
                                                 <button key={video.id} onClick={() => runScan(video)} className="w-full flex gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-[#FF0000]/30 transition-all text-left group">
                                                     <div className="h-10 w-16 rounded-lg overflow-hidden shrink-0"><img src={video.thumbnail} className="h-full w-full object-cover grayscale opacity-40 group-hover:opacity-100 transition-all" alt="" /></div>
                                                     <div className="min-w-0 flex flex-col justify-center">
-                                                        <h3 className="text-xs font-bold truncate text-white/60 group-hover:text-white" dangerouslySetInnerHTML={{ __html: video.title }} />
+                                                        <h3 className="text-xs font-bold truncate text-white/60 group-hover:text-white">
+                                                            {decodeHtml(video.title)}
+                                                        </h3>
                                                     </div>
+
                                                 </button>
                                             ))}
                                         </div>
