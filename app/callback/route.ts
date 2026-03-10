@@ -9,6 +9,8 @@ export const runtime = "edge";
  * WorkOS redirects here with an authorization code.
  * 
  * handleAuth() exchanges the code for a session and sets cookies.
- * After success, redirects to /auth/complete to link the profile.
+ * After success, redirects to /auth-complete to link the profile.
+
  */
-export const GET = handleAuth({ returnPathname: "/auth/complete" });
+export const GET = handleAuth({ returnPathname: "/auth-complete" });
+

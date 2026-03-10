@@ -91,8 +91,8 @@ MusicDNA/
 ├── app/                                 # Next.js App Router
 ├── callback/                            # WorkOS Auth Callback
 ├── login/                               # WorkOS Auth Initiation
-├── auth/
-│   └── complete/                        # Post-auth profile linking
+├── auth-complete/                       # Post-auth profile linking
+
 ├── api/                                 # API routes
 │   ├── auth/
 │   │   ├── me/route.ts                 # Get current user session info

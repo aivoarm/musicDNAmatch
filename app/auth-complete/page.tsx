@@ -5,9 +5,10 @@ import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 /**
- * /auth/complete
+ * /auth-complete
  * 
  * After WorkOS AuthKit verifies the user (Magic Auth), this page:
+
  * 1. Retrieves the authenticated user's email
  * 2. Links their guest DNA profile to the verified email
  * 3. Sets cookies and redirects to /profile
