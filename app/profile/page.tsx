@@ -398,9 +398,12 @@ export default function ProfilePage() {
                                     <span className="flex items-center gap-1.5 text-white/60">Established {new Date(profile.created_at).toLocaleDateString()}</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-center gap-1 glass px-6 py-4 rounded-3xl border border-[#FF0000]/25">
-                                <span className="mono text-[9px] text-white/60 uppercase tracking-widest">Coherence</span>
-                                <span className="text-3xl font-black text-[#FF0000] italic">{((profile.coherence_index ?? 0) * 100).toFixed(1)}%</span>
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="flex flex-col items-center gap-1 glass px-6 py-4 rounded-3xl border border-[#FF0000]/25">
+                                    <span className="mono text-[9px] text-white/60 uppercase tracking-widest">Coherence</span>
+                                    <span className="text-3xl font-black text-[#FF0000] italic">{((profile.coherence_index ?? 0) * 100).toFixed(1)}%</span>
+                                </div>
+                                <ShareDNACard profile={profile} />
                             </div>
                         </div>
 
@@ -465,7 +468,7 @@ export default function ProfilePage() {
                         )}
 
                         {/* Actions */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <Link href="/soulmates"
                                 onClick={() => {
                                     fetch('/api/dna/intent', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ intent: 'find_soulmates' }) }).catch(console.error);
@@ -475,16 +478,8 @@ export default function ProfilePage() {
                             </Link>
                             <button onClick={() => handleDelete(true)}
                                 disabled={deleting}
-                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50">
+                                className="flex items-center justify-center gap-3 border border-white/25 bg-white/10 text-white/85 hover:text-white hover:border-white/40 font-black text-[9px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50">
                                 <RefreshCw className="h-4 w-4" />{deleting ? "Resetting..." : "Regenerate DNA"}
-                            </button>
-                            <ShareDNACard profile={profile} />
-                            <button
-                                onClick={() => handleDelete(false)}
-                                disabled={deleting}
-                                className="flex items-center justify-center gap-3 border border-red-500/30 bg-red-500/5 text-red-500/80 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 font-black text-[11px] uppercase tracking-widest py-5 rounded-2xl transition-all disabled:opacity-50"
-                            >
-                                <X className="h-4 w-4" />{deleting ? "Deleting..." : "Delete Profile"}
                             </button>
                         </div>
 
@@ -624,9 +619,9 @@ export default function ProfilePage() {
                         </div>
 
                         {/* DNA Refinement Section */}
-                        <div className="space-y-8 mt-24 pb-10 border-t border-white/5 pt-12">
+                        <div className="space-y-8 mt-24 pb-10 border-t border-white/5 pt-12 text-center">
                             <div className="px-2">
-                                <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center justify-center gap-2">
                                     <RefreshCw className="h-6 w-6 text-[#FF0000]" />
                                     Refine Your <span className="text-[#FF0000]">DNA</span>
                                 </h3>
@@ -648,6 +643,18 @@ export default function ProfilePage() {
                                         <ArtistPulseSearch />
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="mt-20 pt-10 border-t border-white/5 opacity-50 flex flex-col items-center">
+                                <button
+                                    onClick={() => handleDelete(false)}
+                                    disabled={deleting}
+                                    className="flex items-center justify-center gap-3 text-red-500/60 hover:text-red-500 font-bold text-[10px] uppercase tracking-widest px-8 py-4 rounded-xl hover:bg-white/5 transition-all"
+                                >
+                                    <X className="h-3 w-3" />
+                                    {deleting ? "Deleting Account..." : "Deactivate Profile & Wipe Data"}
+                                </button>
+                                <p className="mono text-[8px] text-white/20 mt-4 uppercase tracking-[0.4em]">Protocol termination permanent // Aesthetic Resonance ends here</p>
                             </div>
                         </div>
                     </motion.div>

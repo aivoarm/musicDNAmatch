@@ -187,6 +187,11 @@ export default function Navbar() {
 
                     {/* Mobile Brand Extras */}
                     <div className="flex md:hidden items-center gap-3">
+                        {isAuthenticated && (
+                            <a href="/api/auth/logout" className="h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50">
+                                <LogOut className="h-4 w-4" />
+                            </a>
+                        )}
                         {hasDna && (
                             <Link href="/soulmates" className="relative h-8 w-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70">
                                 <Bell className="h-4 w-4" />
