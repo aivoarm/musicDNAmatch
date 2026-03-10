@@ -12,5 +12,6 @@ export async function GET() {
     cookieStore.delete("auth_email");
     cookieStore.delete("last_spotify_url");
 
-    return await signOut();
+    return await signOut({ returnTo: "/" });
+
 }
