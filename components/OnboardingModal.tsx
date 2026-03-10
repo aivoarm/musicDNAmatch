@@ -125,12 +125,12 @@ export default function OnboardingModal({ isOpen, dnaResult, guestId, onSuccess,
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="glass max-w-md w-full rounded-2xl p-8 md:p-10 relative z-10 border border-purple-500/20 shadow-2xl shadow-purple-900/40 bg-gray-900/95"
+                        className="glass max-w-md w-full rounded-2xl p-8 md:p-10 relative z-10 border border-[#FF0000]/20 shadow-2xl shadow-[#FF0000]/10 bg-gray-900/95"
                     >
                         {/* Header */}
                         <div className="text-center mb-8">
-                            <div className="h-16 w-16 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 mx-auto border border-purple-500/20">
-                                <Waves className="h-8 w-8 text-purple-400" />
+                            <div className="h-16 w-16 rounded-2xl bg-[#FF0000]/10 flex items-center justify-center mb-6 mx-auto border border-[#FF0000]/20">
+                                <Waves className="h-8 w-8 text-[#FF0000]" />
                             </div>
                             <h2 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter uppercase mb-3">
                                 {submitStatus === 'success' ? "Signal Secured" : "Secure your DNA"}
@@ -157,7 +157,7 @@ export default function OnboardingModal({ isOpen, dnaResult, guestId, onSuccess,
                             <form onSubmit={handleSubmit} className="space-y-5">
                                 {/* Name Field */}
                                 <div>
-                                    <label className="mono text-[8px] text-purple-400 uppercase tracking-widest font-black block mb-2 ml-1">Display Name</label>
+                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-2 ml-1">Display Name</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                                         <input
@@ -170,7 +170,7 @@ export default function OnboardingModal({ isOpen, dnaResult, guestId, onSuccess,
 
                                 {/* City Field */}
                                 <div>
-                                    <label className="mono text-[8px] text-purple-400 uppercase tracking-widest font-black block mb-2 ml-1">Your City</label>
+                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-2 ml-1">Your City</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                                         <input
@@ -183,7 +183,7 @@ export default function OnboardingModal({ isOpen, dnaResult, guestId, onSuccess,
 
                                 {/* Email Field */}
                                 <div>
-                                    <label className="mono text-[8px] text-purple-400 uppercase tracking-widest font-black block mb-2 ml-1">Email Address</label>
+                                    <label className="mono text-[8px] text-[#FF0000] uppercase tracking-widest font-black block mb-2 ml-1">Email Address</label>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
                                         <input
@@ -225,7 +225,7 @@ export default function OnboardingModal({ isOpen, dnaResult, guestId, onSuccess,
                                 <button
                                     type="submit"
                                     disabled={!isFormValid || submitStatus === 'loading'}
-                                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all text-sm uppercase tracking-widest disabled:opacity-30 shadow-xl shadow-purple-900/20"
+                                    className="w-full bg-gradient-to-r from-[#FF0000] to-orange-600 text-white font-black py-5 rounded-2xl flex items-center justify-center gap-3 hover:opacity-90 active:scale-95 transition-all text-sm uppercase tracking-widest disabled:opacity-30 shadow-xl shadow-[#FF0000]/20"
                                 >
                                     {submitStatus === 'loading' ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Activate My Profile <ArrowRight className="h-5 w-5" /></>}
                                 </button>

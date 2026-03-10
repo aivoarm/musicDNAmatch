@@ -195,12 +195,12 @@ export default function ShareDNACard({ profile, siteUrl }: ShareDNACardProps) {
                 className="relative w-full overflow-hidden flex items-center justify-center gap-3 border border-[#FF0000]/30 bg-black text-white hover:border-[#FF0000]/60 font-black text-xs uppercase tracking-[0.2em] py-5 rounded-2xl hover:scale-[1.01] active:scale-95 transition-all group shadow-[0_0_20px_rgba(255,0,0,0.15)] hover:shadow-[0_0_40px_rgba(255,0,0,0.3)]"
             >
                 {/* Subtle animated gradient background */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#FF0000]/20 via-purple-600/10 to-[#FF0000]/20 opacity-40 group-hover:opacity-80 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#FF0000]/20 via-[#FF0000]/5 to-[#FF0000]/20 opacity-40 group-hover:opacity-80 transition-opacity duration-500" />
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full shimmer pointer-events-none" />
 
-                <Camera className="h-5 w-5 text-[#FF0000] group-hover:scale-110 transition-transform relative z-10" />
-                <span className="relative z-10">Capture & Share DNA</span>
+                <Share2 className="h-5 w-5 text-[#FF0000] group-hover:scale-110 transition-transform relative z-10" />
+                <span className="relative z-10">Share Your DNA</span>
             </button>
 
             {/* Hidden card for capture */}
@@ -424,170 +424,172 @@ export default function ShareDNACard({ profile, siteUrl }: ShareDNACardProps) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Share Modal */}
             <AnimatePresence>
-                {showModal && (
-                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => { setShowModal(false); setCapturedImage(null); }}
-                            className="absolute inset-0 bg-black/85 backdrop-blur-md"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="relative z-10 w-full max-w-lg"
-                        >
-                            <div className="glass rounded-[2.5rem] border border-white/15 overflow-hidden">
-                                {/* Modal Header */}
-                                <div className="p-6 md:p-8 pb-0 flex items-center justify-between">
-                                    <div>
-                                        <h2 className="text-2xl font-black text-white italic tracking-tighter">
-                                            Share Your <span className="text-[#FF0000]">DNA</span>
-                                        </h2>
-                                        <p className="mono text-[9px] text-white/50 uppercase tracking-widest font-bold mt-1">
-                                            Download or share to social media
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => { setShowModal(false); setCapturedImage(null); }}
-                                        className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                                    >
-                                        <X className="h-4 w-4 text-white" />
-                                    </button>
-                                </div>
-
-                                {/* Preview */}
-                                <div className="p-6 md:p-8">
-                                    <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/50 mb-6">
-                                        {capturing ? (
-                                            <div className="flex flex-col items-center justify-center py-20">
-                                                <div className="h-8 w-8 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin mb-4" />
-                                                <p className="mono text-[10px] text-white/50 uppercase tracking-widest font-bold">
-                                                    Generating DNA Card…
-                                                </p>
-                                            </div>
-                                        ) : capturedImage ? (
-                                            <img
-                                                src={capturedImage}
-                                                alt="Your Musical DNA Card"
-                                                className="w-full h-auto"
-                                            />
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center py-20">
-                                                <Camera className="h-8 w-8 text-white/20 mb-3" />
-                                                <p className="mono text-[10px] text-white/40 uppercase tracking-widest font-bold">
-                                                    Preparing preview…
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Download button */}
-                                    <button
-                                        onClick={handleDownload}
-                                        disabled={!capturedImage}
-                                        className="w-full flex items-center justify-center gap-3 bg-white text-black font-black text-[11px] uppercase tracking-widest py-4 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed mb-6 shadow-lg"
-                                    >
-                                        <Download className="h-4 w-4" />
-                                        Download Image
-                                    </button>
-
-                                    {/* Social media buttons */}
-                                    <div className="space-y-3">
-                                        <p className="mono text-[9px] text-white/40 uppercase tracking-widest font-bold">
-                                            Share to Social Media
-                                        </p>
-
-                                        <div className="grid grid-cols-2 gap-2.5">
-                                            {/* X/Twitter */}
-                                            <button
-                                                onClick={shareToTwitter}
-                                                className="flex items-center justify-center gap-2.5 bg-white/8 border border-white/15 hover:bg-white/15 hover:border-white/30 text-white font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all group"
-                                            >
-                                                <svg className="h-4 w-4 fill-current group-hover:text-white transition-colors" viewBox="0 0 24 24">
-                                                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                                </svg>
-                                                Post on X
-                                            </button>
-
-                                            {/* Facebook */}
-                                            <button
-                                                onClick={shareToFacebook}
-                                                className="flex items-center justify-center gap-2.5 bg-[#1877F2]/10 border border-[#1877F2]/20 hover:bg-[#1877F2]/20 hover:border-[#1877F2]/40 text-[#1877F2] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
-                                            >
-                                                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                                </svg>
-                                                Facebook
-                                            </button>
-
-                                            {/* WhatsApp */}
-                                            <button
-                                                onClick={shareToWhatsApp}
-                                                className="flex items-center justify-center gap-2.5 bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 hover:border-[#25D366]/40 text-[#25D366] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
-                                            >
-                                                <MessageCircle className="h-4 w-4" />
-                                                WhatsApp
-                                            </button>
-
-                                            {/* LinkedIn */}
-                                            <button
-                                                onClick={shareToLinkedIn}
-                                                className="flex items-center justify-center gap-2.5 bg-[#0A66C2]/10 border border-[#0A66C2]/20 hover:bg-[#0A66C2]/20 hover:border-[#0A66C2]/40 text-[#0A66C2] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
-                                            >
-                                                <Linkedin className="h-4 w-4" />
-                                                LinkedIn
-                                            </button>
+                {
+                    showModal && (
+                        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 md:p-6">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => { setShowModal(false); setCapturedImage(null); }}
+                                className="absolute inset-0 bg-black/85 backdrop-blur-md"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                className="relative z-10 w-full max-w-lg"
+                            >
+                                <div className="glass rounded-[2.5rem] border border-white/15 overflow-hidden">
+                                    {/* Modal Header */}
+                                    <div className="p-6 md:p-8 pb-0 flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-2xl font-black text-white italic tracking-tighter">
+                                                Share Your <span className="text-[#FF0000]">DNA</span>
+                                            </h2>
+                                            <p className="mono text-[9px] text-white/50 uppercase tracking-widest font-bold mt-1">
+                                                Download or share to social media
+                                            </p>
                                         </div>
-
-                                        {/* Native Share (mobile) */}
-                                        {typeof navigator !== "undefined" && "share" in navigator && (
-                                            <button
-                                                onClick={handleNativeShare}
-                                                disabled={!capturedImage}
-                                                className="w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[10px] uppercase tracking-widest py-4 rounded-xl hover:bg-red-500 transition-all disabled:opacity-30 mt-1"
-                                            >
-                                                <Share2 className="h-4 w-4" />
-                                                Share via Device
-                                            </button>
-                                        )}
-
-                                        {/* Copy link */}
                                         <button
-                                            onClick={handleCopyLink}
-                                            className="w-full flex items-center justify-center gap-3 border border-white/15 bg-white/5 text-white/70 hover:text-white hover:border-white/30 font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
+                                            onClick={() => { setShowModal(false); setCapturedImage(null); }}
+                                            className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                                         >
-                                            {copied
-                                                ? <><Check className="h-3.5 w-3.5 text-green-400" />Link Copied!</>
-                                                : <><Copy className="h-3.5 w-3.5" />Copy Share Link</>
-                                            }
+                                            <X className="h-4 w-4 text-white" />
                                         </button>
                                     </div>
-                                </div>
 
-                                {/* Hashtag footer */}
-                                <div className="px-6 md:px-8 pb-6 md:pb-8 pt-2 border-t border-white/5">
-                                    <p className="text-center">
-                                        <span className="mono text-[9px] text-white/30 uppercase tracking-widest font-bold">
-                                            Download the image & upload it with your post →{" "}
-                                        </span>
-                                        <span className="text-[#FF0000] font-black text-sm italic">
-                                            {HASHTAG}
-                                        </span>
-                                    </p>
+                                    {/* Preview */}
+                                    <div className="p-6 md:p-8">
+                                        <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/50 mb-6">
+                                            {capturing ? (
+                                                <div className="flex flex-col items-center justify-center py-20">
+                                                    <div className="h-8 w-8 border-2 border-[#FF0000] border-t-transparent rounded-full animate-spin mb-4" />
+                                                    <p className="mono text-[10px] text-white/50 uppercase tracking-widest font-bold">
+                                                        Generating DNA Card…
+                                                    </p>
+                                                </div>
+                                            ) : capturedImage ? (
+                                                <img
+                                                    src={capturedImage}
+                                                    alt="Your Musical DNA Card"
+                                                    className="w-full h-auto"
+                                                />
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center py-20">
+                                                    <Camera className="h-8 w-8 text-white/20 mb-3" />
+                                                    <p className="mono text-[10px] text-white/40 uppercase tracking-widest font-bold">
+                                                        Preparing preview…
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Download button */}
+                                        <button
+                                            onClick={handleDownload}
+                                            disabled={!capturedImage}
+                                            className="w-full flex items-center justify-center gap-3 bg-white text-black font-black text-[11px] uppercase tracking-widest py-4 rounded-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed mb-6 shadow-lg"
+                                        >
+                                            <Download className="h-4 w-4" />
+                                            Download Image
+                                        </button>
+
+                                        {/* Social media buttons */}
+                                        <div className="space-y-3">
+                                            <p className="mono text-[9px] text-white/40 uppercase tracking-widest font-bold">
+                                                Share to Social Media
+                                            </p>
+
+                                            <div className="grid grid-cols-2 gap-2.5">
+                                                {/* X/Twitter */}
+                                                <button
+                                                    onClick={shareToTwitter}
+                                                    className="flex items-center justify-center gap-2.5 bg-white/8 border border-white/15 hover:bg-white/15 hover:border-white/30 text-white font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all group"
+                                                >
+                                                    <svg className="h-4 w-4 fill-current group-hover:text-white transition-colors" viewBox="0 0 24 24">
+                                                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                                    </svg>
+                                                    Post on X
+                                                </button>
+
+                                                {/* Facebook */}
+                                                <button
+                                                    onClick={shareToFacebook}
+                                                    className="flex items-center justify-center gap-2.5 bg-[#1877F2]/10 border border-[#1877F2]/20 hover:bg-[#1877F2]/20 hover:border-[#1877F2]/40 text-[#1877F2] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
+                                                >
+                                                    <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+                                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                                    </svg>
+                                                    Facebook
+                                                </button>
+
+                                                {/* WhatsApp */}
+                                                <button
+                                                    onClick={shareToWhatsApp}
+                                                    className="flex items-center justify-center gap-2.5 bg-[#25D366]/10 border border-[#25D366]/20 hover:bg-[#25D366]/20 hover:border-[#25D366]/40 text-[#25D366] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
+                                                >
+                                                    <MessageCircle className="h-4 w-4" />
+                                                    WhatsApp
+                                                </button>
+
+                                                {/* LinkedIn */}
+                                                <button
+                                                    onClick={shareToLinkedIn}
+                                                    className="flex items-center justify-center gap-2.5 bg-[#0A66C2]/10 border border-[#0A66C2]/20 hover:bg-[#0A66C2]/20 hover:border-[#0A66C2]/40 text-[#0A66C2] font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
+                                                >
+                                                    <Linkedin className="h-4 w-4" />
+                                                    LinkedIn
+                                                </button>
+                                            </div>
+
+                                            {/* Native Share (mobile) */}
+                                            {typeof navigator !== "undefined" && "share" in navigator && (
+                                                <button
+                                                    onClick={handleNativeShare}
+                                                    disabled={!capturedImage}
+                                                    className="w-full flex items-center justify-center gap-3 bg-[#FF0000] text-white font-black text-[10px] uppercase tracking-widest py-4 rounded-xl hover:bg-red-500 transition-all disabled:opacity-30 mt-1"
+                                                >
+                                                    <Share2 className="h-4 w-4" />
+                                                    Share via Device
+                                                </button>
+                                            )}
+
+                                            {/* Copy link */}
+                                            <button
+                                                onClick={handleCopyLink}
+                                                className="w-full flex items-center justify-center gap-3 border border-white/15 bg-white/5 text-white/70 hover:text-white hover:border-white/30 font-black text-[10px] uppercase tracking-widest py-3.5 rounded-xl transition-all"
+                                            >
+                                                {copied
+                                                    ? <><Check className="h-3.5 w-3.5 text-green-400" />Link Copied!</>
+                                                    : <><Copy className="h-3.5 w-3.5" />Copy Share Link</>
+                                                }
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Hashtag footer */}
+                                    <div className="px-6 md:px-8 pb-6 md:pb-8 pt-2 border-t border-white/5">
+                                        <p className="text-center">
+                                            <span className="mono text-[9px] text-white/30 uppercase tracking-widest font-bold">
+                                                Download the image & upload it with your post →{" "}
+                                            </span>
+                                            <span className="text-[#FF0000] font-black text-sm italic">
+                                                {HASHTAG}
+                                            </span>
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
         </>
     );
 }

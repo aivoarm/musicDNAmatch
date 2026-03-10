@@ -3,7 +3,7 @@ import { Waves } from "lucide-react";
 
 export default function Footer() {
     return (
-        <footer className="border-t border-white/5 bg-[#080808] relative z-20">
+        <footer className="border-t border-white/5 bg-[#080808] relative z-20 pb-20 md:pb-0">
             <div className="max-w-7xl mx-auto px-6 py-12 md:py-8 flex flex-col md:flex-row items-center justify-between gap-6">
 
                 {/* Brand / Logo */}

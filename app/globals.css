@@ -143,5 +143,24 @@
     background-color: #080808;
     color: var(--color-foreground);
     @apply min-h-screen antialiased selection:bg-primary/20;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+    padding-bottom: env(safe-area-inset-bottom);
   }
+}
+  /* Optimize for Mobile Web App (PWA feel) */
+  @media (max-width: 768px) {
+    h1 { font-size: 2.25rem !important; line-height: 1 !important; letter-spacing: -0.05em !important; }
+    h2 { font-size: 1.75rem !important; line-height: 1 !important; letter-spacing: -0.04em !important; }
+    .glass { border-radius: 1.75rem !important; }
+    input, button { font-size: 16px !important; } /* Prevents iOS auto-zoom on focus */
+  }
+
+@utility safe-bottom {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+@utility app-bottom-nav {
+  height: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }

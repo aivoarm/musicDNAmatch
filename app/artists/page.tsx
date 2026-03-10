@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Music2, ArrowLeft, Star, Sparkles, Waves, Users, Zap, Brain, Fingerprint, Activity, Radio, Share2, ArrowRight, Search, Loader2, Mail, CheckCircle2, Plus, Play, Pause } from "lucide-react";
+import { Music2, ArrowLeft, Star, Sparkles, Waves, Users, Zap, Brain, Fingerprint, Activity, Radio, Share2, ArrowRight, Search, Loader2, Mail, CheckCircle2, Plus, Play, Pause, MessageSquarePlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { matchScore, AXIS_LABELS } from "@/lib/dna";
@@ -222,6 +222,92 @@ export default function MusicalTribe() {
                     </section>
                 </div>
 
+                {/* ── FUTURE PROTOCOL SECTION ── */}
+                <section className="mt-40">
+                    <div className="flex flex-col items-center text-center mb-20">
+                        <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} className="flex items-center gap-2 mb-6 border border-white/10 px-4 py-1.5 rounded-full bg-white/5">
+                            <Zap className="h-3 w-3 text-[#FF0000] fill-[#FF0000]" />
+                            <span className="mono text-[8px] uppercase tracking-[0.3em] text-white/60">Protocol Roadmap v2.0</span>
+                        </motion.div>
+                        <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-white mb-6">
+                            The Future of <span className="text-[#FF0000]">Tribe</span>
+                        </h2>
+                        <p className="max-w-2xl text-white/50 text-sm font-medium italic leading-relaxed">
+                            We are architecting the next generation of artist-fan connection. Moving beyond shallow followers into deep sonic resonance.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                icon: Brain,
+                                title: "Hyper-Taste Matching",
+                                desc: "Connect with high-resonance listeners based on identical 12D vectors. No social algorithms, just pure musical compatibility.",
+                                status: "In Alpha",
+                                color: "border-[#FF0000]/30"
+                            },
+                            {
+                                icon: Radio,
+                                title: "Incipient Genre Seeding",
+                                desc: "Be the blueprint for new frequencies. The protocol identifies your sound as 'Native' to emerging genres and suggests you directly to listeners exploring those frontiers.",
+                                status: "Phase 2",
+                                color: "border-blue-500/30"
+                            },
+                            {
+                                icon: MessageSquarePlus,
+                                title: "Resonance Bridges",
+                                desc: "Launch community rooms gated by DNA. Access is granted only to those whose sonic identity aligns with your creative frequency.",
+                                status: "Coming Soon",
+                                color: "border-purple-500/30"
+                            }
+                        ].map((feat, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className={`glass p-10 rounded-[3rem] border ${feat.color} hover:bg-white/[0.03] transition-all group`}
+                            >
+                                <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
+                                    <feat.icon className="h-7 w-7 text-white/80" />
+                                </div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-xl font-black uppercase italic tracking-tighter text-white">{feat.title}</h3>
+                                    <span className="mono text-[8px] bg-white/10 px-2 py-1 rounded-full text-white/40 uppercase tracking-widest">{feat.status}</span>
+                                </div>
+                                <p className="text-white/40 text-xs font-medium italic leading-relaxed">
+                                    {feat.desc}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Dashboard Teaser */}
+                    <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} className="mt-12 glass rounded-[4rem] border border-white/5 p-8 md:p-12 bg-gradient-to-tr from-white/[0.02] to-transparent">
+                        <div className="flex flex-col md:flex-row items-center gap-10">
+                            <div className="flex-1">
+                                <h4 className="text-3xl font-black uppercase italic tracking-tighter text-white mb-4">The Creator <span className="text-[#FF0000]">Dashboard</span></h4>
+                                <p className="text-white/40 text-sm font-medium italic leading-relaxed mb-6">
+                                    A real-time heatmap of your global resonance. Understand where your fans are, what they are hearing, and how your sound is evolving the collective DNA.
+                                </p>
+                                <div className="flex flex-wrap gap-4">
+                                    {['Sonic Analytics', 'Fan Heatmaps', 'Conversion Vectors', 'Sync Opportunities'].map(tag => (
+                                        <div key={tag} className="mono text-[8px] border border-white/10 px-4 py-2 rounded-full text-white/30 uppercase tracking-widest">
+                                            {tag}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="w-full md:w-1/3 aspect-[4/3] rounded-[2.5rem] bg-black/40 border border-white/10 flex items-center justify-center relative overflow-hidden">
+                                <Activity className="h-20 w-20 text-[#FF0000]/20 animate-pulse" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+                                    <span className="mono text-[10px] text-white/20 uppercase tracking-[0.5em] font-black">Interface Mock_v0.2</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </section>
+
                 {/* Tribe Community CTA */}
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="mt-20 p-12 md:p-20 border border-[#FF0000]/20 bg-[#FF0000]/5 rounded-[4rem] flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden relative">
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#FF0000]/10 via-transparent to-transparent pointer-events-none" />
@@ -241,15 +327,55 @@ export default function MusicalTribe() {
                 </motion.div>
             </div>
 
+            {/* Artist Verification Modal (Placeholder) */}
+            <AnimatePresence>
+                {showArtistModal && (
+                    <div className="fixed inset-0 z-[150] flex items-center justify-center p-6">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowArtistModal(false)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="glass max-w-lg w-full rounded-[3rem] p-12 md:p-16 border border-[#FF0000]/20 relative z-10 text-center shadow-2xl shadow-[#FF0000]/10"
+                        >
+                            <div className="h-20 w-20 rounded-2xl bg-[#FF0000]/10 flex items-center justify-center mx-auto mb-10 border border-[#FF0000]/20">
+                                <Sparkles className="h-10 w-10 text-[#FF0000] animate-pulse" />
+                            </div>
+                            <h3 className="text-3xl font-black uppercase italic tracking-tighter text-white mb-6">
+                                We Are Not <br /><span className="text-[#FF0000]">There Yet</span>
+                            </h3>
+                            <p className="text-white/60 text-sm font-medium italic leading-relaxed mb-10">
+                                The Syndicate is currently an invite-only collective. Stay tuned as we build the verification bridge for independent creators.
+                            </p>
+                            <div className="space-y-4">
+                                <p className="mono text-[10px] text-white/30 uppercase tracking-[0.4em] mb-8 font-black">
+                                    Enjoy being a fan • Connect to others
+                                </p>
+                                <button
+                                    onClick={() => setShowArtistModal(false)}
+                                    className="w-full bg-white text-black font-black py-5 rounded-2xl uppercase tracking-widest text-[12px] hover:scale-105 active:scale-95 transition-all text-sm shadow-xl"
+                                >
+                                    Understood
+                                </button>
+                            </div>
+                            <div className="mt-12 pt-8 border-t border-white/5 opacity-30">
+                                <span className="mono text-[8px] uppercase tracking-widest">Protocol Version: SYNDICATE_ALPHA_0.1</span>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* Background Effects */}
             <div className="fixed inset-0 -z-10 pointer-events-none">
                 <div className="absolute top-1/4 left-1/4 h-[600px] w-[600px] blur-[200px] rounded-full bg-blue-600/5 animate-pulse" />
                 <div className="absolute bottom-1/4 right-1/4 h-[600px] w-[600px] blur-[200px] rounded-full bg-[#FF0000]/5" />
-            </div>
-
-            {/* Footer Label */}
-            <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-20 pointer-events-none opacity-20">
-                <p className="mono text-[8px] uppercase tracking-[2em] text-white whitespace-nowrap">Tribe Neural Synchronization Protocol v1.4 // Aesthetic Resonance Verified</p>
             </div>
 
             {/* Footer Label */}

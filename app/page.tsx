@@ -794,6 +794,7 @@ function HomeContent() {
     const [spotifyUrl, setSpotifyUrl] = useState("");
     const [scanning, setScanning] = useState(false);
     const [scanErr, setScanErr] = useState<string | null>(null);
+    const [spotifyHelpOpen, setSpotifyHelpOpen] = useState(false);
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
     const [plTotal, setPlTotal] = useState(0);
     const [plOffset, setPlOffset] = useState(0);
@@ -986,6 +987,7 @@ function HomeContent() {
 
     const scanSpotify = async (offset = 0) => {
         const id = extractId(spotifyUrl);
+        setSpotifyHelpOpen(false);
         if (!id) { setScanErr("Enter a valid Spotify profile URL."); return; }
         if (offset === 0) { setScanning(true); setPlaylists([]); setScanErr(null); }
         else setLoadingMore(true);
@@ -1440,7 +1442,7 @@ function HomeContent() {
 
     // ─────────────────────────────────────────────────────────────────────
     return (
-        <div className="relative min-h-screen bg-[#080808] overflow-x-hidden">
+        <div className="relative min-h-screen bg-[#080808] overflow-x-hidden safe-bottom md:pb-0">
             <style>{`
                 
                 *{font-family:var(--font-syne),'Syne',sans-serif}
@@ -1699,7 +1701,7 @@ function HomeContent() {
                                                 </div>
                                                 {scanErr && <p className="mono text-[10px] text-red-400 mb-4">{scanErr}</p>}
 
-                                                <details className="mb-6 bg-white/4 border border-white/10 rounded-xl p-4 text-sm text-white/70 open:bg-white/5 transition-colors group">
+                                                <details open={spotifyHelpOpen} onToggle={(e: any) => setSpotifyHelpOpen(e.target.open)} className="mb-6 bg-white/4 border border-white/10 rounded-xl p-4 text-sm text-white/70 open:bg-white/5 transition-colors group">
                                                     <summary className="cursor-pointer font-bold select-none text-white/60 group-open:text-white flex items-center justify-between text-xs uppercase tracking-widest mono">
                                                         <span className="flex items-center gap-2"><HelpCircle className="h-4 w-4 text-[#1DB954]" /> Where is my Spotify URL?</span>
                                                         <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" />
@@ -1819,7 +1821,14 @@ function HomeContent() {
                                                     {ytTracks.map((tr, idx) => (
                                                         <div key={tr.id || idx} className={`flex gap-3 items-center p-3 rounded-xl border transition-all ${tr.status !== "idle" ? "bg-white/5 border-white/10" : "bg-white/2 border-white/5 border-dashed"}`}>
                                                             {tr.status === "ok" || tr.thumbnail ? (
-                                                                <img src={tr.thumbnail} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                                <div className="relative group/yt-slot shrink-0">
+                                                                    <img src={tr.thumbnail} className="w-12 h-12 object-cover rounded-lg" />
+                                                                    {tr.url && (
+                                                                        <a href={tr.url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/yt-slot:opacity-100 transition-opacity rounded-lg">
+                                                                            <Play className="w-4 h-4 text-white fill-white" />
+                                                                        </a>
+                                                                    )}
+                                                                </div>
                                                             ) : (
                                                                 <div className="w-12 h-12 flex items-center justify-center bg-white/5 rounded-lg flex-shrink-0">
                                                                     <Youtube className="w-5 h-5 text-white/20" />
@@ -1880,7 +1889,7 @@ function HomeContent() {
                                 {/* ── ANALYZING ── */}
                                 {stage === "analyzing" && (
                                     <motion.div key="an" initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                                        className="glass rounded-[3rem] p-12 md:p-20 text-center max-w-xl mx-auto border border-[#FF0000]/18 bg-[#FF0000]/4">
+                                        className="glass rounded-[3rem] p-8 md:p-20 text-center max-w-xl mx-auto border border-[#FF0000]/18 bg-[#FF0000]/4">
                                         <div className="relative h-44 w-44 mx-auto mb-10">
                                             <div className="absolute inset-0 rounded-full border-4 border-[#FF0000]/10" />
                                             <motion.div className="absolute inset-0 rounded-full border-4 border-t-[#FF0000] border-transparent" animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }} />
@@ -1956,6 +1965,7 @@ function HomeContent() {
 
                                             {/* Stats + CTA */}
                                             <div className="space-y-4">
+                                                <ShareDNACard profile={dna} />
                                                 <div className="glass rounded-[2.5rem] p-8 border border-[#FF0000]/20 bg-[#FF0000]/4">
                                                     <div className="flex items-center justify-between mb-5">
                                                         <span className="mono text-[10px] text-[#FF0000] uppercase tracking-widest font-black flex items-center gap-2"><Fingerprint className="h-4 w-4" />Neural Fingerprint</span>
@@ -2033,7 +2043,6 @@ function HomeContent() {
                                                     <User className="h-5 w-5 text-white/70 group-hover:text-white transition-colors relative z-10" />
                                                     <span className="relative z-10">View Full Profile</span>
                                                 </Link>
-                                                <ShareDNACard profile={dna} />
                                                 <button onClick={() => { setStage("intro"); setSelPlaylists([]); setYtTracks(emptyYt()); }} className="w-full mono text-[10px] text-white/45 hover:text-[#FF0000] transition-all uppercase tracking-widest py-2 text-center">↺ Start new scan</button>
 
                                             </div>
