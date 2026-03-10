@@ -16,7 +16,7 @@ export async function GET() {
         if (guestId) {
             const { data } = await supabase
                 .from("dna_profiles")
-                .select("id, sonic_embedding, metadata, email, city, created_at, user_id, auth_user_id")
+                .select("*, artists(*)")
                 .eq("user_id", userId)
                 .maybeSingle();
             profile = data;
@@ -39,6 +39,18 @@ export async function GET() {
 
         if (!profile) {
             return NextResponse.json({ found: false });
+        }
+
+        // Check if user is a verified artist by email
+        let isArtist = false;
+        if (profile.email) {
+            const { data: artistCheck } = await supabase
+                .from("artists")
+                .select("id, verified")
+                .ilike("verification_email", profile.email.trim())
+                .eq("verified", true)
+                .maybeSingle();
+            if (artistCheck) isArtist = true;
         }
 
         const meta = profile.metadata || {};
@@ -82,6 +94,7 @@ export async function GET() {
             found: true,
             profileId: profile.id,
             userId,
+            isArtist,
             dna: dnaObject
         });
 

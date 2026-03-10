@@ -71,4 +71,25 @@ export class LastFMClient {
             count: parseInt(t.count) || 0
         }));
     }
+
+    /**
+     * Get full artist info including biography.
+     */
+    async getArtistInfo(artist: string) {
+        const data = await this.fetchLF({
+            method: "artist.getInfo",
+            artist: artist,
+            autocorrect: "1"
+        });
+
+        if (!data?.artist) return null;
+
+        return {
+            name: data.artist.name,
+            bio: data.artist.bio?.content || null,
+            summary: data.artist.bio?.summary || null,
+            url: data.artist.url,
+            tags: data.artist.tags?.tag?.map((t: any) => t.name) || []
+        };
+    }
 }

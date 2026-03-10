@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
     Waves, Users, ArrowRight, Brain, User, CheckCircle2,
     ChevronRight, Activity, ExternalLink, Play, RefreshCw,
-    Mail, X, MapPin, Loader2, Sparkles, Search
+    Mail, X, MapPin, Loader2, Sparkles, Search, Star
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                 const r = await fetch("/api/dna/profile/me");
                 const d = await r.json() as any;
                 if (d.found) {
-                    setProfile(d.dna);
+                    setProfile({ ...d.dna, isArtist: d.isArtist });
                     if (d.dna.email) setEmail(d.dna.email);
                     if (d.dna.city) setCity(d.dna.city);
                 } else {
@@ -386,8 +386,15 @@ export default function ProfilePage() {
                                 )}
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                                <span className="mono text-[9px] text-[#FF0000] uppercase tracking-[0.5em] font-black mb-2 block">Digital Identity</span>
-                                <h1 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter mb-2">{profile.display_name}</h1>
+                                <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-4 mb-2">
+                                    <h1 className="text-2xl md:text-3xl font-black text-white italic uppercase tracking-tighter">{profile.display_name}</h1>
+                                    {profile.isArtist && (
+                                        <div className="bg-[#FF0000] px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,0,0,0.3)]">
+                                            <Star className="h-3 w-3 text-white fill-white" />
+                                            <span className="mono text-[8px] text-white font-black uppercase tracking-widest">Verified Artist</span>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/85 mono text-[9px] uppercase tracking-widest mt-3">
                                     {(profile.city || profile.metadata?.city) && (
@@ -401,7 +408,7 @@ export default function ProfilePage() {
                             <div className="flex flex-col items-center gap-4">
                                 <div className="flex flex-col items-center gap-1 glass px-6 py-4 rounded-3xl border border-[#FF0000]/25">
                                     <span className="mono text-[9px] text-white/60 uppercase tracking-widest">Coherence</span>
-                                    <span className="text-3xl font-black text-[#FF0000] italic">{((profile.coherence_index ?? 0) * 100).toFixed(1)}%</span>
+                                    <span className="text-2xl font-black text-[#FF0000] italic">{((profile.coherence_index ?? 0) * 100).toFixed(1)}%</span>
                                 </div>
                                 <ShareDNACard profile={profile} />
                             </div>
@@ -463,7 +470,7 @@ export default function ProfilePage() {
                         {profile.narrative && (
                             <div className="glass rounded-[2.5rem] p-8 md:p-10 border border-white/25">
                                 <p className="mono text-[10px] text-[#FF0000] uppercase tracking-[0.4em] mb-5 font-black flex items-center gap-2"><Brain className="h-3.5 w-3.5" />Your Sound Profile</p>
-                                <p className="text-white leading-relaxed text-sm font-bold">{profile.narrative}</p>
+                                <p className="text-white leading-relaxed text-[12px] font-bold">{profile.narrative}</p>
                             </div>
                         )}
 
@@ -498,7 +505,7 @@ export default function ProfilePage() {
                                         <h3 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-6 opacity-60">This radar suggests someone who likes:</h3>
                                         <ul className="space-y-4">
                                             {generateInterpretation(profile.vector || []).characteristics.map((c, i) => (
-                                                <li key={i} className="flex items-center gap-4 text-white/80 text-sm font-bold italic tracking-tight transition-all hover:translate-x-1">
+                                                <li key={i} className="flex items-center gap-4 text-white/80 text-[12px] font-bold italic tracking-tight transition-all hover:translate-x-1">
                                                     <div className="h-1.5 w-1.5 rounded-full bg-[#FF0000]/80 shadow-[0_0_8px_rgba(255,0,0,0.5)]" />
                                                     {c}
                                                 </li>
@@ -548,7 +555,7 @@ export default function ProfilePage() {
                         <div className="space-y-8 mt-12">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 px-2">
                                 <div>
-                                    <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
+                                    <h3 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tighter flex items-center gap-2">
                                         <Users className="h-6 w-6 text-[#FF0000]" />
                                         Musical <span className="text-[#FF0000]">Tribe</span>
                                     </h3>
@@ -621,7 +628,7 @@ export default function ProfilePage() {
                         {/* DNA Refinement Section */}
                         <div className="space-y-8 mt-24 pb-10 border-t border-white/5 pt-12 text-center">
                             <div className="px-2">
-                                <h3 className="text-xl md:text-2xl font-black text-white italic uppercase tracking-tighter flex items-center justify-center gap-2">
+                                <h3 className="text-lg md:text-xl font-black text-white italic uppercase tracking-tighter flex items-center justify-center gap-2">
                                     <RefreshCw className="h-6 w-6 text-[#FF0000]" />
                                     Refine Your <span className="text-[#FF0000]">DNA</span>
                                 </h3>

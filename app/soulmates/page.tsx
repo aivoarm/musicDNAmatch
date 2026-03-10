@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
     Waves, Users, ArrowLeft, ArrowRight, Brain, Mail, CheckCircle2,
     Activity, X, ChevronRight, Share2, MessageSquarePlus,
-    Scan, Filter, User, RotateCcw, MapPin, Loader2
+    Scan, Filter, User, RotateCcw, MapPin, Loader2, Star
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -131,7 +131,7 @@ export default function SoulmatesPage() {
                     const pd = await profileRes.json() as any;
                     if (pd.found) {
                         foundDna = true;
-                        setUserDna(pd.dna);
+                        setUserDna({ ...pd.dna, isArtist: pd.isArtist });
 
                         // Check for verified email cookie
                         const authEmail = document.cookie.split(";").find(c => c.trim().startsWith("auth_email="));
@@ -264,16 +264,16 @@ export default function SoulmatesPage() {
 
             <div className="max-w-6xl mx-auto px-4 md:px-8 pt-24 pb-20 w-full">
                 {/* Header — tighter */}
-                <div className="glass rounded-2xl p-6 md:p-7 border border-white/25 mb-4 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-6 opacity-10"><Brain className="h-24 w-24" /></div>
+                <div className="glass rounded-2xl p-5 md:p-7 border border-white/25 mb-4 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-6 opacity-10"><Brain className="h-16 w-16" /></div>
                     <div className="relative z-10">
-                        <button onClick={() => router.back()} className="flex items-center gap-2 mono text-[10px] text-white hover:text-[#FF0000] transition-colors uppercase tracking-widest mb-3 font-bold">
-                            <ArrowLeft className="h-3.5 w-3.5" />Return
+                        <button onClick={() => router.back()} className="flex items-center gap-2 mono text-[8px] text-white hover:text-[#FF0000] transition-colors uppercase tracking-widest mb-3 font-bold">
+                            <ArrowLeft className="h-3 w-3" />Return
                         </button>
-                        <h1 className="text-3xl md:text-4xl font-black text-white uppercase tracking-tighter italic mb-1">
+                        <h1 className="text-xl md:text-3xl font-black text-white uppercase tracking-tighter italic leading-none mb-2">
                             Musical <span className="text-[#FF0000]">Soulmates</span>
                         </h1>
-                        <p className="mono text-[9px] text-white/95 uppercase tracking-[0.4em] font-medium">
+                        <p className="mono text-[7px] md:text-[9px] text-white/60 uppercase tracking-[0.2em] font-medium leading-relaxed max-w-[200px] md:max-w-none">
                             Users whose DNA most closely aligns with yours
                         </p>
                     </div>
@@ -347,106 +347,107 @@ export default function SoulmatesPage() {
                                         initial={{ opacity: 0, y: 8 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.03 }}
-                                        className={`glass rounded-xl p-4 border transition-all relative overflow-hidden group
+                                        className={`glass rounded-xl p-3 md:p-4 border transition-all relative overflow-hidden group
                                             ${match.is_mutual ? "ring-1 ring-green-500/40 border-green-500/25" : "border-white/15 hover:border-[#FF0000]/30"}`}>
-                                        <div className="flex gap-3 items-center">
-                                            {/* Avatar + Info wrapper */}
-                                            <button onClick={() => setViewedProfile(match)} className="flex-1 min-w-0 flex gap-3 items-center text-left focus:outline-none">
-                                                {/* Avatar — smaller */}
-                                                <div className="relative shrink-0">
-                                                    <div className="h-12 w-12 rounded-xl overflow-hidden bg-white/10 ring-1 ring-white/15 group-hover:ring-[#FF0000]/40 transition-all">
-                                                        {match.metadata?.images?.[0]?.url
-                                                            ? <img src={match.metadata.images[0].url} alt="" className="h-full w-full object-cover" />
-                                                            : <div className="h-full w-full flex items-center justify-center text-white font-black text-lg">
-                                                                {(match.metadata?.display_name || "?")[0]?.toUpperCase()}
-                                                            </div>}
-                                                    </div>
-                                                </div>
+                                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-3">
+                                            {/* Top Row: Avatar + Name + Artist Badge */}
+                                            <button onClick={() => setViewedProfile(match)} className="flex items-center gap-3 text-left focus:outline-none flex-1 min-w-0 group/info">
+                                                 {/* Avatar — smaller */}
+                                                 <div className="relative shrink-0">
+                                                     <div className="h-10 w-10 md:h-12 md:w-12 rounded-xl overflow-hidden bg-white/10 ring-1 ring-white/15 group-hover/info:ring-[#FF0000]/40 transition-all">
+                                                         {match.metadata?.images?.[0]?.url
+                                                             ? <img src={match.metadata.images[0].url} alt="" className="h-full w-full object-cover" />
+                                                             : <div className="h-full w-full flex items-center justify-center text-white font-black text-base md:text-lg">
+                                                                 {(match.metadata?.display_name || "?")[0]?.toUpperCase()}
+                                                             </div>}
+                                                     </div>
+                                                     {match.is_artist && (
+                                                         <div className="absolute -top-1.5 -right-1.5 bg-[#FF0000] rounded-full p-1 shadow-[0_0_10px_rgba(255,0,0,0.5)] border border-black/50">
+                                                             <Star className="h-2 w-2 text-white fill-white" />
+                                                         </div>
+                                                     )}
+                                                 </div>
 
-                                                {/* Info — compact */}
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-1.5 mb-0.5">
-                                                        <h3 className="text-sm font-black text-white italic tracking-tighter truncate group-hover:text-[#FF0000] transition-colors">
-                                                            {match.metadata?.display_name || match.display_name || "Anonymous Signal"}
-                                                        </h3>
-                                                        {match.is_mutual && (
-                                                            <span className="text-[7px] font-black bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest shrink-0">Mutual</span>
-                                                        )}
-                                                        {match.incoming_signal && !match.is_mutual && (
-                                                            <span className="text-[7px] font-black bg-[#FF0000]/15 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0 animate-pulse">Signal</span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        <span className={`text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${mc.bg} ${mc.border} border ${mc.text}`}>
-                                                            {mode}
-                                                        </span>
-                                                        {matchCity && (
-                                                            <span className="text-[7px] font-bold text-white/40 flex items-center gap-0.5">
-                                                                <MapPin className="h-2.5 w-2.5" />{matchCity}
-                                                            </span>
-                                                        )}
-                                                        {(match.metadata?.top_genres || []).slice(0, 2).map((g: string, i: number) => (
-                                                            <span key={g + i} className="text-[7px] bg-white/8 border border-white/15 text-white/60 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{g}</span>
-                                                        ))}
-                                                        {match.song_match_count > 0 && (
-                                                            <span className="text-[7px] font-black bg-[#FF0000]/10 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-widest shrink-0">
-                                                                {match.song_match_count} {match.song_match_count === 1 ? 'Song' : 'Songs'} Match
-                                                            </span>
-                                                        )}
-                                                        {match.artist_match_count > 0 && (
-                                                            <span className="text-[7px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-widest shrink-0">
-                                                                {match.artist_match_count} {match.artist_match_count === 1 ? 'Artist' : 'Artists'} Match
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                                 {/* Info — compact */}
+                                                 <div className="flex-1 min-w-0">
+                                                     <div className="flex items-center gap-1.5 mb-1">
+                                                         <h3 className="text-xs md:text-sm font-black text-white italic tracking-tighter truncate group-hover/info:text-[#FF0000] transition-colors">
+                                                             {match.metadata?.display_name || match.display_name || "Anonymous Signal"}
+                                                         </h3>
+                                                         {match.is_mutual && (
+                                                             <span className="text-[6px] md:text-[7px] font-black bg-green-500/15 text-green-400 px-1 md:px-1.5 py-0.5 rounded-full border border-green-500/20 uppercase tracking-widest shrink-0">Mutual</span>
+                                                         )}
+                                                         {match.is_artist && (
+                                                             <span className="text-[5px] md:text-[7px] font-black bg-[#FF0000] text-white px-1 md:px-1.5 py-0.5 rounded-full uppercase tracking-tighter md:tracking-widest shrink-0 flex items-center gap-0.5">
+                                                                 <Star className="h-1.5 w-1.5 fill-white" /> Artist
+                                                             </span>
+                                                         )}
+                                                     </div>
+                                                     <div className="flex items-center gap-1 flex-wrap">
+                                                         <span className={`text-[6px] md:text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full ${mc.bg} ${mc.border} border ${mc.text}`}>
+                                                             {mode}
+                                                         </span>
+                                                         {match.song_match_count > 0 && (
+                                                             <span className="text-[6px] md:text-[7px] font-black bg-[#FF0000]/10 text-[#FF0000] px-1.5 py-0.5 rounded-full border border-[#FF0000]/20 uppercase tracking-tighter shrink-0">
+                                                                 {match.song_match_count}S
+                                                             </span>
+                                                         )}
+                                                         {match.artist_match_count > 0 && (
+                                                             <span className="text-[6px] md:text-[7px] font-black bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded-full border border-blue-500/20 uppercase tracking-tighter shrink-0">
+                                                                 {match.artist_match_count}A
+                                                             </span>
+                                                         )}
+                                                         {(match.metadata?.top_genres || []).slice(0, 1).map((g: string, i: number) => (
+                                                             <span key={g + i} className="text-[6px] md:text-[7px] bg-white/8 border border-white/15 text-white/60 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">{g}</span>
+                                                         ))}
+                                                     </div>
+                                                 </div>
                                             </button>
 
-                                            {/* Stats + Action — right side */}
-                                            <div className="flex items-center gap-2.5 shrink-0">
+                                            {/* Bottom Row (Mobile) / Right Row (Desktop): Stats + Actions */}
+                                            <div className="flex items-center justify-between md:justify-end md:flex-1 gap-2.5 pt-2 md:pt-0 border-t border-white/5 md:border-none">
                                                 {/* Coherence + Similarity */}
-                                                <div className="text-right hidden sm:block">
-                                                    <div className="flex items-baseline gap-1 justify-end">
-                                                        <span className={`text-base font-black ${mc.text}`}>{(computeDisplaySimilarity(match.similarity) * 100).toFixed(0)}%</span>
-                                                        <span className="mono text-[7px] text-white/40 uppercase font-bold">Sim</span>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex flex-col md:items-end">
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className={`text-sm md:text-base font-black ${mc.text}`}>{(computeDisplaySimilarity(match.similarity) * 100).toFixed(0)}%</span>
+                                                            <span className="mono text-[6px] md:text-[7px] text-white/40 uppercase font-bold">Sim</span>
+                                                        </div>
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-[8px] md:text-[10px] font-black text-white/50">{coherencePct}%</span>
+                                                            <span className="mono text-[6px] md:text-[7px] text-white/30 uppercase font-bold">Coh</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-baseline gap-1 justify-end">
-                                                        <span className="text-[10px] font-black text-white/50">{coherencePct}%</span>
-                                                        <span className="mono text-[7px] text-white/30 uppercase font-bold">Coh</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Mobile similarity badge */}
-                                                <div className={`sm:hidden ${mc.badge} text-white text-[9px] font-black px-2 py-1 rounded-md`}>
-                                                    {(computeDisplaySimilarity(match.similarity) * 100).toFixed(0)}%
                                                 </div>
 
                                                 {/* Action button */}
-                                                {match.is_mutual ? (
-                                                    <Link href={`/temp-room/${match.bridge_id}`}
-                                                        className="flex items-center gap-1.5 bg-green-500 text-black font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
-                                                        <Scan className="h-3 w-3" />Bridge
-                                                    </Link>
-                                                ) : match.incoming_signal && !match.has_signal ? (
-                                                    <button onClick={() => setSelectedMatch(match)}
-                                                        className="flex items-center gap-1.5 bg-[#FF0000] text-white font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all animate-pulse">
-                                                        <Activity className="h-3 w-3" />Respond
-                                                    </button>
-                                                ) : isAnonymous ? (
-                                                    <button disabled
-                                                        className="flex items-center gap-1.5 bg-white/5 text-white/30 cursor-not-allowed font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest transition-all">
-                                                        <Activity className="h-3 w-3" />Anon
-                                                    </button>
-                                                ) : (
-                                                    <button onClick={() => !match.has_signal && setSelectedMatch(match)}
-                                                        disabled={match.has_signal}
-                                                        className={`flex items-center gap-1.5 font-black py-2 px-3 rounded-lg text-[8px] uppercase tracking-widest transition-all
-                                                            ${match.has_signal ? "bg-white/10 text-white/40 cursor-not-allowed" : "bg-white text-black hover:scale-[1.02] active:scale-95"}`}>
-                                                        {match.has_signal
-                                                            ? <><Activity className="h-3 w-3" />Sent</>
-                                                            : <><MessageSquarePlus className="h-3 w-3" />Connect</>}
-                                                    </button>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {match.is_mutual ? (
+                                                        <Link href={`/temp-room/${match.bridge_id}`}
+                                                            className="flex items-center gap-1 bg-green-500 text-black font-black py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[7px] md:text-[8px] uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">
+                                                            <Scan className="h-2.5 w-2.5" />Bridge
+                                                        </Link>
+                                                    ) : match.incoming_signal && !match.has_signal ? (
+                                                        <button onClick={() => setSelectedMatch(match)}
+                                                            className="flex items-center gap-0.5 bg-[#FF0000] text-white font-black py-1 px-1.5 md:py-2 md:px-3 rounded-lg text-[6px] md:text-[8px] uppercase tracking-tighter md:tracking-widest hover:scale-[1.02] active:scale-95 transition-all animate-pulse">
+                                                            <Activity className="h-2.5 w-2.5" />Respond
+                                                        </button>
+                                                    ) : isAnonymous ? (
+                                                        <button disabled
+                                                            className="flex items-center gap-1 bg-white/5 text-white/30 cursor-not-allowed font-black py-1.5 px-2 md:py-2 md:px-3 rounded-lg text-[7px] md:text-[8px] uppercase tracking-widest transition-all">
+                                                            <Activity className="h-2.5 w-2.5" />Anon
+                                                        </button>
+                                                    ) : (
+                                                        <button onClick={() => !match.has_signal && setSelectedMatch(match)}
+                                                            disabled={match.has_signal}
+                                                            className={`flex items-center gap-0.5 md:gap-1.5 font-black py-1 px-1.5 md:py-2 md:px-3 rounded-lg text-[6px] md:text-[8px] uppercase tracking-tighter md:tracking-widest transition-all
+                                                                ${match.has_signal ? "bg-white/10 text-white/40 cursor-not-allowed" : "bg-white text-black hover:scale-[1.02] active:scale-95"}`}>
+                                                            {match.has_signal
+                                                                ? <><Activity className="h-2.5 w-2.5" />Sent</>
+                                                                : <><MessageSquarePlus className="h-2.5 w-2.5" />Connect</>}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -493,12 +494,19 @@ export default function SoulmatesPage() {
                                 </h3>
                                 <div className="flex items-end justify-between border-b border-white/15 pb-3 mb-3">
                                     <div className="min-w-0">
-                                        <h4 className="text-sm font-black text-white italic truncate pr-2">{userDna.display_name}</h4>
-                                        {userDna.city && (
-                                            <span className="text-[8px] text-white/40 flex items-center gap-1 mt-0.5">
-                                                <MapPin className="h-2.5 w-2.5" />{userDna.city}
-                                            </span>
+                                    <div className="flex items-center gap-2 pr-2">
+                                        <h4 className="text-sm font-black text-white italic truncate">{userDna.display_name}</h4>
+                                        {userDna.isArtist && (
+                                            <div className="bg-[#FF0000] p-1 rounded-full shadow-[0_0_10px_rgba(255,0,0,0.3)]">
+                                                <Star className="h-2 w-2 text-white fill-white" />
+                                            </div>
                                         )}
+                                    </div>
+                                    {userDna.city && (
+                                        <span className="text-[8px] text-white/40 flex items-center gap-1 mt-0.5">
+                                            <MapPin className="h-2.5 w-2.5" />{userDna.city}
+                                        </span>
+                                    )}
                                     </div>
                                     <div className="text-right shrink-0">
                                         <p className="mono text-xl font-black text-[#FF0000]">{((userDna.coherence_index ?? 0) * 100).toFixed(1)}%</p>
@@ -540,9 +548,17 @@ export default function SoulmatesPage() {
                                         : (viewedProfile.metadata?.display_name || viewedProfile.display_name || "?")[0]}
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-white italic tracking-tighter">
-                                        {viewedProfile.metadata?.display_name || viewedProfile.display_name || "Anonymous Signal"}
-                                    </h2>
+                                    <div className="flex items-center gap-2">
+                                        <h2 className="text-2xl font-black text-white italic tracking-tighter">
+                                            {viewedProfile.metadata?.display_name || viewedProfile.display_name || "Anonymous Signal"}
+                                        </h2>
+                                        {viewedProfile.is_artist && (
+                                            <div className="bg-[#FF0000] px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_20px_rgba(255,0,0,0.3)]">
+                                                <Star className="h-2 w-2 text-white fill-white" />
+                                                <span className="mono text-[7px] text-white font-black uppercase tracking-widest">Artist</span>
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex items-center gap-2 mt-1">
                                         <span className="text-xs font-black text-[#FF0000]">{(computeDisplaySimilarity(viewedProfile.similarity) * 100).toFixed(0)}% Match</span>
                                         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${MODE_COLORS[classifyMatch(viewedProfile.similarity)].bg} ${MODE_COLORS[classifyMatch(viewedProfile.similarity)].text}`}>

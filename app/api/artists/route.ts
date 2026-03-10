@@ -3,6 +3,9 @@ import { supabase, toUUID } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { matchScore } from "@/lib/dna";
+import { SpotifyPublicFetcher } from "@/lib/spotify";
+import { MusicBrainzClient } from "@/lib/musicbrainz";
+import { LastFMClient } from "@/lib/lastfm";
 
 
 // Fetch all artists with their sonic embeddings, then sort by match score if caller has DNA
@@ -15,12 +18,14 @@ export async function GET(req: Request) {
         const offset = parseInt(searchParams.get("offset") || "0");
 
         const registeredOnly = searchParams.get("registered") === "true";
+        const verifiedOnly = searchParams.get("verified") === "true";
 
         let dbQuery = supabase
             .from("artists")
-            .select('*');
+            .select('*, dna_profiles(*)');
 
         if (registeredOnly) dbQuery = dbQuery.not("user_id", "is", null);
+        if (verifiedOnly) dbQuery = dbQuery.eq("verified", true);
 
         if (query) dbQuery = dbQuery.ilike("name", `%${query}%`);
         if (genre) {
@@ -133,7 +138,7 @@ export async function GET(req: Request) {
     }
 }
 
-// POST: Create an artist profile for the current user
+// POST: Create/Submit an artist profile and link it to DNA
 export async function POST(req: Request) {
     try {
         const body = await req.json() as any;
@@ -143,31 +148,111 @@ export async function POST(req: Request) {
 
         const userId = toUUID(guestId);
 
-        // Make sure user has a DNA profile first
-        const { data: myProfile } = await supabase.from("dna_profiles").select("id").eq("user_id", userId).single();
-        if (!myProfile) return NextResponse.json({ error: "Must generate DNA first" }, { status: 400 });
+        // 1. Try to find existing DNA profile (optional linking)
+        const { data: myProfile } = await supabase.from("dna_profiles").select("id").eq("user_id", userId).maybeSingle();
 
+        // 2. Fetch full details from Multiple APIs
+        let enrichedData = {
+            name: body.name,
+            style: body.style,
+            image_url: body.image_url,
+            genres: [body.style].filter(Boolean) as string[],
+            tags: body.tags || [],
+            bio: body.bio || null as string | null
+        };
+
+        // Parallel enrichment for maximum profile depth
+        const spotifyPromise = (async () => {
+            if (body.spotify_url) {
+                const spotifyId = body.spotify_url.split("/artist/")[1]?.split("?")[0];
+                if (spotifyId) {
+                    const clientId = process.env.SPOTIFY_CLIENT_ID;
+                    const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+                    if (clientId && clientSecret) {
+                        try {
+                            const spotify = new SpotifyPublicFetcher(clientId, clientSecret);
+                            const artistsData = await spotify.getArtists([spotifyId]);
+                            const sArtist = artistsData[0];
+                            if (sArtist) {
+                                return {
+                                    name: sArtist.name,
+                                    image_url: sArtist.images?.[0]?.url,
+                                    genres: sArtist.genres || []
+                                };
+                            }
+                        } catch (e) { console.error("Spotify enrichment error:", e); }
+                    }
+                }
+            }
+            return null;
+        })();
+
+        const mbPromise = (async () => {
+            try {
+                const mb = new MusicBrainzClient();
+                return await mb.searchArtist(enrichedData.name);
+            } catch (e) { console.error("MusicBrainz enrichment error:", e); return null; }
+        })();
+
+        const lfmPromise = (async () => {
+            try {
+                const lfm = new LastFMClient();
+                return await lfm.getArtistInfo(enrichedData.name);
+            } catch (e) { console.error("Last.fm enrichment error:", e); return null; }
+        })();
+
+        const [sDetails, mbDetails, lfmDetails] = await Promise.all([spotifyPromise, mbPromise, lfmPromise]);
+
+        // Merge Signals
+        if (sDetails) {
+            enrichedData.name = sDetails.name || enrichedData.name;
+            enrichedData.image_url = sDetails.image_url || enrichedData.image_url;
+            enrichedData.genres = Array.from(new Set([...enrichedData.genres, ...sDetails.genres]));
+        }
+
+        if (lfmDetails) {
+            // Priority for Last.fm bio (usually richest wikis)
+            enrichedData.bio = lfmDetails.bio || enrichedData.bio;
+            enrichedData.tags = Array.from(new Set([...enrichedData.tags, ...(lfmDetails.tags || [])]));
+        }
+
+        if (mbDetails) {
+            // We can collect country/type here if needed later
+        }
+
+        // 3. Upsert artist record
         const { data: artist, error } = await supabase
             .from("artists")
             .upsert({
                 user_id: userId,
-                name: body.name,
-                style: body.style,
-                bio: body.bio,
-                tags: body.tags || [],
+                name: enrichedData.name,
+                style: enrichedData.style,
+                genres: enrichedData.genres,
+                tags: enrichedData.tags,
+                bio: enrichedData.bio,
                 spotify_url: body.spotify_url,
                 youtube_url: body.youtube_url,
-                image_url: body.image_url,
+                image_url: enrichedData.image_url,
                 preview_url: body.preview_url,
-                verification_email: body.verification_email
+                verification_email: body.verification_email,
+                verified: false
             }, { onConflict: "user_id" })
             .select()
             .single();
 
         if (error) throw error;
 
+        // 4. Link artist to DNA profile (User: "column artist in dna_profile")
+        if (myProfile) {
+            await supabase
+                .from("dna_profiles")
+                .update({ artist: artist.id })
+                .eq("user_id", userId);
+        }
+
         return NextResponse.json({ success: true, artist });
     } catch (error: any) {
+        console.error("Artist POST error:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

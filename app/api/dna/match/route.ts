@@ -25,8 +25,18 @@ export async function GET() {
 
     try {
         if (!guestId) {
+            // Fetch verified artist emails for public profiles too
+            const { data: verifiedArtists } = await supabase.from("artists").select("verification_email").eq("verified", true);
+            const verifiedEmails = new Set((verifiedArtists || []).map(a => a.verification_email?.toLowerCase().trim()).filter(Boolean));
+
             const { data: publicProfiles } = await supabase.from("dna_profiles").select("*, email, city").limit(10);
-            return NextResponse.json((publicProfiles || []).map(m => ({ ...m, similarity: 0.75, coherence: extractCoherence(m.metadata), city: m.city || m.metadata?.city || null })));
+            return NextResponse.json((publicProfiles || []).map(m => ({
+                ...m,
+                similarity: 0.75,
+                coherence: extractCoherence(m.metadata),
+                city: m.city || m.metadata?.city || null,
+                is_artist: verifiedEmails.has((m.email || m.metadata?.email || "").toLowerCase().trim())
+            })));
         }
 
         const userId = toUUID(guestId);
@@ -40,8 +50,18 @@ export async function GET() {
             .single();
 
         if (profileError || !userProfile) {
+            // Fetch verified artist emails
+            const { data: verifiedArtists } = await supabase.from("artists").select("verification_email").eq("verified", true);
+            const verifiedEmails = new Set((verifiedArtists || []).map(a => a.verification_email?.toLowerCase().trim()).filter(Boolean));
+
             const { data: publicProfiles } = await supabase.from("dna_profiles").select("*, email, city").neq("user_id", userId).limit(10);
-            return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({ ...m, similarity: 0.7, coherence: extractCoherence(m.metadata), city: m.city || m.metadata?.city || null })));
+            return NextResponse.json((publicProfiles || []).filter((p: any) => p.user_id !== userId).map(m => ({
+                ...m,
+                similarity: 0.7,
+                coherence: extractCoherence(m.metadata),
+                city: m.city || m.metadata?.city || null,
+                is_artist: verifiedEmails.has((m.email || m.metadata?.email || "").toLowerCase().trim())
+            })));
         }
 
         // 1.5 Prepare user's tracks/artists for overlap matching
@@ -79,7 +99,7 @@ export async function GET() {
             seenNames.add(myName);
         }
 
-        const filteredMatches = [];
+        const filteredMatches: any[] = [];
         for (const m of (matches || [])) {
             const mName = String(m.metadata?.display_name || "Anonymous Signal").toLowerCase().trim();
             if (seenNames.has(mName) && mName !== "anonymous signal") continue;
@@ -93,11 +113,25 @@ export async function GET() {
         if (matchUserIds.length > 0) {
             const { data: matchProfiles } = await supabase
                 .from("dna_profiles")
-                .select("user_id, sonic_embedding")
+                .select("user_id, sonic_embedding, email")
                 .in("user_id", matchUserIds);
 
-            (matchProfiles || []).forEach(p => embeddingMap.set(p.user_id, p.sonic_embedding));
+            (matchProfiles || []).forEach(p => {
+                embeddingMap.set(p.user_id, p.sonic_embedding);
+                if (p.email) {
+                    // Inject email back into the match object metadata or a separate map
+                    const match = filteredMatches.find(m => m.user_id === p.user_id);
+                    if (match) match.email = p.email;
+                }
+            });
         }
+
+        // 3.5 Fetch all verified artists to cross-reference later
+        const { data: verifiedArtists } = await supabase
+            .from("artists")
+            .select("verification_email")
+            .eq("verified", true);
+        const verifiedArtistEmails = new Set((verifiedArtists || []).map(a => a.verification_email?.toLowerCase().trim()).filter(Boolean));
 
         // 4. Enrich existing matches
         let enrichedMatches = filteredMatches.map((m: any) => {
@@ -109,12 +143,15 @@ export async function GET() {
             const mArtists = Array.from(new Set(mTracks.map(t => String(t.artist || "").toLowerCase().trim()).filter(a => a && a !== "unknown")));
             const commonArtistsCount = mArtists.filter(a => myArtists.has(a)).length;
 
+            const mEmail = (m.email || m.metadata?.email || "").toLowerCase().trim();
+
             return {
                 ...m,
                 has_signal: interestIds.has(m.user_id),
                 incoming_signal: incomingSignalIds.has(m.user_id),
                 bridge_id: bridgeMap.get(m.user_id),
                 is_mutual: bridgeMap.has(m.user_id),
+                is_artist: verifiedArtistEmails.has(mEmail),
                 coherence: extractCoherence(m.metadata),
                 email: m.email || m.metadata?.email || null,
                 city: m.city || m.metadata?.city || null,
@@ -147,6 +184,8 @@ export async function GET() {
                     const mArtists = Array.from(new Set(mTracks.map(t => String(t.artist || "").toLowerCase().trim()).filter(a => a && a !== "unknown")));
                     const commonArtistsCount = mArtists.filter(a => myArtists.has(a)).length;
 
+                    const mEmail = (p as any).email || (p as any).metadata?.email || "";
+
                     return {
                         ...p,
                         similarity: 0.65, // Default for non-top matches who sent a signal
@@ -154,6 +193,7 @@ export async function GET() {
                         incoming_signal: incomingSignalIds.has(p.user_id),
                         bridge_id: bridgeMap.get(p.user_id),
                         is_mutual: bridgeMap.has(p.user_id),
+                        is_artist: verifiedArtistEmails.has(mEmail.toLowerCase().trim()),
                         coherence: extractCoherence((p as any).metadata),
                         email: (p as any).email || (p as any).metadata?.email || null,
                         city: (p as any).city || (p as any).metadata?.city || null,

@@ -183,13 +183,13 @@ export default function UnifiedArtistCard({ artist, index, hasDna, isAlreadySync
                             {!hideLabel && (
                                 <span className="mono text-[10px] uppercase tracking-[0.4em] text-[#FF0000] font-black block mb-2">{artist.is_db ? "Active Identity" : "Simulated Match"}</span>
                             )}
-                            <h4 className="text-4xl md:text-5xl font-black uppercase italic text-white leading-none tracking-tighter mb-4">
+                            <h4 className="text-2xl md:text-3xl font-black uppercase italic text-white leading-none tracking-tighter mb-4">
                                 {artist.name}
                             </h4>
                         </div>
                         {hasDna && artist.match && (
                             <div className="text-right">
-                                <div className="text-4xl font-black italic text-white leading-none">
+                                <div className="text-2xl font-black italic text-white leading-none">
                                     {(artist.match.cosine_similarity * 100).toFixed(0)}%
                                 </div>
                                 <div className="mono text-[8px] uppercase tracking-widest text-[#FF0000] mt-1 font-black">Resonance</div>
@@ -208,7 +208,7 @@ export default function UnifiedArtistCard({ artist, index, hasDna, isAlreadySync
                         ))}
                     </div>
 
-                    <p className="text-white/60 text-sm md:text-base font-medium italic leading-relaxed mb-8 max-w-lg">
+                    <p className="text-white/60 text-[12px] font-medium italic leading-relaxed mb-8 max-w-lg">
                         {artist.bio || `Analyzing neural patterns for ${artist.name}. This signal represents a high-fidelity match within your unique 12-dimensional sonic vector.`}
                     </p>
                 </div>
