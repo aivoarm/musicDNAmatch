@@ -13,16 +13,16 @@ interface CompleteProps {
     email: string | null;
     genres: string[];
     isAuthenticated: boolean;
-    setShowOnboarding: React.Dispatch<React.SetStateAction<boolean>>;
     onRestart: () => void;
 }
 
-export default function StageComplete({ dna, email, genres, isAuthenticated, setShowOnboarding, onRestart }: CompleteProps) {
+export default function StageComplete({ dna, email, genres, isAuthenticated, onRestart }: CompleteProps) {
     if (!dna) return null;
 
     return (
         <motion.div key="co" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 md:space-y-6 w-full pb-16 md:pb-20 px-2 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+
 
                 {/* LEFT COLUMN: DNA BARS */}
                 <div className="space-y-4 md:space-y-5">
@@ -38,9 +38,12 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
                             <div className="relative z-10">
                                 <h4 className="text-xs md:text-sm font-black text-white italic uppercase tracking-tighter mb-1.5">Anonymous Signal Detected</h4>
                                 <p className="text-white/60 text-[10px] md:text-xs font-bold leading-relaxed mb-4 max-w-[85%]">You are viewing a temporary profile. Secure this DNA with your email to prevent data loss and connect with matches.</p>
-                                <Link href="/profile" className="inline-flex items-center gap-2 text-[#FF0000] text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:translate-x-1 transition-transform bg-[#FF0000]/10 px-3 py-1.5 rounded-full border border-[#FF0000]/20">
+                                <button 
+                                    onClick={() => window.location.href = "/login"}
+                                    className="inline-flex items-center gap-2 text-[#FF0000] text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:translate-x-1 transition-transform bg-[#FF0000]/10 px-3 py-1.5 rounded-full border border-[#FF0000]/20"
+                                >
                                     Secure DNA Now <ArrowRight className="h-3 w-3" />
-                                </Link>
+                                </button>
                             </div>
                         </motion.div>
                     )}
@@ -62,7 +65,6 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
                         </div>
                     </div>
                 </div>
-
                 {/* RIGHT COLUMN: STATS & CTAS */}
                 <div className="space-y-4 md:space-y-5 flex flex-col">
                     {/* ENHANCED SHARE CTA */}
@@ -135,10 +137,8 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
                                 body: JSON.stringify({ intent: 'find_soulmates' })
                             }).catch(console.error);
 
-                            if (!email) {
-                                setShowOnboarding(true);
-                            } else if (!isAuthenticated) {
-                                window.location.href = `/login?email=${encodeURIComponent(email)}`;
+                            if (!email || !isAuthenticated) {
+                                window.location.href = `/login${email ? `?email=${encodeURIComponent(email)}` : ""}`;
                             } else {
                                 window.location.href = "/soulmates?genres=" + encodeURIComponent(genres.join(","));
                             }
@@ -176,7 +176,7 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
                         THE ARCHITECTURE <br />OF YOUR <span className="text-[#FF0000]">SENSORY TASTE</span>
                     </h3>
                     <p className="text-white/80 text-lg md:text-xl font-bold italic leading-relaxed mb-8">
-                        Your Musical DNA is a 12-dimensional neural coordinate extracted from your listening history. We strip away labels and focus on raw audio signals—Spectral Energy, Harmonic Depth, and Rhythmic Drive—to map your exact position in the sonic landscape. 
+                        Your Musical DNA is a 12-dimensional neural coordinate extracted from your listening history. We strip away labels and focus on raw audio signals—Spectral Energy, Harmonic Depth, and Rhythmic Drive—to map your exact position in the sonic landscape.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">

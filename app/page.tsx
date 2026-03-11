@@ -11,14 +11,10 @@ import {
     AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail, Sparkles, Fingerprint
 } from "lucide-react";
 import ShareDNACard from "@/components/ShareDNACard";
-import OnboardingModal from "@/components/OnboardingModal";
-import OnboardingBanner from "@/components/OnboardingBanner";
 import DNAHelix from "@/components/DNAHelix";
 import Ticker from "@/components/Ticker";
 import { RadarChart, DualRadarChart } from "@/components/RadarCharts";
 import HomeLanding from "@/components/HomeLanding";
-import HomeOnboarding from "@/components/HomeOnboarding";
-import StageReviewSongs from "@/components/StageReviewSongs";
 import StageGenreSelection from "@/components/StageGenreSelection";
 import StageAnalyzing from "@/components/StageAnalyzing";
 import StageComplete from "@/components/StageComplete";
@@ -31,7 +27,7 @@ import { AXIS_LABELS, generateInterpretation } from "@/lib/dna";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────
-type Stage = "landing" | "intro" | "welcome_name" | "welcome_story" | "sources" | "review_songs" | "genre_selection" | "analyzing" | "complete" | "email_capture";
+type Stage = "landing" | "sources" | "genre_selection" | "analyzing" | "complete" | "email_capture";
 
 interface Playlist {
     id: string; name: string; image?: string; track_count: number; url?: string;
@@ -132,23 +128,10 @@ function HomeContent() {
     const [emailVerifySent, setEmailVerifySent] = useState(false);
     const [emailVerifyError, setEmailVerifyError] = useState<string | null>(null);
 
-    const [showOnboarding, setShowOnboarding] = useState(false);
-    const [showBanner, setShowBanner] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [skippedOnboarding, setSkippedOnboarding] = useState(false);
-    const [onboardedToast, setOnboardedToast] = useState(false);
 
     const searchParams = useSearchParams();
 
-    // Onboarded check
-    useEffect(() => {
-        if (searchParams.get("onboarded") === "true") {
-            setOnboardedToast(true);
-            setTimeout(() => setOnboardedToast(false), 5000);
-            // Clear param
-            window.history.replaceState({}, '', '/');
-        }
-    }, [searchParams]);
 
     // ── Email Verify (WorkOS Magic Auth) ────────────────────────────────
     const handleEmailVerify = async (forceConfirm = false) => {
@@ -239,9 +222,6 @@ function HomeContent() {
             if (d.user) setIsAuthenticated(true);
         }).catch(() => { });
 
-        // Check if skipped
-        const skipped = sessionStorage.getItem("dna_skipped_onboarding");
-        if (skipped) setSkippedOnboarding(true);
 
         const saved = getCookie("last_spotify_url");
         if (saved) setSpotifyUrl(decodeURIComponent(saved));
@@ -266,15 +246,6 @@ function HomeContent() {
         return () => clearTimeout(timer);
     }, [stage]);
 
-    // ── Onboarding Trigger ──
-    useEffect(() => {
-        if (stage === "complete" && dna && !isAuthenticated && !skippedOnboarding) {
-            const timer = setTimeout(() => {
-                setShowOnboarding(true);
-            }, 1500);
-            return () => clearTimeout(timer);
-        }
-    }, [stage, dna, isAuthenticated, skippedOnboarding]);
 
     // ── Spotify ───────────────────────────────────────────────────────────
     const extractId = (raw: string) => {
@@ -665,12 +636,8 @@ function HomeContent() {
             } catch { }
         }
 
-        // Step 4: Go to next stage (skip review if no tracks)
-        if (totalFound === 0) {
-            setStage("genre_selection");
-        } else {
-            setStage("review_songs");
-        }
+        // Step 4: Go to next stage
+        setStage("genre_selection");
         setProgress(0);
     };
 
@@ -747,20 +714,6 @@ function HomeContent() {
     const ytOk = ytTracks.filter(t => t.status === "ok");
     const hasYt = ytOk.length > 0;
 
-    const handleOnboardingSuccess = (profile: any) => {
-        setShowOnboarding(false);
-        setExisting(profile);
-        if (profile.metadata?.display_name) setDisplayName(profile.metadata.display_name);
-        if (profile.email) setEmail(profile.email);
-        if (profile.city) setCity(profile.city);
-    };
-
-    const handleOnboardingSkip = () => {
-        setShowOnboarding(false);
-        setSkippedOnboarding(true);
-        setShowBanner(true);
-        sessionStorage.setItem("dna_skipped_onboarding", "true");
-    };
 
     // ─────────────────────────────────────────────────────────────────────
     return (
@@ -785,7 +738,7 @@ function HomeContent() {
                 {/* ═══════════════════════════════════════════════════════ */}
                 {stage === "landing" && (
                     <HomeLanding
-                        onChoice={() => setStage("intro")}
+                        onChoice={() => setStage("sources")}
                         onArtist={() => { window.location.href = "/artists" }}
                         existing={existing}
                         refreshProfile={refreshProfile}
@@ -796,34 +749,17 @@ function HomeContent() {
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* CONVERSATIONAL ONBOARDING                               */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {(stage === "intro" || stage === "welcome_name" || stage === "welcome_story") && (
-                    <HomeOnboarding
-                        existing={existing}
-                        checking={checking}
-                        displayName={displayName}
-                        city={city}
-                        onResume={() => { setDna(existing); setStage("complete"); }}
-                        onBegin={() => setStage("sources")}
-                    />
-                )}
 
                 {/* ═══════════════════════════════════════════════════════ */}
                 {/* INNER STAGES                                            */}
                 {/* ═══════════════════════════════════════════════════════ */}
-                {stage !== "intro" && stage !== "welcome_name" && stage !== "welcome_story" && stage !== "landing" && (
+                {stage !== "landing" && (
                     <motion.div key="inner" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen">
 
 
                         <div className="max-w-5xl mx-auto px-4 md:px-8 pt-[5rem] lg:pt-28 pb-40 w-full">
                             <AnimatePresence mode="wait">
 
-                                {stage === "review_songs" && (
-                                    <StageReviewSongs
-                                        fetchedSources={fetchedSources}
-                                        onNext={() => { setStage("genre_selection"); setProgress(0); }}
-                                        onBack={() => setStage("sources")}
-                                    />
-                                )}
 
                                 {stage === "genre_selection" && (
                                     <StageGenreSelection
@@ -833,10 +769,7 @@ function HomeContent() {
                                         availableGenres={GENRES}
                                         fetchedSources={fetchedSources}
                                         onNext={runAnalysis}
-                                        onBack={() => {
-                                            const totalFound = (fetchedSources?.spotifyTracks?.length ?? 0) + (fetchedSources?.youtubeTracks?.length ?? 0);
-                                            setStage(totalFound > 0 ? "review_songs" : "sources");
-                                        }}
+                                        onBack={() => setStage("sources")}
                                     />
                                 )}
 
@@ -867,7 +800,7 @@ function HomeContent() {
                                         setYtTracks={setYtTracks}
                                         fetchSourcesAndPreselect={fetchSourcesAndPreselect}
                                         hasYt={hasYt}
-                                        onBack={() => setStage("intro")}
+                                        onBack={() => setStage("landing")}
                                     />
                                 )}
 
@@ -886,8 +819,7 @@ function HomeContent() {
                                         email={email}
                                         genres={genres}
                                         isAuthenticated={isAuthenticated}
-                                        setShowOnboarding={setShowOnboarding}
-                                        onRestart={() => { setStage("intro"); setSelPlaylists([]); setYtTracks(emptyYt()); }}
+                                        onRestart={() => { setStage("landing"); setSelPlaylists([]); setYtTracks(emptyYt()); }}
                                     />
                                 )}
 
@@ -919,43 +851,6 @@ function HomeContent() {
 
             </AnimatePresence>
 
-            <OnboardingModal
-                isOpen={showOnboarding}
-                dnaResult={{
-                    genres,
-                    displayName,
-                    email,
-                    city,
-                    audioFeatures: fetchedSources?.audioFeatures || [],
-                    youtubeVideos: fetchedSources?.youtubeVideos || [],
-                    artistGenres: fetchedSources?.artistGenres || [],
-                    spotifyTracks: fetchedSources?.spotifyTracks || [],
-                    youtubeTracks: fetchedSources?.youtubeTracks || [],
-                }}
-                guestId={getCookie("guest_id") || ""}
-                onSuccess={handleOnboardingSuccess}
-                onSkip={handleOnboardingSkip}
-            />
-
-            <OnboardingBanner
-                visible={showBanner && !isAuthenticated}
-                onActivate={() => setShowOnboarding(true)}
-                onDismiss={() => setShowBanner(false)}
-            />
-
-            <AnimatePresence>
-                {onboardedToast && (
-                    <motion.div
-                        initial={{ y: 50, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 50, opacity: 0 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[110] bg-green-500 text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] flex items-center gap-3 shadow-2xl shadow-green-900/40"
-                    >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Signal Secured & Identity Linked
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 }

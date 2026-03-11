@@ -15,13 +15,41 @@ interface GenreSelectionProps {
     onBack: () => void;
 }
 
-export default function StageGenreSelection({ 
-    genres, setGenres, matchedGenres, availableGenres, fetchedSources, onNext, onBack 
+export default function StageGenreSelection({
+    genres, setGenres, matchedGenres, availableGenres, fetchedSources, onNext, onBack
 }: GenreSelectionProps) {
     return (
         <motion.div key="gs" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
             <Stepper step={2} />
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="lg:col-span-4 sticky top-24">
+                    <div className="glass p-7 rounded-[2rem] border border-[#FF0000]/20 bg-[#FF0000]/5 flex flex-col gap-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-black uppercase tracking-[0.3em] text-[#FF0000]">Genre Selection</span>
+                            <span className="mono text-[10px] text-white/60">{genres.length} selected</span>
+                        </div>
+                        <p className="text-[10px] text-white/60 leading-relaxed font-bold">
+                            Your self-selected genres provide the "ground truth" for our vector mapping, mixed with audio feature analysis.
+                        </p>
+                        {((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0) && (
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 items-start">
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider leading-relaxed">
+                                    At least one Spotify playlist or YouTube track is required to compute your unique DNA.
+                                </p>
+                            </div>
+                        )}
+                        <button
+                            disabled={genres.length === 0 || ((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0)}
+                            onClick={onNext}
+                            className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.2)] disabled:opacity-30 disabled:cursor-not-allowed">
+                            Analyze Frequency <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={onBack} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest mt-1">
+                            ← Back to Tracks
+                        </button>
+                    </div>
+                </div>
                 <div className="lg:col-span-8 space-y-6">
                     <div>
                         <h2 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter italic mb-1">Sonic <span className="text-[#FF0000]">Library</span></h2>
@@ -74,34 +102,7 @@ export default function StageGenreSelection({
                     )}
                 </div>
 
-                <div className="lg:col-span-4 sticky top-24">
-                    <div className="glass p-7 rounded-[2rem] border border-[#FF0000]/20 bg-[#FF0000]/5 flex flex-col gap-5">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-black uppercase tracking-[0.3em] text-[#FF0000]">Genre Selection</span>
-                            <span className="mono text-[10px] text-white/60">{genres.length} selected</span>
-                        </div>
-                        <p className="text-[10px] text-white/60 leading-relaxed font-bold">
-                            Your self-selected genres provide the "ground truth" for our vector mapping, mixed with audio feature analysis.
-                        </p>
-                        {((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0) && (
-                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 items-start">
-                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                                <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider leading-relaxed">
-                                    At least one Spotify playlist or YouTube track is required to compute your unique DNA.
-                                </p>
-                            </div>
-                        )}
-                        <button 
-                            disabled={genres.length === 0 || ((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0)}
-                            onClick={onNext} 
-                            className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.2)] disabled:opacity-30 disabled:cursor-not-allowed">
-                            Analyze Frequency <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={onBack} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest mt-1">
-                            ← Back to Tracks
-                        </button>
-                    </div>
-                </div>
+
             </div>
         </motion.div>
     );

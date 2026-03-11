@@ -186,31 +186,6 @@ export default function StageSources({
                 </AnimatePresence>
             </div>
 
-            {/* Bottom Sticky Actions - Positioned above mobile bottom menu */}
-            <div className="fixed bottom-16 left-0 right-0 z-[60] bg-[#080808]/80 backdrop-blur-xl border-t border-white/5 px-4 py-4 md:static md:bg-transparent md:backdrop-blur-none md:border-none md:px-0 md:pb-8">
-                <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-                    <button
-                        onClick={handleBack}
-                        className="h-12 md:h-11 px-6 md:px-4 rounded-xl border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all text-xs font-bold uppercase tracking-wider bg-white/5 whitespace-nowrap active:scale-95"
-                    >
-                        Back
-                    </button>
-                    <button
-                        onClick={handleNext}
-                        disabled={!isSpotifySub && selPlaylists.length === 0 && !ytTracks.some(t => t.status === "ok")}
-                        className={`h-12 md:h-11 flex-1 md:flex-none px-5 md:px-8 rounded-xl text-white font-black flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95 text-xs uppercase tracking-wider whitespace-nowrap ${
-                            isSpotifySub 
-                            ? "bg-white/10 border border-white/10 hover:bg-white/20 shadow-none" 
-                            : "bg-red-600 shadow-red-900/40 disabled:opacity-30 disabled:shadow-none"
-                        }`}
-                    >
-                        <span>
-                            {isSpotifySub ? "Next: Add Tracks" : "Finish: Review Tracks"}
-                        </span>
-                        <ArrowRight size={14} />
-                    </button>
-                </div>
-            </div>
         </motion.div>
     );
 }
