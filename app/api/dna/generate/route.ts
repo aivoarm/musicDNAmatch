@@ -113,7 +113,10 @@ export async function POST(req: Request) {
 
         const finalDNA = combineDNA(genreDNA, spotifyDNA, youtubeDNA, lastfmDNA, musicbrainzDNA);
 
-        // ── Build descriptive summary (no AI) ──────────
+        // ── Build descriptive summary (Personalized v2.5) ──────────
+        const allTags = [...allLfmTags, ...allMbTags].map(t => t.name);
+        const interpretation = generateInterpretation(finalDNA.vector, allTags);
+        
         const topAxes = finalDNA.vector
             .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
             .sort((a, b) => b.value - a.value)
@@ -123,13 +126,10 @@ export async function POST(req: Request) {
             .map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
             .sort((a, b) => a.value - b.value)[0];
 
-        const lCount = allLfmTags.length;
-        const mCount = allMbTags.length;
         const narrative = [
-            `Your Musical DNA reveals a unique sonic fingerprint with a coherence index of ${(finalDNA.coherence_index * 100).toFixed(1)}%.`,
-            `Your strongest dimensions are ${topAxes.map(a => a.label.replace(/_/g, " ")).join(", ")}.`,
-            `Your discovery frontier lies in ${lowestAxis.label.replace(/_/g, " ")} — exploring this axis could unlock new sonic territories.`,
-            `Based on ${genres.length} genre selections, ${audioFeatures.length} Spotify tracks, ${youtubeVideos.length} YouTube signals, ${lCount} Last.fm tags, and ${mCount} MusicBrainz entries.`,
+            interpretation.narrative,
+            `Your core signal shows high ${topAxes.map(a => a.label.replace(/_/g, " ")).join(", ")}.`,
+            `Your DNA reveals a coherence index of ${(finalDNA.coherence_index * 100).toFixed(1)}%.`,
         ].join(" ");
 
         // ── Save to Supabase ───────────────────────────
@@ -155,9 +155,6 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
         };
 
-        // ── Interpretation & Suggestions ──────────────
-        const allTags = [...allLfmTags, ...allMbTags].map(t => t.name);
-        const interpretation = generateInterpretation(finalDNA.vector, allTags);
         metadata.suggested_genres = interpretation.genreMatches;
 
         if (dry_run) {

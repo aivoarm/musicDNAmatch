@@ -1,45 +1,733 @@
 {
-    "rap": [0.8, 0.4, 0.9, 0.4, 0.5, 0.8, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
-    "hiphop": [0.7, 0.4, 0.9, 0.6, 0.5, 0.7, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
-    "electronic": [0.9, 0.5, 0.8, 0.3, 0.7, 0.9, 0.6, 0.8, 0.7, 0.7, 0.8, 0.5],
-    "techno": [0.9, 0.4, 0.9, 0.2, 0.6, 0.9, 0.5, 0.7, 0.7, 0.6, 0.8, 0.4],
-    "house": [0.8, 0.5, 0.9, 0.4, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.6, 0.6],
-    "ambient": [0.4, 0.6, 0.2, 0.6, 0.6, 0.9, 0.8, 0.5, 0.9, 0.5, 0.8, 0.6],
-    "rnb": [0.6, 0.7, 0.7, 0.9, 0.5, 0.7, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
-    "indie": [0.5, 0.6, 0.5, 0.8, 0.7, 0.6, 0.7, 0.5, 0.7, 0.6, 0.6, 0.7],
-    "classical": [0.4, 0.9, 0.3, 0.9, 0.9, 0.5, 0.8, 0.6, 0.9, 0.3, 0.4, 0.8],
-    "jazz": [0.5, 0.9, 0.6, 0.7, 0.8, 0.6, 0.8, 0.5, 0.7, 0.7, 0.7, 0.7],
-    "metal": [0.9, 0.6, 0.9, 0.3, 0.7, 0.8, 0.5, 0.4, 0.8, 0.5, 0.7, 0.7],
-    "rock": [0.8, 0.6, 0.7, 0.5, 0.6, 0.7, 0.5, 0.5, 0.7, 0.5, 0.5, 0.7],
-    "pop": [0.6, 0.5, 0.7, 0.7, 0.4, 0.6, 0.4, 0.8, 0.5, 0.5, 0.3, 0.7],
-    "folk": [0.3, 0.7, 0.4, 0.9, 0.6, 0.4, 0.6, 0.6, 0.8, 0.4, 0.5, 0.8],
-    "latin": [0.6, 0.6, 0.9, 0.7, 0.5, 0.6, 0.5, 0.7, 0.6, 0.7, 0.4, 0.8],
-    "world": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.6, 0.6, 0.9, 0.7, 0.7],
-    "country": [0.4, 0.6, 0.5, 0.8, 0.5, 0.5, 0.4, 0.7, 0.6, 0.4, 0.3, 0.7],
-    "blues": [0.5, 0.8, 0.5, 0.8, 0.6, 0.5, 0.5, 0.4, 0.7, 0.5, 0.5, 0.9],
-    "soul": [0.6, 0.7, 0.6, 0.9, 0.5, 0.6, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
-    "punk": [0.8, 0.4, 0.8, 0.4, 0.4, 0.7, 0.4, 0.5, 0.6, 0.4, 0.6, 0.6],
-    "reggae": [0.4, 0.6, 0.7, 0.8, 0.5, 0.6, 0.5, 0.6, 0.5, 0.6, 0.4, 0.8],
-    "disco": [0.7, 0.5, 0.9, 0.6, 0.4, 0.7, 0.4, 0.8, 0.6, 0.6, 0.4, 0.7],
-    "funk": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.6, 0.7, 0.7, 0.5, 0.8],
-    "synthwave": [0.8, 0.5, 0.7, 0.5, 0.6, 0.9, 0.5, 0.8, 0.7, 0.6, 0.7, 0.6],
-    "lofi": [0.3, 0.5, 0.4, 0.7, 0.4, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5, 0.7],
-    "kpop": [0.7, 0.5, 0.8, 0.6, 0.6, 0.7, 0.5, 0.9, 0.6, 0.7, 0.5, 0.7],
-    "afrobeats": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.7, 0.6, 0.8, 0.5, 0.8],
-    "gospel": [0.5, 0.8, 0.6, 0.9, 0.6, 0.5, 0.5, 0.7, 0.7, 0.4, 0.3, 0.9],
-    "experimental": [0.6, 0.6, 0.5, 0.4, 0.9, 0.8, 0.9, 0.4, 0.8, 0.7, 0.9, 0.5],
-    "phonk": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.4, 0.6, 0.7, 0.7, 0.6, 0.8],
-    "synthpop": [0.7, 0.6, 0.8, 0.7, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.5, 0.7],
-    "grunge": [0.7, 0.6, 0.6, 0.5, 0.6, 0.7, 0.5, 0.4, 0.7, 0.5, 0.5, 0.8],
-    "industrial": [0.9, 0.5, 0.8, 0.2, 0.7, 0.9, 0.6, 0.4, 0.8, 0.6, 0.8, 0.5],
-    "garage": [0.8, 0.5, 0.9, 0.5, 0.5, 0.7, 0.5, 0.7, 0.6, 0.6, 0.5, 0.7],
-    "trap": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.5, 0.7, 0.8, 0.8, 0.5, 0.8],
-    "drill": [0.8, 0.4, 0.9, 0.4, 0.5, 0.8, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
-    "dubstep": [0.9, 0.4, 0.9, 0.3, 0.7, 0.9, 0.6, 0.6, 0.8, 0.6, 0.8, 0.5],
-    "trance": [0.9, 0.5, 0.8, 0.4, 0.6, 0.8, 0.5, 0.9, 0.6, 0.5, 0.7, 0.5],
-    "filmscore": [0.4, 0.8, 0.3, 0.7, 0.9, 0.8, 0.7, 0.5, 0.9, 0.4, 0.5, 0.7],
-    "reggaeton": [0.7, 0.5, 0.9, 0.6, 0.4, 0.7, 0.5, 0.8, 0.5, 0.7, 0.4, 0.7],
-    "jpop": [0.7, 0.6, 0.8, 0.7, 0.6, 0.8, 0.5, 0.9, 0.6, 0.6, 0.5, 0.7],
-    "arabic": [0.5, 0.7, 0.7, 0.8, 0.6, 0.7, 0.6, 0.6, 0.7, 0.8, 0.6, 0.8],
-    "indian": [0.5, 0.8, 0.6, 0.8, 0.8, 0.7, 0.6, 0.7, 0.7, 0.7, 0.6, 0.8]
+    "rap": {
+        "vector": [
+            0.8,
+            0.4,
+            0.9,
+            0.4,
+            0.5,
+            0.8,
+            0.5,
+            0.6,
+            0.8,
+            0.8,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your signal is defined by aggressive percussive grids and high-density lyrical flow."
+    },
+    "hiphop": {
+        "vector": [
+            0.7,
+            0.4,
+            0.9,
+            0.6,
+            0.5,
+            0.7,
+            0.5,
+            0.6,
+            0.8,
+            0.8,
+            0.5,
+            0.8
+        ],
+        "narrative": "You lean into the soulful foundations of boom-bap, where rhythmic drive meets melodic warmth."
+    },
+    "electronic": {
+        "vector": [
+            0.9,
+            0.5,
+            0.8,
+            0.3,
+            0.7,
+            0.9,
+            0.6,
+            0.8,
+            0.7,
+            0.7,
+            0.8,
+            0.5
+        ],
+        "narrative": "Your neural map is a landscape of synthetic oscillators and complex rhythmic subdivisions."
+    },
+    "techno": {
+        "vector": [
+            0.9,
+            0.4,
+            0.9,
+            0.2,
+            0.6,
+            0.9,
+            0.5,
+            0.7,
+            0.7,
+            0.6,
+            0.8,
+            0.4
+        ],
+        "narrative": "You thrive in the relentless, industrial pulse of the machine, where repetition becomes meditation."
+    },
+    "house": {
+        "vector": [
+            0.8,
+            0.5,
+            0.9,
+            0.4,
+            0.5,
+            0.8,
+            0.4,
+            0.8,
+            0.6,
+            0.6,
+            0.6,
+            0.6
+        ],
+        "narrative": "Your frequency is a soulful, four-on-the-floor vibration that bridges the gap between club and heart."
+    },
+    "ambient": {
+        "vector": [
+            0.4,
+            0.6,
+            0.2,
+            0.6,
+            0.6,
+            0.9,
+            0.8,
+            0.5,
+            0.9,
+            0.5,
+            0.8,
+            0.6
+        ],
+        "narrative": "Your sonic identity is a spectral wash of boundless textures and temporal suspension."
+    },
+    "rnb": {
+        "vector": [
+            0.6,
+            0.7,
+            0.7,
+            0.9,
+            0.5,
+            0.7,
+            0.4,
+            0.6,
+            0.6,
+            0.6,
+            0.4,
+            0.9
+        ],
+        "narrative": "Your DNA is saturated with melodic warmth and the rich, harmonic depth of urban soul."
+    },
+    "indie": {
+        "vector": [
+            0.5,
+            0.6,
+            0.5,
+            0.8,
+            0.7,
+            0.6,
+            0.7,
+            0.5,
+            0.7,
+            0.6,
+            0.6,
+            0.7
+        ],
+        "narrative": "You possess a raw, guitar-driven honesty that values emotional density over synthetic perfection."
+    },
+    "classical": {
+        "vector": [
+            0.4,
+            0.9,
+            0.3,
+            0.9,
+            0.9,
+            0.5,
+            0.8,
+            0.6,
+            0.9,
+            0.3,
+            0.4,
+            0.8
+        ],
+        "narrative": "Your architecture is one of immense structural complexity and timeless harmonic resonance."
+    },
+    "jazz": {
+        "vector": [
+            0.5,
+            0.9,
+            0.6,
+            0.7,
+            0.8,
+            0.6,
+            0.8,
+            0.5,
+            0.7,
+            0.7,
+            0.7,
+            0.7
+        ],
+        "narrative": "Your signal is an improvisational journey through complex tonal shifts and rhythmic swing."
+    },
+    "metal": {
+        "vector": [
+            0.9,
+            0.6,
+            0.9,
+            0.3,
+            0.7,
+            0.8,
+            0.5,
+            0.4,
+            0.8,
+            0.5,
+            0.7,
+            0.7
+        ],
+        "narrative": "You resonate with high-gain spectral energy and the intense, driving force of distorted textures."
+    },
+    "rock": {
+        "vector": [
+            0.8,
+            0.6,
+            0.7,
+            0.5,
+            0.6,
+            0.7,
+            0.5,
+            0.5,
+            0.7,
+            0.5,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your foundation is a classic combination of rhythmic drive and melodic grit."
+    },
+    "pop": {
+        "vector": [
+            0.6,
+            0.5,
+            0.7,
+            0.7,
+            0.4,
+            0.6,
+            0.4,
+            0.8,
+            0.5,
+            0.5,
+            0.3,
+            0.7
+        ],
+        "narrative": "Your frequency is a bright, high-definition signal tuned to the pulse of culture."
+    },
+    "folk": {
+        "vector": [
+            0.3,
+            0.7,
+            0.4,
+            0.9,
+            0.6,
+            0.4,
+            0.6,
+            0.6,
+            0.8,
+            0.4,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your DNA is organic and acoustic, rooted in the spectral warmth of storytelling."
+    },
+    "latin": {
+        "vector": [
+            0.6,
+            0.6,
+            0.9,
+            0.7,
+            0.5,
+            0.6,
+            0.5,
+            0.7,
+            0.6,
+            0.7,
+            0.4,
+            0.8
+        ],
+        "narrative": "Your map is a vibrant fusion of syncopated rhythms and passionate harmonic depth."
+    },
+    "world": {
+        "vector": [
+            0.5,
+            0.7,
+            0.7,
+            0.7,
+            0.7,
+            0.7,
+            0.7,
+            0.6,
+            0.6,
+            0.9,
+            0.7,
+            0.7
+        ],
+        "narrative": "Your signal is a global tapestry of diverse rhythmic traditions and unique tonal palettes."
+    },
+    "country": {
+        "vector": [
+            0.4,
+            0.6,
+            0.5,
+            0.8,
+            0.5,
+            0.5,
+            0.4,
+            0.7,
+            0.6,
+            0.4,
+            0.3,
+            0.7
+        ],
+        "narrative": "Your identity is a blend of acoustic simplicity and honest, narrative-driven warmth."
+    },
+    "blues": {
+        "vector": [
+            0.5,
+            0.8,
+            0.5,
+            0.8,
+            0.6,
+            0.5,
+            0.5,
+            0.4,
+            0.7,
+            0.5,
+            0.5,
+            0.9
+        ],
+        "narrative": "Your frequency is a grounded, soulful expression of harmonic tension and release."
+    },
+    "soul": {
+        "vector": [
+            0.6,
+            0.7,
+            0.6,
+            0.9,
+            0.5,
+            0.6,
+            0.4,
+            0.6,
+            0.6,
+            0.6,
+            0.4,
+            0.9
+        ],
+        "narrative": "Your neural map is rich with emotional density and the timeless warmth of vocal expression."
+    },
+    "punk": {
+        "vector": [
+            0.8,
+            0.4,
+            0.8,
+            0.4,
+            0.4,
+            0.7,
+            0.4,
+            0.5,
+            0.6,
+            0.4,
+            0.6,
+            0.6
+        ],
+        "narrative": "Your signal is a high-energy, raw transmission that values attitude over complexity."
+    },
+    "reggae": {
+        "vector": [
+            0.4,
+            0.6,
+            0.7,
+            0.8,
+            0.5,
+            0.6,
+            0.5,
+            0.6,
+            0.5,
+            0.6,
+            0.4,
+            0.8
+        ],
+        "narrative": "Your frequency is a deep, sub-bass vibration defined by off-beat rhythmic drive."
+    },
+    "disco": {
+        "vector": [
+            0.7,
+            0.5,
+            0.9,
+            0.6,
+            0.4,
+            0.7,
+            0.4,
+            0.8,
+            0.6,
+            0.6,
+            0.4,
+            0.7
+        ],
+        "narrative": "Your map is a glitter-drenched signal of high-energy danceability and bright tonality."
+    },
+    "funk": {
+        "vector": [
+            0.7,
+            0.6,
+            0.9,
+            0.7,
+            0.5,
+            0.7,
+            0.5,
+            0.6,
+            0.7,
+            0.7,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your DNA is a syncopated groove-machine, locked into the deepest pocket of rhythmic drive."
+    },
+    "synthwave": {
+        "vector": [
+            0.8,
+            0.5,
+            0.7,
+            0.5,
+            0.6,
+            0.9,
+            0.5,
+            0.8,
+            0.7,
+            0.6,
+            0.7,
+            0.6
+        ],
+        "narrative": "Your signal is a retro-futuristic transmission from a neon-soaked 80s dreamscape."
+    },
+    "lofi": {
+        "vector": [
+            0.3,
+            0.5,
+            0.4,
+            0.7,
+            0.4,
+            0.7,
+            0.6,
+            0.5,
+            0.5,
+            0.5,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your identity is a cozy, bit-crushed signal of nostalgic warmth and relaxed tempo."
+    },
+    "kpop": {
+        "vector": [
+            0.7,
+            0.5,
+            0.8,
+            0.6,
+            0.6,
+            0.7,
+            0.5,
+            0.9,
+            0.6,
+            0.7,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your map is a high-definition, multi-genre fusion of extreme production precision."
+    },
+    "afrobeats": {
+        "vector": [
+            0.7,
+            0.6,
+            0.9,
+            0.7,
+            0.5,
+            0.7,
+            0.5,
+            0.7,
+            0.6,
+            0.8,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your signal is a polyrhythmic explosion of modern rhythmic drive and global flow."
+    },
+    "gospel": {
+        "vector": [
+            0.5,
+            0.8,
+            0.6,
+            0.9,
+            0.6,
+            0.5,
+            0.5,
+            0.7,
+            0.7,
+            0.4,
+            0.3,
+            0.9
+        ],
+        "narrative": "Your DNA is an uplifting, high-harmonic signal of powerful collective expression."
+    },
+    "experimental": {
+        "vector": [
+            0.6,
+            0.6,
+            0.5,
+            0.4,
+            0.9,
+            0.8,
+            0.9,
+            0.4,
+            0.8,
+            0.7,
+            0.9,
+            0.5
+        ],
+        "narrative": "Your architecture is a boundary-pushing exploration of avant-garde sonic textures."
+    },
+    "phonk": {
+        "vector": [
+            0.8,
+            0.4,
+            0.9,
+            0.5,
+            0.4,
+            0.8,
+            0.4,
+            0.6,
+            0.7,
+            0.7,
+            0.6,
+            0.8
+        ],
+        "narrative": "Your frequency is a dark, distorted signal of Memphis-inspired atmospheric weight."
+    },
+    "synthpop": {
+        "vector": [
+            0.7,
+            0.6,
+            0.8,
+            0.7,
+            0.5,
+            0.8,
+            0.4,
+            0.8,
+            0.6,
+            0.6,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your identity is a sleek, electronic-forward blend of bright melodies and danceable beats."
+    },
+    "grunge": {
+        "vector": [
+            0.7,
+            0.6,
+            0.6,
+            0.5,
+            0.6,
+            0.7,
+            0.5,
+            0.4,
+            0.7,
+            0.5,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your signal is a heavy, distorted transmission of raw emotional density and angst."
+    },
+    "industrial": {
+        "vector": [
+            0.9,
+            0.5,
+            0.8,
+            0.2,
+            0.7,
+            0.9,
+            0.6,
+            0.4,
+            0.8,
+            0.6,
+            0.8,
+            0.5
+        ],
+        "narrative": "Your DNA is a cold, metallic signal of mechanical percussion and harsh textures."
+    },
+    "garage": {
+        "vector": [
+            0.8,
+            0.5,
+            0.9,
+            0.5,
+            0.5,
+            0.7,
+            0.5,
+            0.7,
+            0.6,
+            0.6,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your identity is a raw, high-energy signal of DIY spirit and rhythmic grit."
+    },
+    "trap": {
+        "vector": [
+            0.8,
+            0.4,
+            0.9,
+            0.5,
+            0.4,
+            0.8,
+            0.5,
+            0.7,
+            0.8,
+            0.8,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your frequency is a bass-heavy transmission of rapid-fire hats and dark spectral energy."
+    },
+    "drill": {
+        "vector": [
+            0.8,
+            0.4,
+            0.9,
+            0.4,
+            0.5,
+            0.8,
+            0.5,
+            0.6,
+            0.8,
+            0.8,
+            0.5,
+            0.8
+        ],
+        "narrative": "Your signal is a dark, sliding-bass transmission of intense rhythmic energy."
+    },
+    "dubstep": {
+        "vector": [
+            0.9,
+            0.4,
+            0.9,
+            0.3,
+            0.7,
+            0.9,
+            0.6,
+            0.6,
+            0.8,
+            0.6,
+            0.8,
+            0.5
+        ],
+        "narrative": "Your map is a high-impact exploration of sub-bass pressure and aggressive texture."
+    },
+    "trance": {
+        "vector": [
+            0.9,
+            0.5,
+            0.8,
+            0.4,
+            0.6,
+            0.8,
+            0.5,
+            0.9,
+            0.6,
+            0.5,
+            0.7,
+            0.5
+        ],
+        "narrative": "Your frequency is a high-tempo, euphoric signal of building harmonic tension."
+    },
+    "filmscore": {
+        "vector": [
+            0.4,
+            0.8,
+            0.3,
+            0.7,
+            0.9,
+            0.8,
+            0.7,
+            0.5,
+            0.9,
+            0.4,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your architecture is highly cinematic, defined by atmospheric depth and narrative scale."
+    },
+    "reggaeton": {
+        "vector": [
+            0.7,
+            0.5,
+            0.9,
+            0.6,
+            0.4,
+            0.7,
+            0.5,
+            0.8,
+            0.5,
+            0.7,
+            0.4,
+            0.7
+        ],
+        "narrative": "Your DNA is a high-energy, dembow-driven signal of rhythmic intensity."
+    },
+    "jpop": {
+        "vector": [
+            0.7,
+            0.6,
+            0.8,
+            0.7,
+            0.6,
+            0.8,
+            0.5,
+            0.9,
+            0.6,
+            0.6,
+            0.5,
+            0.7
+        ],
+        "narrative": "Your frequency is a bright, high-energy signal of complex melodic arrangements."
+    },
+    "arabic": {
+        "vector": [
+            0.5,
+            0.7,
+            0.7,
+            0.8,
+            0.6,
+            0.7,
+            0.6,
+            0.6,
+            0.7,
+            0.8,
+            0.6,
+            0.8
+        ],
+        "narrative": "Your signal is a rich tapestry of microtonal melodies and intricate rhythmic drive."
+    },
+    "indian": {
+        "vector": [
+            0.5,
+            0.8,
+            0.6,
+            0.8,
+            0.8,
+            0.7,
+            0.6,
+            0.7,
+            0.7,
+            0.7,
+            0.6,
+            0.8
+        ],
+        "narrative": "Your DNA is a complex fusion of classical ragas and modern rhythmic innovations."
+    }
 }

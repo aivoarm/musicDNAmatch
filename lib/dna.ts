@@ -30,10 +30,21 @@ export const DNA_SCHEMA_VERSION = 2;
 
 // ── Genre Bias Vectors ───────────────────────────────
 // ── DNA Configuration ──────────────────────────────
-import GENRE_VECTORS_RAW from "./genre-vectors.json";
+import GENRE_DATA_RAW from "./genre-vectors.json";
 import YT_TIERS_RAW from "./yt-tiers.json";
 
-export const GENRE_VECTORS: Record<string, number[]> = GENRE_VECTORS_RAW;
+export const GENRE_VECTORS: Record<string, number[]> = {};
+export const GENRE_NARRATIVES: Record<string, string> = {};
+
+Object.entries(GENRE_DATA_RAW).forEach(([k, v]: [string, any]) => {
+    if (v.vector) {
+        GENRE_VECTORS[k] = v.vector;
+        GENRE_NARRATIVES[k] = v.narrative;
+    } else {
+        GENRE_VECTORS[k] = v; // Fallback
+    }
+});
+
 const YT_TIERS = (YT_TIERS_RAW as any).yt_tiers as Record<string, { gold: string[], silver: string[], bronze?: string[] }>;
 
 // ── Types ───────────────────────────────────────────
@@ -111,7 +122,7 @@ export function calculateCoherence(vector: number[], confidence: number[] = []):
  * Now weights direct tag matches from metadata.
  */
 export function generateInterpretation(vector: number[], metaTags: string[] = []) {
-    if (!vector.length) return { characteristics: [], genreMatches: [] };
+    if (!vector.length) return { characteristics: [], genreMatches: [], narrative: "" };
 
     // 1. Identify primary characteristics from vector axes
     const characteristics = vector.map((v, i) => ({ label: AXIS_LABELS[i], value: v }))
@@ -122,6 +133,7 @@ export function generateInterpretation(vector: number[], metaTags: string[] = []
     const vectorMatches = Object.entries(GENRE_VECTORS)
         .map(([name, genreVec]) => ({
             name: name.charAt(0).toUpperCase() + name.slice(1),
+            key: name,
             score: euclideanSimilarityScore(vector, genreVec) // 0 to 1 scale
         }));
 
@@ -137,18 +149,33 @@ export function generateInterpretation(vector: number[], metaTags: string[] = []
     });
 
     // 4. Combine: (Vector Weight: 0.7, Tag Weight: 0.3)
-    const finalMatches = vectorMatches.map(m => {
-        const genreKey = m.name.toLowerCase();
+    const sortedMatches = vectorMatches.map(m => {
+        const genreKey = m.key;
         const tagScore = tagMatches[genreKey] || 0;
         return {
             name: m.name,
+            key: m.key,
             score: (m.score * 0.7) + (tagScore * 0.3)
         };
-    }).sort((a, b) => b.score - a.score).slice(0, 8); // Return top 8
+    }).sort((a, b) => b.score - a.score);
+
+    const finalMatches = sortedMatches.slice(0, 8); // Return top 8
+
+    // 5. Generate Personalized Narrative
+    const top2 = sortedMatches.slice(0, 2);
+    let narrative = "";
+    if (top2.length >= 2) {
+        const n1 = GENRE_NARRATIVES[top2[0].key] || "";
+        const n2 = GENRE_NARRATIVES[top2[1].key] || "";
+        narrative = `${n1} This is fused with elements of ${top2[1].name}, where ${n2.charAt(0).toLowerCase()}${n2.slice(1)}`;
+    } else if (top2.length === 1) {
+        narrative = GENRE_NARRATIVES[top2[0].key] || "Your signal is a unique sonic fingerprint.";
+    }
 
     return {
         characteristics,
-        genreMatches: finalMatches.map(g => g.name)
+        genreMatches: finalMatches.map(g => g.name),
+        narrative
     };
 }
 
@@ -256,7 +283,7 @@ export function computeYouTubeVector(videos: any[]): DNAVector {
         const pooled = Array(12).fill(0);
         bestGenres.forEach(g => {
             const normalizedKey = g.toLowerCase().replace(/[^a-z0-9]/g, "");
-            const vec = GENRE_VECTORS[normalizedKey] || GENRE_VECTORS.pop;
+            const vec = GENRE_VECTORS[normalizedKey] || GENRE_VECTORS["pop"];
             vec.forEach((v, i) => pooled[i] += v);
         });
         return pooled.map(v => v / bestGenres.length);

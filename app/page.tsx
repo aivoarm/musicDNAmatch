@@ -11,6 +11,7 @@ import {
     AlertCircle, Loader2, Search, Activity, MessageSquarePlus, Mail, Sparkles, Fingerprint
 } from "lucide-react";
 import ShareDNACard from "@/components/ShareDNACard";
+import OnboardingModal from "@/components/OnboardingModal";
 import DNAHelix from "@/components/DNAHelix";
 import Ticker from "@/components/Ticker";
 import { RadarChart, DualRadarChart } from "@/components/RadarCharts";
@@ -128,6 +129,7 @@ function HomeContent() {
     const [emailVerifySent, setEmailVerifySent] = useState(false);
     const [emailVerifyError, setEmailVerifyError] = useState<string | null>(null);
 
+    const [showOnboarding, setShowOnboarding] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const searchParams = useSearchParams();
@@ -245,6 +247,16 @@ function HomeContent() {
         const timer = setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 350);
         return () => clearTimeout(timer);
     }, [stage]);
+
+    // ── Onboarding Trigger ──
+    useEffect(() => {
+        if (stage === "complete" && dna && !isAuthenticated) {
+            const timer = setTimeout(() => {
+                setShowOnboarding(true);
+            }, 1500);
+            return () => clearTimeout(timer);
+        }
+    }, [stage, dna, isAuthenticated]);
 
 
     // ── Spotify ───────────────────────────────────────────────────────────
@@ -715,6 +727,18 @@ function HomeContent() {
     const hasYt = ytOk.length > 0;
 
 
+    const handleOnboardingSuccess = (profile: any) => {
+        setShowOnboarding(false);
+        setExisting(profile);
+        if (profile.metadata?.display_name) setDisplayName(profile.metadata.display_name);
+        if (profile.email) setEmail(profile.email);
+        if (profile.city) setCity(profile.city);
+    };
+
+    const handleOnboardingSkip = () => {
+        setShowOnboarding(false);
+    };
+
     // ─────────────────────────────────────────────────────────────────────
     return (
         <div className="relative min-h-screen bg-[#080808] overflow-x-hidden safe-bottom md:pb-0">
@@ -819,6 +843,7 @@ function HomeContent() {
                                         email={email}
                                         genres={genres}
                                         isAuthenticated={isAuthenticated}
+                                        setShowOnboarding={setShowOnboarding}
                                         onRestart={() => { setStage("landing"); setSelPlaylists([]); setYtTracks(emptyYt()); }}
                                     />
                                 )}
@@ -850,6 +875,24 @@ function HomeContent() {
                 )}
 
             </AnimatePresence>
+
+            <OnboardingModal
+                isOpen={showOnboarding}
+                dnaResult={{
+                    genres,
+                    displayName,
+                    email,
+                    city,
+                    audioFeatures: fetchedSources?.audioFeatures || [],
+                    youtubeVideos: fetchedSources?.youtubeVideos || [],
+                    artistGenres: fetchedSources?.artistGenres || [],
+                    spotifyTracks: fetchedSources?.spotifyTracks || [],
+                    youtubeTracks: fetchedSources?.youtubeTracks || [],
+                }}
+                guestId={getCookie("guest_id") || ""}
+                onSuccess={handleOnboardingSuccess}
+                onSkip={handleOnboardingSkip}
+            />
 
         </div>
     );
