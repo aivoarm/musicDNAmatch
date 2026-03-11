@@ -3,19 +3,20 @@
 
 [Live Site: dna.armanayva.com](https://dna.armanayva.com/)
 
-Music DNA Match is a high-fidelity musical discovery engine that strips away cultural labels and genres to focus on the underlying mathematics of sound. By scanning your digital music footprint (Spotify & YouTube), it generates a **12-dimensional sonic vector**—a mathematical fingerprint of your unique musical identity—then matches you with like-minded listeners ("Sonic Soulmates").
+Music DNA Match is a high-fidelity musical discovery engine that bridges the gap between **Artists and Fans** through shared musical biology. By scanning your digital music footprint (Spotify & YouTube), it generates a **12-dimensional sonic vector**—a mathematical fingerprint of your unique musical identity—then matches you with like-minded listeners ("Sonic Soulmates") and verified creators ("The Syndicate").
 
 ---
 
 ## ✨ Features
 
 ### 🧬 Neural Discovery Flow
-- **Frictionless Onboarding:** No mandatory sign-up or login. Users are assigned a persistent **Digital Identity** via guest cookies, allowing instant DNA extraction.
+- **Artist-Fan Bridge:** A tool designed for creators and listeners to find their tribe based on true musical resonance rather than algorithmic bias.
+- **Frictionless Onboarding:** A multi-stage process (Sources → Review → Genres → Analysis) that allows users to refine AI-driven insights before generating their final DNA.
 - **Profile Restoration:** A "Neural Handshake" portal allows returning users to securely recover their profile on any device using their registered email.
 - **Multimodal Signal Capture:**
-    - **Spotify Native Scan:** Analyzes public playlists and listening signals without requiring account connection.
-    - **YouTube Search & Paste:** Supplement your DNA with specific tracks found on YouTube.
-- **Signature Identification:** To ensure a unique presence, users are assigned a **Signal ID** (e.g., `NAME-SIGNAL`) and an optional email used for secure profile reconnects and mutal match notifications.
+    - **Spotify Native Scan:** Analyzes public playlists and listening signals.
+    - **YouTube Search & Paste:** Enrich your DNA with individual tracks or "Add Similar" tracks via automated discovery.
+- **Signature Identification:** Users are assigned a **Signal ID** (e.g., `NAME-SIGNAL`) for secure profile reconnects and mutual match notifications.
 
 ### 🧬 Neural Discovery Protocol
 - **Vector Space Mapping:** DNA is quantized across 12 distinct axes: *Spectral Energy, Harmonic Depth, Rhythmic Drive, Melodic Warmth, Structural Complexity, Sonic Texture, Tempo Variance, Tonal Brightness, Dynamic Range, Genre Fusion, Experimental Index, and Emotional Density.*

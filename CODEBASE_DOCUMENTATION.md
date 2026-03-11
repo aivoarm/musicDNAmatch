@@ -30,13 +30,14 @@ musicDNAmatch is a **web application** that:
 
 1. **Analyzes** users' music preferences from genre selection, Spotify, and YouTube
 2. **Generates** a 12-dimensional Musical DNA vector using:
-   - 50% genre preferences (user selection)
-   - 25% Spotify audio features (energy, valence, danceability, etc.)
-   - 25% YouTube metadata (category, tags, title)
+   - 30% Genre preferences
+   - 20% Spotify audio features
+   - 20% YouTube metadata
+   - 30% Global Signal alignment (Last.fm/MB API fallbacks)
 3. **Matches** users based on cosine similarity of their DNA vectors
-4. **Restores** existing profiles via a "Neural Handshake" (email-based portal) for return visitors
-5. **Facilitates** connections ("Bridges") between matched users with email confirmation workflows
-6. **Curates** official artist profiles ("The Syndicate") for creators to connect with their listener base
+4. **Bridges** the gap between **Artists and Fans** by allowing verified creators ("The Syndicate") to discover their most resonant fan clusters.
+5. **Facilitates** secure connections ("Bridges") between matched users with double-opt-in email confirmation workflows.
+6. **Optimizes** for SEO with rich keywords like "Acoustic DNA", "Musical Fingerprint", and "Neural Extraction".
 
 ### Technology Stack
 
@@ -56,6 +57,8 @@ musicDNAmatch is a **web application** that:
 - **Match Score**: Cosine similarity between two DNA vectors (`0-1`)
 - **Bridge**: A connection object between two matched users
 - **Soulmate**: A user with high musical DNA similarity (convergent/resonant match)
+- **Artist Ecosystem**: A verified space ("The Syndicate") where musicians use their DNA to find their tribe of listeners.
+- **Match Interst**: A signal sent by one user to another, leading to a mutual "Bridge" if reciprocated.
 
 ---
 
@@ -132,11 +135,11 @@ MusicDNA/
 │   │   └── test/
 │   │       └── reset/route.ts
 │   ├── (page routes)
-│   │   ├── page.tsx                    # Home / Discovery
+│   │   ├── page.tsx                    # Home / Multi-Stage Onboarding
 │   │   ├── about/page.tsx
 │   │   ├── profile/page.tsx            # User profile & settings
 │   │   ├── soulmates/page.tsx          # Match browsing
-│   │   ├── artists/page.tsx            # I'm Artist (Fan-Artist matching)
+│   │   ├── artists/page.tsx            # The Syndicate (Verified Artist lists)
 │   │   ├── broadcast/page.tsx
 │   │   ├── youtube/page.tsx
 │   │   ├── privacy/page.tsx
@@ -1254,7 +1257,47 @@ User can:
 Final DNA generated from full cumulative song list
     ↓
 All tracks stored in metadata.recent_tracks
+
+---
+
+### 9. YouTube Selection Strategy
+
 ```
+User searches for YouTube video
+    ↓
+Results grid shows two distinct actions on hover:
+    ↓
+1. "Add Song" (sparkles=false):
+   - Adds single specific video to tracks list.
+   - Preserves precision.
+2. "Add Similar" (sparkles=true):
+   - Adds video + triggers magicFillSlots().
+   - Fetches 4-6 similar tracks via YouTube API.
+   - Provides instant "Taste Enrichment".
+    ↓
+Tracks merged into fetchedSources for unified analysis.
+```
+
+---
+
+### 10. Multi-Stage Onboarding Flow
+
+```
+Landing (Hero) -> onChoice()
+    ↓
+Stage 1: Sources (Spotify User ID / YouTube URL / Last.fm)
+    ↓
+Stage 2: Review Tracks (De-duplicate & Confirm list)
+    ↓
+Stage 3: Genre Selection (Refine AI Suggestions)
+   - AI pre-selects genres based on dry-run analysis.
+   - User MANUALLY refines (prevents data bias).
+   - "Musical DNA" button only enabled if selection exists.
+    ↓
+Stage 4: DNA Generation (Final pgvector Calculation)
+    ↓
+Stage 5: Complete (Profile visualization)
+``````
 
 ---
 
@@ -1450,5 +1493,5 @@ pnpm lint
 
 ---
 
-**Last Updated**: March 9, 2026  
-**Documentation Version**: 1.5
+**Last Updated**: March 11, 2026  
+**Documentation Version**: 1.6
