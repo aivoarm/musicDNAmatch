@@ -23,20 +23,6 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
     return (
         <motion.div key="co" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="space-y-5 md:space-y-6 w-full pb-16 md:pb-20 px-2 sm:px-0">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-
-
-                {/* LEFT COLUMN: DNA BARS */}
-                <div className="space-y-4 md:space-y-5">
-
-                    <div className="glass rounded-3xl md:rounded-[2.5rem] p-5 md:p-10 border border-white/10 flex flex-col">
-                        <p className="mono text-[9px] md:text-[10px] text-white/60 uppercase tracking-widest mb-5 md:mb-7">Structural Map Vector — 12 Dimensions</p>
-                        <div className="space-y-3 md:space-y-4 max-h-[350px] md:max-h-[420px] overflow-y-auto sb pr-1 md:pr-2 flex-1">
-                            {(dna.axes || AXIS_LABELS).map((axis: string, i: number) => (
-                                <DnaBar key={axis} label={axis.replace(/_/g, " ")} value={dna.vector?.[i] ?? 0} red={i % 2 === 0} />
-                            ))}
-                        </div>
-                    </div>
-                </div>
                 {/* RIGHT COLUMN: STATS & CTAS */}
                 <div className="space-y-4 md:space-y-5 flex flex-col">
                     {/* ENHANCED SHARE CTA */}
@@ -137,6 +123,20 @@ export default function StageComplete({ dna, email, genres, isAuthenticated, set
                         </button>
                     </div>
                 </div>
+
+                {/* LEFT COLUMN: DNA BARS */}
+                <div className="space-y-4 md:space-y-5">
+
+                    <div className="glass rounded-3xl md:rounded-[2.5rem] p-5 md:p-10 border border-white/10 flex flex-col">
+                        <p className="mono text-[9px] md:text-[10px] text-white/60 uppercase tracking-widest mb-5 md:mb-7">Structural Map Vector — 12 Dimensions</p>
+                        <div className="space-y-3 md:space-y-4 max-h-[350px] md:max-h-[420px] overflow-y-auto sb pr-1 md:pr-2 flex-1">
+                            {(dna.axes || AXIS_LABELS).map((axis: string, i: number) => (
+                                <DnaBar key={axis} label={axis.replace(/_/g, " ")} value={dna.vector?.[i] ?? 0} red={i % 2 === 0} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
 
