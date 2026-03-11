@@ -1,0 +1,454 @@
+{
+    "yt_tiers": {
+        "rap": {
+            "gold": [
+                "eminem",
+                "drake",
+                "kendrick lamar",
+                "kanye west",
+                "jay-z",
+                "nas",
+                "j cole",
+                "lil wayne",
+                "future",
+                "travis scott",
+                "nicki minaj",
+                "cardi b",
+                "megan thee stallion",
+                "50 cent",
+                "ice cube",
+                "ice t",
+                "ll cool j",
+                "method man",
+                "redman",
+                "busta rhymes",
+                "logic",
+                "big sean",
+                "tyga",
+                "asap rocky",
+                "asap ferg",
+                "mac miller",
+                "schoolboy q",
+                "tyler the creator",
+                "earl sweatshirt",
+                "vince staples",
+                "joey badass",
+                "denzel curry",
+                "kid cudi",
+                "chance the rapper",
+                "post malone",
+                "lil baby",
+                "gunna",
+                "21 savage",
+                "playboi carti",
+                "lil uzi vert",
+                "roddy ricch",
+                "offset",
+                "takeoff",
+                "quavo"
+            ],
+            "silver": [
+                "rap",
+                "hip hop",
+                "bars",
+                "freestyle",
+                "cypher",
+                "lyricism"
+            ]
+        },
+        "pop": {
+            "gold": [
+                "taylor swift",
+                "billie eilish",
+                "dua lipa",
+                "ariana grande",
+                "ed sheeran",
+                "bruno mars",
+                "justin bieber",
+                "lady gaga",
+                "katy perry",
+                "olivia rodrigo",
+                "harry styles",
+                "sam smith",
+                "sia",
+                "adele",
+                "shawn mendes",
+                "charlie puth",
+                "camila cabello",
+                "lorde",
+                "troye sivan",
+                "pink",
+                "christina aguilera",
+                "britney spears",
+                "madonna",
+                "michael jackson",
+                "janet jackson",
+                "justin timberlake",
+                "selena gomez",
+                "demi lovato",
+                "miley cyrus",
+                "jonas brothers",
+                "halsey",
+                "the weeknd",
+                "post malone"
+            ],
+            "silver": [
+                "pop",
+                "radio pop",
+                "chart hits",
+                "mainstream"
+            ]
+        },
+        "rock": {
+            "gold": [
+                "queen",
+                "led zeppelin",
+                "pink floyd",
+                "the beatles",
+                "rolling stones",
+                "nirvana",
+                "pearl jam",
+                "soundgarden",
+                "foo fighters",
+                "arctic monkeys",
+                "radiohead",
+                "u2",
+                "the doors",
+                "the who",
+                "acdc",
+                "guns n roses",
+                "red hot chili peppers",
+                "oasis",
+                "green day",
+                "linkin park",
+                "blink 182",
+                "paramore",
+                "the killers",
+                "imagine dragons",
+                "muse",
+                "coldplay",
+                "smashing pumpkins",
+                "stone temple pilots",
+                "the black keys"
+            ],
+            "silver": [
+                "rock",
+                "classic rock",
+                "alt rock",
+                "guitar rock"
+            ]
+        },
+        "metal": {
+            "gold": [
+                "metallica",
+                "slayer",
+                "megadeth",
+                "anthrax",
+                "iron maiden",
+                "black sabbath",
+                "pantera",
+                "judas priest",
+                "motorhead",
+                "rammstein",
+                "slipknot",
+                "system of a down",
+                "gojira",
+                "meshuggah",
+                "dream theater",
+                "avenged sevenfold",
+                "arch enemy",
+                "nightwish",
+                "sabaton",
+                "lamb of god",
+                "trivium",
+                "behemoth"
+            ],
+            "silver": [
+                "metal",
+                "heavy metal",
+                "thrash metal",
+                "death metal",
+                "djent"
+            ]
+        },
+        "electronic": {
+            "gold": [
+                "daft punk",
+                "aphex twin",
+                "skrillex",
+                "deadmau5",
+                "avicii",
+                "calvin harris",
+                "martin garrix",
+                "tiesto",
+                "armin van buuren",
+                "porter robinson",
+                "madeon",
+                "justice",
+                "chemical brothers",
+                "fatboy slim",
+                "the prodigy",
+                "kraftwerk",
+                "flume",
+                "disclosure",
+                "kaytranada",
+                "eric prydz",
+                "alan walker",
+                "illenium",
+                "zedd",
+                "krewella",
+                "above and beyond",
+                "swedish house mafia"
+            ],
+            "silver": [
+                "electronic",
+                "edm",
+                "dance music",
+                "dj set"
+            ]
+        },
+        "jazz": {
+            "gold": [
+                "miles davis",
+                "john coltrane",
+                "herbie hancock",
+                "thelonious monk",
+                "bill evans",
+                "charlie parker",
+                "dizzy gillespie",
+                "sonny rollins",
+                "chet baker",
+                "art blakey",
+                "wayne shorter",
+                "pat metheny",
+                "keith jarrett",
+                "kamasi washington",
+                "esperanza spalding",
+                "charles mingus",
+                "stan getz",
+                "clifford brown",
+                "joe henderson"
+            ],
+            "silver": [
+                "jazz",
+                "bebop",
+                "fusion",
+                "swing"
+            ]
+        },
+        "rnb": {
+            "gold": [
+                "frank ocean",
+                "sza",
+                "the weeknd",
+                "beyonce",
+                "rihanna",
+                "usher",
+                "alicia keys",
+                "mary j blige",
+                "lauryn hill",
+                "erykah badu",
+                "dangelo",
+                "maxwell",
+                "brent faiyaz",
+                "daniel caesar",
+                "summer walker",
+                "jhene aiko",
+                "chris brown",
+                "ne yo",
+                "miguel",
+                "ty dolla sign"
+            ],
+            "silver": [
+                "rnb",
+                "r&b",
+                "neo soul"
+            ]
+        },
+        "latin": {
+            "gold": [
+                "bad bunny",
+                "j balvin",
+                "karol g",
+                "rosalia",
+                "daddy yankee",
+                "shakira",
+                "selena",
+                "maluma",
+                "ozuna",
+                "feid",
+                "rauw alejandro",
+                "anuel aa",
+                "romeo santos",
+                "marc anthony",
+                "carlos santana",
+                "nicky jam",
+                "don omar",
+                "farruko",
+                "becky g",
+                "camilo"
+            ],
+            "silver": [
+                "latin",
+                "reggaeton",
+                "bachata",
+                "salsa",
+                "latin pop"
+            ]
+        },
+        "afrobeats": {
+            "gold": [
+                "burna boy",
+                "wizkid",
+                "davido",
+                "rema",
+                "tems",
+                "asake",
+                "ckay",
+                "ayra starr",
+                "mr eazi",
+                "tiwa savage",
+                "olamide",
+                "yemi alade"
+            ],
+            "silver": [
+                "afrobeats",
+                "afropop"
+            ]
+        },
+        "indie": {
+            "gold": [
+                "tame impala",
+                "phoebe bridgers",
+                "bon iver",
+                "mac demarco",
+                "mitski",
+                "vampire weekend",
+                "sufjan stevens",
+                "beach house",
+                "clairo",
+                "rex orange county",
+                "the xx",
+                "alt j",
+                "arctic monkeys",
+                "glass animals",
+                "cage the elephant",
+                "king gizzard"
+            ],
+            "silver": [
+                "indie",
+                "alternative",
+                "dream pop"
+            ]
+        },
+        "funk": {
+            "gold": [
+                "james brown",
+                "parliament",
+                "funkadelic",
+                "prince",
+                "earth wind and fire",
+                "chic",
+                "sly and the family stone",
+                "tower of power",
+                "vulfpeck",
+                "the meters",
+                "jamiroquai",
+                "lettuce"
+            ],
+            "silver": [
+                "funk",
+                "groove",
+                "slap bass"
+            ]
+        },
+        "soul": {
+            "gold": [
+                "aretha franklin",
+                "marvin gaye",
+                "stevie wonder",
+                "al green",
+                "sam cooke",
+                "ray charles",
+                "wilson pickett",
+                "etta james",
+                "donny hathaway",
+                "bill withers",
+                "solomon burke"
+            ],
+            "silver": [
+                "soul",
+                "motown"
+            ]
+        },
+        "classical": {
+            "gold": [
+                "bach",
+                "mozart",
+                "beethoven",
+                "chopin",
+                "debussy",
+                "stravinsky",
+                "tchaikovsky",
+                "vivaldi",
+                "rachmaninoff",
+                "brahms",
+                "handel",
+                "schubert",
+                "mahler",
+                "prokofiev",
+                "philip glass",
+                "erik satie"
+            ],
+            "silver": [
+                "classical",
+                "symphony",
+                "orchestra"
+            ]
+        },
+        "ambient": {
+            "gold": [
+                "brian eno",
+                "tim hecker",
+                "william basinski",
+                "stars of the lid",
+                "nils frahm",
+                "max richter",
+                "biosphere",
+                "loscil",
+                "gas",
+                "oneohtrix point never"
+            ],
+            "silver": [
+                "ambient",
+                "drone",
+                "meditation",
+                "sleep music"
+            ]
+        },
+        "kpop": {
+            "gold": [
+                "bts",
+                "blackpink",
+                "twice",
+                "newjeans",
+                "aespa",
+                "exo",
+                "stray kids",
+                "seventeen",
+                "enhypen",
+                "itzy",
+                "ive",
+                "le sserafim",
+                "mamamoo",
+                "red velvet",
+                "gidle"
+            ],
+            "silver": [
+                "kpop",
+                "korean pop",
+                "idol"
+            ]
+        }
+    }
+}

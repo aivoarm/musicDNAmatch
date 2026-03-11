@@ -29,45 +29,12 @@ export const AXIS_DESCRIPTIONS: Record<string, string> = {
 export const DNA_SCHEMA_VERSION = 2;
 
 // ── Genre Bias Vectors ───────────────────────────────
-export const GENRE_VECTORS: Record<string, number[]> = {
-    "electronic": [0.9, 0.5, 0.8, 0.3, 0.7, 0.9, 0.6, 0.8, 0.7, 0.7, 0.8, 0.5],
-    "techno": [0.9, 0.4, 0.9, 0.2, 0.6, 0.9, 0.5, 0.7, 0.7, 0.6, 0.8, 0.4],
-    "house": [0.8, 0.5, 0.9, 0.4, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.6, 0.6],
-    "ambient": [0.4, 0.6, 0.2, 0.6, 0.6, 0.9, 0.8, 0.5, 0.9, 0.5, 0.8, 0.6],
-    "hiphop": [0.7, 0.4, 0.9, 0.6, 0.5, 0.7, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
-    "rnb": [0.6, 0.7, 0.7, 0.9, 0.5, 0.7, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
-    "indie": [0.5, 0.6, 0.5, 0.8, 0.7, 0.6, 0.7, 0.5, 0.7, 0.6, 0.6, 0.7],
-    "classical": [0.4, 0.9, 0.3, 0.9, 0.9, 0.5, 0.8, 0.6, 0.9, 0.3, 0.4, 0.8],
-    "jazz": [0.5, 0.9, 0.6, 0.7, 0.8, 0.6, 0.8, 0.5, 0.7, 0.7, 0.7, 0.7],
-    "metal": [0.9, 0.6, 0.9, 0.3, 0.7, 0.8, 0.5, 0.4, 0.8, 0.5, 0.7, 0.7],
-    "rock": [0.8, 0.6, 0.7, 0.5, 0.6, 0.7, 0.5, 0.5, 0.7, 0.5, 0.5, 0.7],
-    "pop": [0.6, 0.5, 0.7, 0.7, 0.4, 0.6, 0.4, 0.8, 0.5, 0.5, 0.3, 0.7],
-    "folk": [0.3, 0.7, 0.4, 0.9, 0.6, 0.4, 0.6, 0.6, 0.8, 0.4, 0.5, 0.8],
-    "latin": [0.6, 0.6, 0.9, 0.7, 0.5, 0.6, 0.5, 0.7, 0.6, 0.7, 0.4, 0.8],
-    "world": [0.5, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0.6, 0.6, 0.9, 0.7, 0.7],
-    "country": [0.4, 0.6, 0.5, 0.8, 0.5, 0.5, 0.4, 0.7, 0.6, 0.4, 0.3, 0.7],
-    "blues": [0.5, 0.8, 0.5, 0.8, 0.6, 0.5, 0.5, 0.4, 0.7, 0.5, 0.5, 0.9],
-    "soul": [0.6, 0.7, 0.6, 0.9, 0.5, 0.6, 0.4, 0.6, 0.6, 0.6, 0.4, 0.9],
-    "punk": [0.8, 0.4, 0.8, 0.4, 0.4, 0.7, 0.4, 0.5, 0.6, 0.4, 0.6, 0.6],
-    "reggae": [0.4, 0.6, 0.7, 0.8, 0.5, 0.6, 0.5, 0.6, 0.5, 0.6, 0.4, 0.8],
-    "disco": [0.7, 0.5, 0.9, 0.6, 0.4, 0.7, 0.4, 0.8, 0.6, 0.6, 0.4, 0.7],
-    "funk": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.6, 0.7, 0.7, 0.5, 0.8],
-    "synthwave": [0.8, 0.5, 0.7, 0.5, 0.6, 0.9, 0.5, 0.8, 0.7, 0.6, 0.7, 0.6],
-    "lofi": [0.3, 0.5, 0.4, 0.7, 0.4, 0.7, 0.6, 0.5, 0.5, 0.5, 0.5, 0.7],
-    "kpop": [0.7, 0.5, 0.8, 0.6, 0.6, 0.7, 0.5, 0.9, 0.6, 0.7, 0.5, 0.7],
-    "afrobeats": [0.7, 0.6, 0.9, 0.7, 0.5, 0.7, 0.5, 0.7, 0.6, 0.8, 0.5, 0.8],
-    "gospel": [0.5, 0.8, 0.6, 0.9, 0.6, 0.5, 0.5, 0.7, 0.7, 0.4, 0.3, 0.9],
-    "experimental": [0.6, 0.6, 0.5, 0.4, 0.9, 0.8, 0.9, 0.4, 0.8, 0.7, 0.9, 0.5],
-    "phonk": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.4, 0.6, 0.7, 0.7, 0.6, 0.8],
-    "synthpop": [0.7, 0.6, 0.8, 0.7, 0.5, 0.8, 0.4, 0.8, 0.6, 0.6, 0.5, 0.7],
-    "grunge": [0.7, 0.6, 0.6, 0.5, 0.6, 0.7, 0.5, 0.4, 0.7, 0.5, 0.5, 0.8],
-    "industrial": [0.9, 0.5, 0.8, 0.2, 0.7, 0.9, 0.6, 0.4, 0.8, 0.6, 0.8, 0.5],
-    "garage": [0.8, 0.5, 0.9, 0.5, 0.5, 0.7, 0.5, 0.7, 0.6, 0.6, 0.5, 0.7],
-    "trap": [0.8, 0.4, 0.9, 0.5, 0.4, 0.8, 0.5, 0.7, 0.8, 0.8, 0.5, 0.8],
-    "drill": [0.8, 0.4, 0.9, 0.4, 0.5, 0.8, 0.5, 0.6, 0.8, 0.8, 0.5, 0.8],
-    "dubstep": [0.9, 0.4, 0.9, 0.3, 0.7, 0.9, 0.6, 0.6, 0.8, 0.6, 0.8, 0.5],
-    "trance": [0.9, 0.5, 0.8, 0.4, 0.6, 0.8, 0.5, 0.9, 0.6, 0.5, 0.7, 0.5],
-};
+// ── DNA Configuration ──────────────────────────────
+import GENRE_VECTORS_RAW from "./genre-vectors.json";
+import YT_TIERS_RAW from "./yt-tiers.json";
+
+export const GENRE_VECTORS: Record<string, number[]> = GENRE_VECTORS_RAW;
+const YT_TIERS = (YT_TIERS_RAW as any).yt_tiers as Record<string, { gold: string[], silver: string[], bronze?: string[] }>;
 
 // ── Types ───────────────────────────────────────────
 export interface DNAVector {
@@ -115,70 +82,8 @@ const makeDNA = (vector: number[], confidence: number[], source: string, metadat
 
 // ── Data Mappings ──────────────────────────────────
 
-const TIER_WEIGHTS = { GOLD: 1.0, SILVER: 0.6 };
+const TIER_WEIGHTS = { GOLD: 1.0, SILVER: 0.6, BRONZE: 0.3 };
 
-const YT_TIERS: Record<string, { gold: string[], silver: string[] }> = {
-    "kpop": {
-        gold: ["kpop", "blackpink", "bts", "twice", "newjeans", "huntrix", "stray kids", "exo", "red velvet", "aespa", "itzy"],
-        silver: ["k-pop", "korean", "hallyu", "idol"]
-    },
-    "rock": {
-        gold: ["queen", "led zeppelin", "nirvana", "ac/dc", "pink floyd", "the beatles", "rolling stones", "arctic monkeys", "radiohead"],
-        silver: ["rock", "guitar", "live aid", "classic rock", "stadium rock"]
-    },
-    "metal": {
-        gold: ["metallica", "slayer", "megadeth", "iron maiden", "black sabbath", "slipknot", "system of a down", "gojira"],
-        silver: ["metal", "heavy metal", "death metal", "thrash", "djent"]
-    },
-    "electronic": {
-        gold: ["daft punk", "aphex twin", "skrillex", "deadmau5", "tiesto", "avicii", "disclosure", "kaytranada", "flume"],
-        silver: ["electronic", "techno", "house", "edm", "synth", "mix", "remix", "dj set"]
-    },
-    "hiphop": {
-        gold: ["kendrick lamar", "drake", "eminem", "kanye west", "travis scott", "2pac", "biggie", "jay-z", "j cole", "nas"],
-        silver: ["hiphop", "rap", "trap", "drill", "beats", "type beat", "hip-hop"]
-    },
-    "jazz": {
-        gold: ["miles davis", "coltrane", "herbie hancock", "brubeck", "nina simone", "bill evans", "kamasi washington"],
-        silver: ["jazz", "sax", "trumpet", "smooth jazz", "bebop", "blue note"]
-    },
-    "rnb": {
-        gold: ["frank ocean", "sza", "the weeknd", "alicia keys", "usher", "lauryn hill", "erykah badu", "brent faiyaz"],
-        silver: ["rnb", "r&b", "soul", "neo-soul", "contemporary rnb"]
-    },
-    "ambient": {
-        gold: ["brian eno", "stars of the lid", "aphex twin - selected ambient", "william basinski", "tim hecker"],
-        silver: ["ambient", "drone", "meditation", "sleep", "calm", "lofi", "study beats"]
-    },
-    "indie": {
-        gold: ["tame impala", "the strokes", "bon iver", "mac demarco", "phoebe bridgers", "mitski", "boygenius"],
-        silver: ["indie", "alternative", "alt-rock", "dream pop", "shoegaze"]
-    },
-    "classical": {
-        gold: ["bach", "beethoven", "mozart", "chopin", "debussy", "stravinsky", "hans zimmer", "john williams"],
-        silver: ["classical", "orchestra", "piano", "violin", "symphony", "composition"]
-    },
-    "latin": {
-        gold: ["bad bunny", "j balvin", "karol g", "rosalía", "daddy yankee", "shakira", "selena", "santana"],
-        silver: ["latin", "reggaeton", "salsa", "bossa nova", "tango", "bachata"]
-    },
-    "soul": {
-        gold: ["aretha franklin", "marvin gaye", "stevie wonder", "otis redding", "al green", "sam cooke"],
-        silver: ["soul", "motown", "classic soul", "stax"]
-    },
-    "funk": {
-        gold: ["james brown", "parliament", "funkadelic", "vulfpeck", "khruangbin", "the meters", "prince"],
-        silver: ["funk", "groove", "slap bass"]
-    },
-    "synthwave": {
-        gold: ["kavinsky", "the midnight", "carpenter brut", "gunship", "perturbator"],
-        silver: ["synthwave", "retrowave", "80s synth", "outrun"]
-    },
-    "folk": {
-        gold: ["bob dylan", "joni mitchell", "fleet foxes", "the tallest man on earth", "simon & garfunkel"],
-        silver: ["folk", "acoustic", "singer-songwriter", "americana"]
-    }
-};
 
 const SPOTIFY_AXIS_MAP: Record<number, [string, number][]> = {
     0: [["energy", 0.6], ["loudness_norm", 0.4]], 1: [["instrumentalness", 0.5], ["acousticness", 0.5]],
@@ -331,13 +236,30 @@ export function computeYouTubeVector(videos: any[]): DNAVector {
     if (!videos.length) return makeDNA(Array(12).fill(0.5), Array(12).fill(0.1), "youtube", { track_count: 0 });
     const genreVecs = videos.map(v => {
         const title = (v.title || "").toLowerCase();
-        let best = "pop";
+        let bestGenres: string[] = ["pop"];
         let max = 0;
         Object.entries(YT_TIERS).forEach(([genre, tiers]) => {
-            let score = tiers.gold.some(k => title.includes(k)) ? TIER_WEIGHTS.GOLD : (tiers.silver.some(k => title.includes(k)) ? TIER_WEIGHTS.SILVER : 0);
-            if (score > max) { max = score; best = genre; }
+            let score = 0;
+            if (tiers.gold.some(k => title.includes(k))) score = TIER_WEIGHTS.GOLD;
+            else if (tiers.silver.some(k => title.includes(k))) score = TIER_WEIGHTS.SILVER;
+            else if (tiers.bronze?.some(k => title.includes(k))) score = TIER_WEIGHTS.BRONZE;
+
+            if (score > max) {
+                max = score;
+                bestGenres = [genre];
+            } else if (score === max && score > 0) {
+                bestGenres.push(genre);
+            }
         });
-        return GENRE_VECTORS[best] || GENRE_VECTORS.pop;
+
+        // Average vectors for all tied best genres (e.g. Hip-Hop AND Rap)
+        const pooled = Array(12).fill(0);
+        bestGenres.forEach(g => {
+            const normalizedKey = g.toLowerCase().replace(/[^a-z0-9]/g, "");
+            const vec = GENRE_VECTORS[normalizedKey] || GENRE_VECTORS.pop;
+            vec.forEach((v, i) => pooled[i] += v);
+        });
+        return pooled.map(v => v / bestGenres.length);
     }) as number[][];
     return makeDNA(Array(12).fill(0).map((_, i) => genreVecs.reduce((sum, v) => sum + v[i], 0) / genreVecs.length), Array(12).fill(0.4), "youtube", { track_count: videos.length });
 }

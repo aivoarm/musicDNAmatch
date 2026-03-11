@@ -562,7 +562,7 @@ export default function ProfilePage() {
                                     <p className="mono text-[9px] text-white/50 uppercase tracking-[0.2em]">Synchronized signals from the community</p>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    {["", "Electronic", "Jazz", "Hip-Hop", "Experimental"].map((g) => (
+                                    {["", "Electronic", "Jazz", "Hip-Hop", "Rap", "Experimental"].map((g) => (
                                         <button
                                             key={g}
                                             onClick={() => setGenreFilter(g)}
