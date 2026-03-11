@@ -143,8 +143,18 @@ export function generateInterpretation(vector: number[], metaTags: string[] = []
 
     Object.keys(GENRE_VECTORS).forEach(genre => {
         const gn = genre.toLowerCase().replace(/[^a-z0-9]/g, "");
-        // Direct match or substring match (e.g. 'Classical' matches 'Modern Classical')
-        if (normalizedMetaTags.some(t => t.includes(gn) || gn.includes(t))) {
+        
+        // Smarter Matching:
+        // 1. Exact match (pop === pop)
+        // 2. Direct inclusion ONLY if the tag is specific (long enough) 
+        // 3. Or if the shorter word is exactly 'pop', it must be a precise match
+        const isMatch = normalizedMetaTags.some(t => {
+            if (t === gn) return true;
+            if (t.length > 4 && (t.includes(gn) || gn.includes(t))) return true;
+            return false;
+        });
+
+        if (isMatch) {
             tagMatches[genre] = 1.0; 
         }
     });
