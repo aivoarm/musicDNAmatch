@@ -144,23 +144,25 @@ export function StageSourceYoutube({
                 </div>
 
                 {/* Big Action Button matched to Spotify logic */}
-                {!hasSelectedTracks ? (
-                    !ytSearching && (
+                <div className="flex items-center gap-3">
+                    {!hasSelectedTracks ? (
+                        !ytSearching && (
+                            <button
+                                onClick={onNext}
+                                className="flex-1 py-4 px-6 bg-white/5 border border-white/10 rounded-2xl text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest active:scale-[0.98]"
+                            >
+                                No YouTube Tracks
+                            </button>
+                        )
+                    ) : (
                         <button
                             onClick={onNext}
-                            className="w-full py-4 px-6 bg-white/5 border border-white/10 rounded-2xl text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest active:scale-[0.98]"
+                            className="flex-1 py-4 px-6 bg-[#FF0000]/10 border border-[#FF0000]/30 rounded-2xl text-[#FF0000] hover:bg-[#FF0000]/20 transition-all text-xs font-black uppercase tracking-[0.2em] active:scale-[0.98] flex items-center justify-center gap-2"
                         >
-                            I don't have YouTube tracks
+                            Analyze My DNA <ArrowRight size={14} />
                         </button>
-                    )
-                ) : (
-                    <button
-                        onClick={onNext}
-                        className="w-full py-4 px-6 bg-[#FF0000]/10 border border-[#FF0000]/30 rounded-2xl text-[#FF0000] hover:bg-[#FF0000]/20 transition-all text-xs font-black uppercase tracking-[0.2em] active:scale-[0.98] flex items-center justify-center gap-2"
-                    >
-                        Continue to Step 2 <ArrowRight size={14} />
-                    </button>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Selected Tracks Horizontal List */}

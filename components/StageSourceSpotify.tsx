@@ -129,23 +129,25 @@ export function StageSourceSpotify({
                     </button>
                 </div>
 
-                {playlists.length === 0 ? (
-                    !scanning && (
+                <div className="flex items-center gap-3">
+                    {playlists.length === 0 ? (
+                        !scanning && (
+                            <button
+                                onClick={onNext}
+                                className="flex-1 py-4 px-6 bg-white/5 border border-white/10 rounded-2xl text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest active:scale-[0.98]"
+                            >
+                                I don't have public Spotify playlists
+                            </button>
+                        )
+                    ) : (
                         <button
                             onClick={onNext}
-                            className="w-full py-4 px-6 bg-white/5 border border-white/10 rounded-2xl text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all text-xs font-bold uppercase tracking-widest active:scale-[0.98]"
+                            className="flex-1 py-4 px-6 bg-[#1DB954]/10 border border-[#1DB954]/30 rounded-2xl text-[#1DB954] hover:bg-[#1DB954]/20 transition-all text-xs font-black uppercase tracking-[0.2em] active:scale-[0.98] flex items-center justify-center gap-2"
                         >
-                            I don't have public Spotify playlists
+                            Continue to Step 2 <ArrowRight size={14} />
                         </button>
-                    )
-                ) : (
-                    <button
-                        onClick={onNext}
-                        className="w-full py-4 px-6 bg-[#1DB954]/10 border border-[#1DB954]/30 rounded-2xl text-[#1DB954] hover:bg-[#1DB954]/20 transition-all text-xs font-black uppercase tracking-[0.2em] active:scale-[0.98] flex items-center justify-center gap-2"
-                    >
-                        Continue to Step 2 <ArrowRight size={14} />
-                    </button>
-                )}
+                    )}
+                </div>
             </div>
 
             {scanErr && (

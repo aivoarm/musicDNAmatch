@@ -124,14 +124,20 @@ export default function StageSources({
 
             {/* Sub-Stage Indicator (Minimal) */}
             <div className="flex items-center justify-center gap-12 mb-8">
-                <div className={`flex flex-col items-center gap-2 transition-opacity ${tab === 'spotify' ? 'opacity-100' : 'opacity-30'}`}>
+                <button 
+                    onClick={() => setTab("spotify")}
+                    className={`flex flex-col items-center gap-2 transition-all hover:scale-105 active:scale-95 ${tab === 'spotify' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                >
                     <div className={`w-1.5 h-1.5 rounded-full ${tab === 'spotify' ? 'bg-[#1DB954]' : 'bg-white/20'}`} />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Step 1: Spotify</span>
-                </div>
-                <div className={`flex flex-col items-center gap-2 transition-opacity ${tab === 'youtube' ? 'opacity-100' : 'opacity-30'}`}>
+                </button>
+                <button 
+                    onClick={() => setTab("youtube")}
+                    className={`flex flex-col items-center gap-2 transition-all hover:scale-105 active:scale-95 ${tab === 'youtube' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+                >
                     <div className={`w-1.5 h-1.5 rounded-full ${tab === 'youtube' ? 'bg-[#FF0000]' : 'bg-white/20'}`} />
                     <span className="text-[10px] font-black uppercase tracking-[0.2em]">Step 2: YouTube</span>
-                </div>
+                </button>
             </div>
 
 
