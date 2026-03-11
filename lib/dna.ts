@@ -149,28 +149,54 @@ export function generateInterpretation(vector: number[], metaTags: string[] = []
         }
     });
 
-    // 4. Combine: (Vector Weight: 0.6, Tag Weight: 0.4)
+    // 4. Combine: (Vector Weight: 0.5, Tag Weight: 0.5)
     const sortedMatches = vectorMatches.map(m => {
         const genreKey = m.key;
         const tagScore = tagMatches[genreKey] || 0;
         return {
             name: m.name,
             key: m.key,
-            score: (m.score * 0.6) + (tagScore * 0.4)
+            score: (m.score * 0.5) + (tagScore * 0.5)
         };
     }).sort((a, b) => b.score - a.score);
 
     const finalMatches = sortedMatches.slice(0, 8); // Return top 8
 
-    // 5. Generate Personalized Narrative
-    const top2 = sortedMatches.slice(0, 2);
+    // 5. Generate Personalized Narrative (Diverse & Deduplicated)
+    const distinctTop = [];
+    if (sortedMatches.length > 0) {
+        const first = sortedMatches[0];
+        distinctTop.push(first);
+
+        // Find a second one that is high scoring but sonically different
+        const firstVec = GENRE_VECTORS[first.key];
+        let bestDiverse = null;
+        let maxDiversityScore = -1;
+
+        for (let i = 1; i < Math.min(sortedMatches.length, 10); i++) {
+            const current = sortedMatches[i];
+            const currentVec = GENRE_VECTORS[current.key];
+            if (!currentVec || !firstVec) continue;
+            
+            const similarity = euclideanSimilarityScore(firstVec, currentVec);
+            // Diversity Score = Weight(Match Score) * Weight(Difference)
+            const diversityScore = current.score * (1.1 - similarity); 
+
+            if (diversityScore > maxDiversityScore) {
+                maxDiversityScore = diversityScore;
+                bestDiverse = current;
+            }
+        }
+        if (bestDiverse) distinctTop.push(bestDiverse);
+    }
+
     let narrative = "";
-    if (top2.length >= 2) {
-        const n1 = GENRE_NARRATIVES[top2[0].key] || "";
-        const n2 = GENRE_NARRATIVES[top2[1].key] || "";
-        narrative = `${n1} This is fused with elements of ${top2[1].name}, where ${n2.charAt(0).toLowerCase()}${n2.slice(1)}`;
-    } else if (top2.length === 1) {
-        narrative = GENRE_NARRATIVES[top2[0].key] || "Your signal is a unique sonic fingerprint.";
+    if (distinctTop.length >= 2) {
+        const n1 = GENRE_NARRATIVES[distinctTop[0].key] || "";
+        const n2 = GENRE_NARRATIVES[distinctTop[1].key] || "";
+        narrative = `${n1} This is fused with elements of ${distinctTop[1].name}, where ${n2.charAt(0).toLowerCase()}${n2.slice(1)}`;
+    } else if (distinctTop.length === 1) {
+        narrative = GENRE_NARRATIVES[distinctTop[0].key] || "Your signal is a unique sonic fingerprint.";
     }
 
     return {
