@@ -68,7 +68,7 @@ export default function StageReviewSongs({ fetchedSources, onNext, onBack }: Rev
                             These are the tracks we found from your connected sources. We will prioritize these to compute your DNA.
                         </p>
                         <button onClick={onNext} className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.2)]">
-                            Confirm Genres <ArrowRight className="h-3.5 w-3.5" />
+                            Continue to Genres <ArrowRight className="h-3.5 w-3.5" />
                         </button>
                         <button onClick={onBack} className="mono text-[10px] text-white/45 hover:text-white transition-all uppercase tracking-widest mt-1">
                             ← Back to Sources

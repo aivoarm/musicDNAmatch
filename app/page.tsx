@@ -647,8 +647,13 @@ function HomeContent() {
             }
         } catch { }
 
-        // Go to review songs
-        setStage("review_songs");
+        // Step 4: Go to next stage (skip review if no tracks)
+        const totalFound = spotifyTracks.length + ytOkTracks.length;
+        if (totalFound === 0) {
+            setStage("genre_selection");
+        } else {
+            setStage("review_songs");
+        }
         setProgress(0);
     };
 

@@ -196,11 +196,10 @@ export default function StageSources({
                     </button>
                     <button
                         onClick={handleNext}
-                        disabled={!isSpotifySub && selPlaylists.length === 0 && !hasYt}
                         className={`h-12 md:h-11 flex-1 md:flex-none px-5 md:px-8 rounded-xl text-white font-black flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95 text-xs uppercase tracking-wider whitespace-nowrap ${
                             isSpotifySub 
                             ? "bg-white/10 border border-white/10 hover:bg-white/20 shadow-none" 
-                            : "bg-red-600 shadow-red-900/40 disabled:opacity-30 disabled:shadow-none"
+                            : "bg-red-600 shadow-red-900/40 transition-all"
                         }`}
                     >
                         <span>
