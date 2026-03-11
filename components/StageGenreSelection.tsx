@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-import { Music2, Youtube, ArrowRight } from "lucide-react";
+import { Music2, Youtube, ArrowRight, AlertCircle } from "lucide-react";
 import { Stepper } from "./HomeUI";
 import { decodeHtml } from "@/lib/utils";
 
@@ -83,8 +83,16 @@ export default function StageGenreSelection({
                         <p className="text-[10px] text-white/60 leading-relaxed font-bold">
                             Your self-selected genres provide the "ground truth" for our vector mapping, mixed with audio feature analysis.
                         </p>
+                        {((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0) && (
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 items-start">
+                                <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                                <p className="text-[9px] text-red-400 font-bold uppercase tracking-wider leading-relaxed">
+                                    At least one Spotify playlist or YouTube track is required to compute your unique DNA.
+                                </p>
+                            </div>
+                        )}
                         <button 
-                            disabled={genres.length === 0}
+                            disabled={genres.length === 0 || ((fetchedSources?.spotifyTracks?.length ?? 0) === 0 && (fetchedSources?.youtubeTracks?.length ?? 0) === 0)}
                             onClick={onNext} 
                             className="w-full bg-[#FF0000] text-white font-black py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-red-500 transition-all text-[11px] uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.2)] disabled:opacity-30 disabled:cursor-not-allowed">
                             Analyze Frequency <ArrowRight className="h-3.5 w-3.5" />

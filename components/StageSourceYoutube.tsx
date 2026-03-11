@@ -10,7 +10,8 @@ import {
     HelpCircle,
     Monitor,
     Smartphone,
-    ArrowRight
+    ArrowRight,
+    Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { decodeHtml } from "@/lib/utils";
@@ -23,10 +24,11 @@ interface StageSourceYoutubeProps {
     ytShowSearch: boolean;
     setYtShowSearch: (v: boolean) => void;
     searchYt: (q: string) => void;
-    magicFillSlots: (v: any, e: any) => void;
+    addYtSearchResult: (v: any) => void;
+    magicFillSlots: (v: any, e: React.MouseEvent) => void;
     ytTracks: any[];
     setYtTracks: React.Dispatch<React.SetStateAction<any[]>>;
-    onNext: () => void; // Added onNext to match Spotify
+    onNext: () => void;
 }
 
 export function StageSourceYoutube({
@@ -37,6 +39,7 @@ export function StageSourceYoutube({
     ytShowSearch,
     setYtShowSearch,
     searchYt,
+    addYtSearchResult,
     magicFillSlots,
     ytTracks,
     setYtTracks,
@@ -252,10 +255,9 @@ export function StageSourceYoutube({
                         const added = ytTracks.some((t) => t.url?.includes(v.id));
 
                         return (
-                            <button
+                            <div
                                 key={v.id}
-                                onClick={(e) => !added && magicFillSlots(v, e)}
-                                className={`p-3 rounded-2xl border text-left transition-all active:scale-95 flex flex-col group ${added
+                                className={`p-3 rounded-2xl border text-left transition-all flex flex-col group relative overflow-hidden ${added
                                     ? "border-[#FF0000] bg-[#FF0000]/10 shadow-[0_0_15px_rgba(255,0,0,0.1)]"
                                     : "border-white/10 bg-white/5 hover:bg-white/10"
                                     }`}
@@ -263,11 +265,30 @@ export function StageSourceYoutube({
                                 <div className="relative w-full aspect-square mb-3 overflow-hidden rounded-xl bg-black/40">
                                     <img
                                         src={v.thumbnail}
-                                        className={`w-full h-full object-cover transition-transform duration-500 ${added ? 'scale-110 opacity-40' : 'group-hover:scale-110'}`}
+                                        className={`w-full h-full object-cover transition-transform duration-500 ${added ? 'scale-110 opacity-20' : 'group-hover:scale-110 group-hover:opacity-30'}`}
                                         alt={v.title}
                                     />
+                                    
+                                    {/* Action Choices - Show on Hover OR if not added */}
+                                    {!added && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-3 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-black/60 backdrop-blur-[2px]">
+                                            <button 
+                                                onClick={() => addYtSearchResult(v)}
+                                                className="w-full py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-[9px] font-black uppercase tracking-wider text-white transition-all active:scale-95"
+                                            >
+                                                Add Song
+                                            </button>
+                                            <button 
+                                                onClick={(e) => magicFillSlots(v, e)}
+                                                className="w-full py-2 bg-[#FF0000] hover:bg-red-500 rounded-lg text-[9px] font-black uppercase tracking-wider text-white transition-all shadow-lg shadow-red-900/40 active:scale-95 flex items-center justify-center gap-1.5"
+                                            >
+                                                <Sparkles size={10} /> Add Similar
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {added && (
-                                        <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                             <div className="px-3 py-1 bg-[#FF0000]/20 backdrop-blur-md border border-[#FF0000]/50 rounded-full">
                                                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Added</span>
                                             </div>
@@ -280,7 +301,7 @@ export function StageSourceYoutube({
                                 <p className="text-[10px] text-white/30 mt-1 truncate w-full">
                                     {v.channelTitle}
                                 </p>
-                            </button>
+                            </div>
                         );
                     })}
                 </div>
