@@ -143,19 +143,20 @@ export function generateInterpretation(vector: number[], metaTags: string[] = []
 
     Object.keys(GENRE_VECTORS).forEach(genre => {
         const gn = genre.toLowerCase().replace(/[^a-z0-9]/g, "");
-        if (normalizedMetaTags.includes(gn)) {
-            tagMatches[genre] = 1.0; // Perfect match
+        // Direct match or substring match (e.g. 'Classical' matches 'Modern Classical')
+        if (normalizedMetaTags.some(t => t.includes(gn) || gn.includes(t))) {
+            tagMatches[genre] = 1.0; 
         }
     });
 
-    // 4. Combine: (Vector Weight: 0.7, Tag Weight: 0.3)
+    // 4. Combine: (Vector Weight: 0.6, Tag Weight: 0.4)
     const sortedMatches = vectorMatches.map(m => {
         const genreKey = m.key;
         const tagScore = tagMatches[genreKey] || 0;
         return {
             name: m.name,
             key: m.key,
-            score: (m.score * 0.7) + (tagScore * 0.3)
+            score: (m.score * 0.6) + (tagScore * 0.4)
         };
     }).sort((a, b) => b.score - a.score);
 
@@ -368,7 +369,10 @@ export function combineDNA(
     // Weight Logic: MusicBrainz and Last.fm (Human Curation) are weighted slightly higher than raw source logs
     let wg = 0.3, ws = 0.15, wy = 0.15, wl = 0.2, wm = 0.2;
 
+    const gCount = genreDNA.metadata.genres?.length || 0;
+
     // Dynamic adjustment if sources are missing
+    if (gCount === 0) { wg = 0; }
     if (!lastfmDNA || lCount === 0) { wl = 0; }
     if (!musicbrainzDNA || mCount === 0) { wm = 0; }
     if (!spotifyDNA || sCount === 0) { ws = 0; }
