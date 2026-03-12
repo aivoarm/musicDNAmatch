@@ -64,7 +64,7 @@ coverage/
 .nyc_output/
 
 # Misc
-.cache/
+.cache
 *.tgz
 
 # Local Artifacts & Test Scripts
