@@ -80,3 +80,7 @@ test_playlist.mjs
 # Playwright
 playwright-report/
 test-results/
+
+# Secrets & Tokens
+s_token
+.gemini/
