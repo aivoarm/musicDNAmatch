@@ -2,7 +2,8 @@ import { signOut } from "@workos-inc/authkit-nextjs";
 import { cookies } from "next/headers";
 export const runtime = "edge";
 
-export async function GET() {
+export async function GET(request: Request) {
+    const { origin } = new URL(request.url);
     const cookieStore = await cookies();
 
     // Clear application-specific "cache" cookies
@@ -12,6 +13,5 @@ export async function GET() {
     cookieStore.delete("auth_email");
     cookieStore.delete("last_spotify_url");
 
-    return await signOut({ returnTo: "/" });
-
+    return await signOut({ returnTo: origin });
 }
