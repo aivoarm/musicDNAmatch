@@ -78,8 +78,8 @@ export default function StageGenreSelection({
                             <div className="flex items-center justify-between px-2">
                                 <h3 className="mono text-[10px] text-white/40 uppercase tracking-[0.3em]">Extracted Signals (Top Tracks)</h3>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {fetchedSources?.spotifyTracks?.slice(0, 4).map((t: any, i: number) => (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 sb">
+                                {fetchedSources?.spotifyTracks?.map((t: any, i: number) => (
                                     <div key={`sp-${i}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 border-l-[#1DB954] border-l-2">
                                         <Music2 className="h-4 w-4 text-[#1DB954] shrink-0" />
                                         <div className="flex-1 min-w-0">
@@ -88,7 +88,7 @@ export default function StageGenreSelection({
                                         </div>
                                     </div>
                                 ))}
-                                {fetchedSources?.youtubeTracks?.slice(0, 4).map((t: any, i: number) => (
+                                {fetchedSources?.youtubeTracks?.map((t: any, i: number) => (
                                     <div key={`yt-${i}`} className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 border-l-[#FF0000] border-l-2">
                                         <Youtube className="h-4 w-4 text-[#FF0000] shrink-0" />
                                         <div className="flex-1 min-w-0">

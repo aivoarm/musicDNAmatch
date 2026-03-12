@@ -225,13 +225,13 @@ function euclideanSimilarityScore(a: number[], b: number[]): number {
 }
 
 export function computeGenreVector(selectedGenres: string[]): DNAVector {
-    const normalised = selectedGenres.map(g => g.toLowerCase().replace(/[^a-z0-9]/g, ""));
+    const normalised = selectedGenres.map(g => g.toLowerCase().replace(/&/g, "n").replace(/[^a-z0-9]/g, ""));
     const vecs = normalised.map(g => GENRE_VECTORS[g]).filter(Boolean) as number[][];
     const vector = vecs.length ? Array(12).fill(0).map((_, i) => vecs.reduce((sum, v) => sum + v[i], 0) / vecs.length) : Array(12).fill(0.5);
     return makeDNA(vector, Array(12).fill(1.0), "genre", { genres: selectedGenres });
 }
 
-export function computeSpotifyVector(features: SpotifyAudioFeatures[], artistGenres: string[] = []): DNAVector {
+export function computeSpotifyVector(features: SpotifyAudioFeatures[], artistGenres: string[] = [], tracks: any[] = []): DNAVector {
     const hasFeatures = features.length > 0;
     const hasGenres = artistGenres.length > 0;
 
@@ -268,9 +268,23 @@ export function computeSpotifyVector(features: SpotifyAudioFeatures[], artistGen
     const genreVecs: number[][] = [];
     if (hasGenres) {
         artistGenres.forEach(g => {
-            const normalized = g.toLowerCase().replace(/[^a-z0-9]/g, "");
+            const normalized = g.toLowerCase().replace(/&/g, "n").replace(/[^a-z0-9]/g, "");
             const vec = GENRE_VECTORS[normalized];
             if (vec) genreVecs.push(vec);
+        });
+    }
+
+    // 2.5. Artist Name matching via YT_TIERS (Tier matching for Spotify)
+    if (tracks.length > 0) {
+        tracks.forEach(t => {
+            const artistName = (t.artist || "").toLowerCase();
+            Object.entries(YT_TIERS).forEach(([genre, tiers]) => {
+                if (tiers.gold.some(a => a.toLowerCase() === artistName)) {
+                    const normalizedKey = genre.toLowerCase().replace(/&/g, "n").replace(/[^a-z0-9]/g, "");
+                    const vec = GENRE_VECTORS[normalizedKey];
+                    if (vec) genreVecs.push(vec);
+                }
+            });
         });
     }
 
@@ -319,7 +333,7 @@ export function computeYouTubeVector(videos: any[]): DNAVector {
         // Average vectors for all tied best genres (e.g. Hip-Hop AND Rap)
         const pooled = Array(12).fill(0);
         bestGenres.forEach(g => {
-            const normalizedKey = g.toLowerCase().replace(/[^a-z0-9]/g, "");
+            const normalizedKey = g.toLowerCase().replace(/&/g, "n").replace(/[^a-z0-9]/g, "");
             const vec = GENRE_VECTORS[normalizedKey] || GENRE_VECTORS["pop"];
             vec.forEach((v, i) => pooled[i] += v);
         });

@@ -569,40 +569,13 @@ function HomeContent() {
 
         const ytFormattedTracks = ytOkTracks.map(t => ({ id: t.id, title: t.title, artist: t.channel, thumbnail: t.thumbnail, url: t.url }));
 
-        // Merge with existing sources (if any)
-        setFetchedSources((prev) => {
-            const currentSpotifyTracks = prev?.spotifyTracks || [];
-            const currentAudioFeatures = prev?.audioFeatures || [];
-            const currentArtistGenres = prev?.artistGenres || [];
-            const currentYoutubeTracks = prev?.youtubeTracks || [];
-            const currentYoutubeVideos = prev?.youtubeVideos || [];
-
-            // Combine Spotify tracks without duplicates
-            const newSpotifyTracks = spotifyTracks.filter((t: any) => !currentSpotifyTracks.some((et: any) => et.id === t.id));
-            const combinedSpotifyTracks = [...currentSpotifyTracks, ...newSpotifyTracks];
-
-            // Combine audio features without duplicates
-            const newFeatures = (audioFeatures || []).filter((f: any) => !currentAudioFeatures.some((ef: any) => ef.id === f.id));
-            const combinedFeatures = [...currentAudioFeatures, ...newFeatures];
-
-            // Combine genres
-            const combinedGenres = Array.from(new Set([...currentArtistGenres, ...(artistGenres || [])]));
-
-            // Combine YouTube tracks without duplicates
-            const newYoutubeTracks = ytFormattedTracks.filter((t: any) => !currentYoutubeTracks.some((et: any) => et.url === t.url));
-            const combinedYoutubeTracks = [...currentYoutubeTracks, ...newYoutubeTracks];
-
-            // Combine YouTube videos without duplicates
-            const newYoutubeVideos = (youtubeVideos || []).filter((v: any) => !currentYoutubeVideos.some((ev: any) => ev.id === v.id));
-            const combinedYoutubeVideos = [...currentYoutubeVideos, ...newYoutubeVideos];
-
-            return {
-                spotifyTracks: combinedSpotifyTracks,
-                audioFeatures: combinedFeatures,
-                artistGenres: combinedGenres,
-                youtubeVideos: combinedYoutubeVideos,
-                youtubeTracks: combinedYoutubeTracks
-            };
+        // Overwrite with current selection — ensure fresh data
+        setFetchedSources({
+            spotifyTracks: spotifyTracks,
+            audioFeatures: audioFeatures,
+            artistGenres: artistGenres,
+            youtubeVideos: youtubeVideos,
+            youtubeTracks: ytFormattedTracks
         });
 
         const totalFound = spotifyTracks.length + ytFormattedTracks.length;
@@ -676,6 +649,8 @@ function HomeContent() {
                     audioFeatures,
                     youtubeVideos,
                     artistGenres,
+                    spotifyTracks,
+                    youtubeTracks,
                     dry_run: true
                 })
             });
@@ -844,7 +819,7 @@ function HomeContent() {
                                         genres={genres}
                                         isAuthenticated={isAuthenticated}
                                         setShowOnboarding={setShowOnboarding}
-                                        onRestart={() => { setStage("landing"); setSelPlaylists([]); setYtTracks(emptyYt()); }}
+                                        onRestart={() => { setStage("landing"); setSelPlaylists([]); setYtTracks(emptyYt()); setFetchedSources(null); setDna(null); }}
                                     />
                                 )}
 

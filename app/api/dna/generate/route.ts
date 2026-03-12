@@ -75,7 +75,7 @@ export async function POST(req: Request) {
         // ── Compute Core Vectors ───────────────────────
         const genreDNA = computeGenreVector(genres);
         const hasSpots = audioFeatures.length > 0 || artistGenres.length > 0;
-        const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres) : null;
+        const spotifyDNA = hasSpots ? computeSpotifyVector(audioFeatures, artistGenres, spotifyTracks) : null;
         const youtubeDNA = youtubeVideos.length > 0 ? computeYouTubeVector(youtubeVideos) : null;
 
         // ── Enrich with Last.fm & MusicBrainz (v2.4 Full Pass) ─────
